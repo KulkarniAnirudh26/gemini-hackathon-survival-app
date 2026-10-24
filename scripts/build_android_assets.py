@@ -4,6 +4,8 @@
 
 writes
     android/app/src/main/assets/maps/yosemite/{mappack.json, map.jpg}
+    android/app/src/main/assets/maps/yosemite/yosemite.mbtiles   (with --tiles; ~2 min, ~24 MB
+                                                                  for zooms 9-14, gitignored)
     android/mappack/src/test/resources/parity.json   (what the Python side answers, which the
                                                       Kotlin tests must reproduce)
 """
@@ -13,6 +15,7 @@ from pathlib import Path
 
 from geopdf_locator import GeoPdfMap, Guidance
 from geopdf_locator.export import export
+from geopdf_locator.tiles import write_mbtiles
 
 ROOT = Path(__file__).resolve().parent.parent
 ASSETS = ROOT / "android" / "app" / "src" / "main" / "assets" / "maps"
@@ -45,13 +48,20 @@ def main() -> int:
     parser.add_argument("pdf")
     parser.add_argument("--name", default="yosemite", help="asset folder name (default: yosemite)")
     parser.add_argument("--dpi", type=int, default=150)
+    parser.add_argument("--tiles", action="store_true", help="also render an MBTiles tileset")
+    parser.add_argument("--max-zoom", type=int, default=14, help="highest tile zoom (default 14)")
     args = parser.parse_args()
 
     pack_path, image_path = export(args.pdf, str(ASSETS / args.name), dpi=args.dpi)
     pack = json.loads(pack_path.read_text())
     FIXTURE.parent.mkdir(parents=True, exist_ok=True)
     FIXTURE.write_text(json.dumps(parity_cases(GeoPdfMap.open(args.pdf), pack), indent=1))
-    for p in (pack_path, image_path, FIXTURE):
+    written = [pack_path, image_path, FIXTURE]
+    if args.tiles:
+        tiles = ASSETS / args.name / f"{args.name}.mbtiles"
+        write_mbtiles(args.pdf, str(tiles), max_zoom=args.max_zoom)
+        written.append(tiles)
+    for p in written:
         print(f"wrote {p.relative_to(ROOT)} ({p.stat().st_size / 1e6:.2f} MB)")
     return 0
 
