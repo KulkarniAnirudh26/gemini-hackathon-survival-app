@@ -9,47 +9,73 @@ class GuideScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
-        listenable: assistant,
-        builder: (context, _) {
-          final g = assistant.guide;
-          if (g == null) return const Center(child: Text('Loading guide…'));
-          return ListView(
-            padding: const EdgeInsets.all(12),
+    listenable: assistant,
+    builder: (context, _) {
+      final g = assistant.guide;
+      if (g == null) return const Center(child: Text('Loading guide…'));
+      return ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Row(
             children: [
-              const Text('Survival guide', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
-              const SizedBox(height: 4),
-              const Text('Works offline. Tap the speaker to hear a section.', style: TextStyle(color: kMuted)),
-              const SizedBox(height: 12),
-              for (final s in g.sections)
-                Card(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  child: ExpansionTile(
-                    title: Text(s.title, style: const TextStyle(fontWeight: FontWeight.w600)),
-                    subtitle: Text(s.summary, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: kMuted)),
-                    trailing: assistant.speaking && assistant.speakingSource == 'guide:${s.id}'
-                        ? IconButton(
-                            tooltip: 'Stop',
-                            icon: const Icon(Icons.stop_circle, color: kDanger, size: 32),
-                            onPressed: assistant.stopSpeaking,
-                          )
-                        : IconButton(
-                            tooltip: 'Read aloud',
-                            icon: const Icon(Icons.volume_up, color: kAccent),
-                            onPressed: () async {
-                              if (assistant.speaking) await assistant.stopSpeaking();
-                              assistant.speak('${s.title}. ${s.summary}', source: 'guide:${s.id}');
-                            },
-                          ),
-                    childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                    children: [
-                      Text(s.summary, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-                      const SizedBox(height: 8),
-                      Text(s.body.replaceAll('**', ''), style: const TextStyle(height: 1.4)),
-                    ],
-                  ),
-                ),
+              const Icon(Icons.emergency, color: kClay),
+              const SizedBox(width: 8),
+              Text('SOS & AID', style: label(kInk, size: 22).copyWith(letterSpacing: 0.4)),
             ],
-          );
-        },
+          ),
+          const SizedBox(height: 4),
+          const Text('Vetted survival guide. Works offline. Tap the speaker to hear a section.', style: TextStyle(color: kInkMuted)),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: kClay,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: kInk, width: 2),
+            ),
+            child: const Text(
+              'Life-threatening? Call 911, or use Satellite SOS if you have no signal.',
+              style: TextStyle(color: kCard, fontSize: 16, fontWeight: FontWeight.w700),
+            ),
+          ),
+          const SizedBox(height: 12),
+          for (final s in g.sections)
+            Card(
+              margin: const EdgeInsets.only(bottom: 8),
+              child: ExpansionTile(
+                shape: const Border(),
+                collapsedShape: const Border(),
+                title: Text(s.title, style: const TextStyle(fontWeight: FontWeight.w700)),
+                subtitle: Text(
+                  s.summary,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: kInkMuted),
+                ),
+                trailing: assistant.speaking && assistant.speakingSource == 'guide:${s.id}'
+                    ? IconButton(
+                        tooltip: 'Stop',
+                        icon: const Icon(Icons.stop_circle, color: kClay, size: 32),
+                        onPressed: assistant.stopSpeaking,
+                      )
+                    : IconButton(
+                        tooltip: 'Read aloud',
+                        icon: const Icon(Icons.volume_up, color: kInk),
+                        onPressed: () async {
+                          if (assistant.speaking) await assistant.stopSpeaking();
+                          assistant.speak('${s.title}. ${s.summary}', source: 'guide:${s.id}');
+                        },
+                      ),
+                childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                children: [
+                  Text(s.summary, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 8),
+                  Text(s.body.replaceAll('**', ''), style: const TextStyle(height: 1.4)),
+                ],
+              ),
+            ),
+        ],
       );
+    },
+  );
 }

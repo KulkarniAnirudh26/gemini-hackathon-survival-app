@@ -66,6 +66,9 @@ class MainActivity : FlutterActivity() {
             }
             "unloadLlm" -> { ai.unloadLlm(); result.success(null) }
             "status" -> result.success(mapOf("llmLoaded" to ai.llmLoaded()))
+            "metrics" -> result.success(ai.metrics())
+            // adb shell am start -n com.hackathon.yosemite_survival/.MainActivity --ez calibrate true
+            "launchFlags" -> result.success(mapOf("calibrate" to (intent?.getBooleanExtra("calibrate", false) ?: false)))
             else -> result.notImplemented()
           }
         } catch (e: Throwable) {
