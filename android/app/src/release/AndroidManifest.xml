@@ -1,0 +1,4 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
+    <!-- Release builds are offline by design: strip INTERNET even if a library merges it in. -->
+    <uses-permission android:name="android.permission.INTERNET" tools:node="remove" />
+</manifest>
