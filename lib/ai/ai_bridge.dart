@@ -16,6 +16,8 @@ class AiBridge {
   Future<Map<String, dynamic>> init(String modelsDir) async =>
       Map<String, dynamic>.from(await _method.invokeMethod('init', {'modelsDir': modelsDir}) as Map);
 
+  Future<bool> requestMic() async => (await _method.invokeMethod<bool>('requestMic')) ?? false;
+
   Future<void> startListening() => _method.invokeMethod('startListening');
   Future<String> stopListening() async => (await _method.invokeMethod<String>('stopListening')) ?? '';
 

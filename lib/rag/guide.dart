@@ -64,6 +64,8 @@ class _Bm25 {
   static const _stop = {
     'the', 'a', 'an', 'and', 'or', 'to', 'of', 'in', 'on', 'is', 'it', 'i', 'my', 'me', 'do', 'what',
     'how', 'should', 'can', 'for', 'with', 'you', 'your', 'if', 'at', 'be', 'are', 'am', 'there', 'this',
+    'near', 'our', 'we', 'they', 'get', 'got', 'from', 'into', 'out', 'up', 'down', 'not', 'no', 'all', 'any',
+    'camp', 'help', 'need', 'now', 'will', 'just', 'very', 'much', 'more', 'less',
   };
   final List<Map<String, int>> _tf = [];
   final List<int> _len = [];

@@ -1,6 +1,8 @@
 package com.hackathon.yosemite_survival
 
+import android.Manifest
 import android.content.ComponentCallbacks2
+import android.content.pm.PackageManager
 import android.os.Handler
 import android.os.Looper
 import io.flutter.embedding.android.FlutterActivity
@@ -40,6 +42,7 @@ class MainActivity : FlutterActivity() {
       scope.launch {
         try {
           when (call.method) {
+            "requestMic" -> result.success(requestMic())
             "modelsDir" -> result.success(getExternalFilesDir(null)?.resolve("models")?.absolutePath)
             "init" -> result.success(ai.init(call.argument<String>("modelsDir")!!))
             "startListening" -> { ai.startListening(); result.success(null) }
@@ -68,8 +71,29 @@ class MainActivity : FlutterActivity() {
     }
   }
 
+  private var micGranted: kotlinx.coroutines.CompletableDeferred<Boolean>? = null
+
+  private suspend fun requestMic(): Boolean {
+    if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) return true
+    val waiter = kotlinx.coroutines.CompletableDeferred<Boolean>().also { micGranted = it }
+    requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), MIC_REQUEST)
+    return waiter.await()
+  }
+
+  override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+    super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+    if (requestCode == MIC_REQUEST) {
+      micGranted?.complete(grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED)
+      micGranted = null
+    }
+  }
+
   override fun onTrimMemory(level: Int) {
     super.onTrimMemory(level)
     if (level >= ComponentCallbacks2.TRIM_MEMORY_BACKGROUND && ::ai.isInitialized) ai.trimMemory()
+  }
+
+  companion object {
+    private const val MIC_REQUEST = 7
   }
 }
