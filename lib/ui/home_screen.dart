@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../ai/assistant.dart';
 import '../ai/situation.dart';
 import '../geo/geo_math.dart';
 import '../location/location_service.dart';
+import 'guide_screen.dart';
 import 'theme.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -18,6 +20,24 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final _text = TextEditingController();
   final _scroll = ScrollController();
+  int _seen = 0;
+  bool _typing = false;
+
+  /// An emergency answer takes over the screen at once, before Gemma adds anything.
+  void _checkEmergency(Assistant a) {
+    if (a.messages.length <= _seen) return;
+    final fresh = a.messages.sublist(_seen);
+    _seen = a.messages.length;
+    for (final m in fresh) {
+      if (!m.user && (m.meta ?? '').startsWith('emergency')) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          HapticFeedback.heavyImpact();
+          Navigator.of(context).push(MaterialPageRoute(fullscreenDialog: true, builder: (_) => _EmergencyTakeover(a: a, m: m)));
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,13 +45,14 @@ class _HomeScreenState extends State<HomeScreen> {
       listenable: Listenable.merge([widget.assistant, widget.location]),
       builder: (context, _) {
         final a = widget.assistant;
+        _checkEmergency(a);
         final s = Situation.build(widget.location, a.geo, a.router);
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (_scroll.hasClients) _scroll.jumpTo(_scroll.position.maxScrollExtent);
         });
         return Column(
           children: [
-            _StatusBar(s: s, location: widget.location),
+            _StatusBar(s: s),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
               child: _Cards(s: s),
@@ -47,23 +68,23 @@ class _HomeScreenState extends State<HomeScreen> {
                       itemBuilder: (_, i) => _Bubble(m: a.messages[i]),
                     ),
             ),
-            _Composer(a: a, text: _text),
-            _StatusLine(a: a),
+            if (_typing)
+              _Composer(a: a, text: _text, onClose: () => setState(() => _typing = false))
+            else
+              _VoiceBar(a: a, onKeyboard: () => setState(() => _typing = true)),
           ],
         );
       },
     );
   }
 }
-
 class _StatusBar extends StatelessWidget {
   final Situation s;
-  final LocationService location;
-  const _StatusBar({required this.s, required this.location});
+  const _StatusBar({required this.s});
 
   @override
   Widget build(BuildContext context) {
-    final t = s.now;
+    // no clock or battery here: the phone's own status bar already shows them
     final us = s.untilSunset;
     final sunText = s.isNight
         ? 'DARK'
@@ -71,39 +92,20 @@ class _StatusBar extends StatelessWidget {
         ? '--'
         : us.isNegative
         ? 'DUSK'
-        : 'SUNSET ${formatDuration(us).toUpperCase()}';
+        : 'SUNSET IN ${formatDuration(us).toUpperCase()}';
     final sunWarn = s.isNight || (us != null && us < const Duration(hours: 1));
     final f = s.fix;
-    final tierColor = switch (s.tier) {
-      PowerTier.normal => kMoss,
-      PowerTier.saver => kTrail,
-      PowerTier.critical => kClay,
-    };
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
       child: Row(
         children: [
-          Text('${_hhmm(t)} LOCAL', style: label(kInk, size: 13).copyWith(fontFeatures: const [FontFeature.tabularFigures()])),
+          Flexible(child: _Chip(icon: Icons.wb_twilight, text: sunText, warn: sunWarn)),
           const SizedBox(width: 8),
-          Expanded(
-            child: Align(alignment: Alignment.centerLeft, child: _Chip(icon: Icons.wb_twilight, text: sunText, warn: sunWarn)),
-          ),
-          const SizedBox(width: 6),
-          _Chip(
-            icon: f == null ? Icons.gps_off : Icons.gps_fixed,
-            text: f == null ? 'NO FIX' : (f.simulated ? 'PINNED' : 'GPS ±${f.accuracy.round()} M'),
-            warn: f == null,
-          ),
-          const SizedBox(width: 6),
-          PopupMenuButton<PowerTier>(
-            tooltip: 'Battery mode',
-            onSelected: location.overrideTier,
-            itemBuilder: (_) => [for (final p in PowerTier.values) PopupMenuItem(value: p, child: Text('Force ${p.name} mode'))],
-            child: Row(
-              children: [
-                Icon(Icons.battery_std, size: 16, color: tierColor),
-                Text('${s.battery}%', style: label(tierColor)),
-              ],
+          Flexible(
+            child: _Chip(
+              icon: f == null ? Icons.gps_off : Icons.gps_fixed,
+              text: f == null ? 'FINDING GPS' : (f.simulated ? 'PINNED POSITION' : 'GPS ±${f.accuracy.round()} M'),
+              warn: f == null,
             ),
           ),
         ],
@@ -111,7 +113,6 @@ class _StatusBar extends StatelessWidget {
     );
   }
 }
-
 String _hhmm(DateTime t) => '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
 
 /// Pill status chip: inset fill, moss (nominal) or clay (warning) border, solid pip.
@@ -399,7 +400,6 @@ class _Bubble extends StatelessWidget {
                   // Gemma answers are generated; only the scripted ones are vetted text
                   if (!gemma) ...[Text('VERIFIED OFFLINE ACTION', style: label(kClay, size: 10)), const SizedBox(height: 4)],
                   Text(m.text.isEmpty ? '…' : m.text, style: const TextStyle(fontSize: 15, height: 1.4)),
-                  if (meta.isNotEmpty) ...[const SizedBox(height: 6), Text(meta, style: const TextStyle(color: kInkMuted, fontSize: 10))],
                 ],
               ),
             ),
@@ -410,31 +410,135 @@ class _Bubble extends StatelessWidget {
   }
 }
 
-class _StatusLine extends StatelessWidget {
+/// The main input: one big hold-to-talk button. Typing is the secondary path.
+class _VoiceBar extends StatelessWidget {
   final Assistant a;
-  const _StatusLine({required this.a});
+  final VoidCallback onKeyboard;
+  const _VoiceBar({required this.a, required this.onKeyboard});
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(20, 2, 20, 6),
-    child: Row(
-      children: [
-        Icon(a.llmLoaded ? Icons.lock_outline : Icons.memory_outlined, size: 13, color: a.llmLoaded ? kMoss : kInkMuted),
-        const SizedBox(width: 4),
-        Expanded(
-          child: Text(a.status.toUpperCase(), style: label(kInkMuted, size: 10), overflow: TextOverflow.ellipsis),
+  Widget build(BuildContext context) {
+    final listening = a.phase == Phase.listening;
+    final working = a.busy && !listening && a.phase != Phase.loading;
+    final speaking = a.phase == Phase.speaking;
+    final caption = switch (a.phase) {
+      Phase.loading => 'GETTING READY…',
+      Phase.listening => 'LISTENING… RELEASE TO ASK',
+      Phase.ready => 'HOLD TO TALK',
+      _ => a.status.toUpperCase(),
+    };
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        Row(children: [
+          _RoundIcon(icon: Icons.keyboard_alt_outlined, tooltip: 'Type instead', onTap: onKeyboard),
+          const Spacer(),
+          GestureDetector(
+            onTapDown: (_) {
+              HapticFeedback.mediumImpact();
+              a.pressTalk();
+            },
+            onTapUp: (_) {
+              HapticFeedback.lightImpact();
+              a.releaseTalk();
+            },
+            onTapCancel: () => a.releaseTalk(),
+            child: _MicButton(listening: listening, enabled: a.phase != Phase.loading),
+          ),
+          const Spacer(),
+          working || speaking
+              ? _RoundIcon(icon: Icons.stop, tooltip: 'Stop', onTap: a.stop, color: kClay)
+              : const SizedBox(width: 48),
+        ]),
+        const SizedBox(height: 6),
+        Text(caption, style: label(listening ? kClay : kInkMuted, size: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
+      ]),
+    );
+  }
+}
+
+class _MicButton extends StatefulWidget {
+  final bool listening, enabled;
+  const _MicButton({required this.listening, required this.enabled});
+
+  @override
+  State<_MicButton> createState() => _MicButtonState();
+}
+
+class _MicButtonState extends State<_MicButton> with SingleTickerProviderStateMixin {
+  late final _pulse = AnimationController(vsync: this, duration: const Duration(milliseconds: 1100));
+
+  @override
+  void didUpdateWidget(_MicButton old) {
+    super.didUpdateWidget(old);
+    // the pulse only runs while recording (battery)
+    if (widget.listening && !_pulse.isAnimating) _pulse.repeat();
+    if (!widget.listening && _pulse.isAnimating) _pulse.reset();
+  }
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+        width: 112,
+        height: 112,
+        child: AnimatedBuilder(
+          animation: _pulse,
+          builder: (_, child) => Stack(alignment: Alignment.center, children: [
+            if (widget.listening)
+              Container(
+                width: 84 + 28 * _pulse.value,
+                height: 84 + 28 * _pulse.value,
+                decoration: BoxDecoration(shape: BoxShape.circle, color: kClay.withValues(alpha: 0.35 * (1 - _pulse.value))),
+              ),
+            child!,
+          ]),
+          child: Container(
+            width: 84,
+            height: 84,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: widget.enabled ? (widget.listening ? kInk : kClay) : kOutline,
+              border: Border.all(color: kInk, width: 2),
+              boxShadow: const [BoxShadow(color: kInk, offset: Offset(0, 3))],
+            ),
+            child: Icon(widget.listening ? Icons.graphic_eq : Icons.mic, size: 40, color: kCard),
+          ),
         ),
-        const SizedBox(width: 8),
-        Text('ON-DEVICE · ${a.templateAnswers} SCRIPTED · ${a.llmAnswers} GEMMA', style: label(kInkMuted, size: 10)),
-      ],
-    ),
-  );
+      );
+}
+
+class _RoundIcon extends StatelessWidget {
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onTap;
+  final Color color;
+  const _RoundIcon({required this.icon, required this.tooltip, required this.onTap, this.color = kInk});
+
+  @override
+  Widget build(BuildContext context) => IconButton(
+        tooltip: tooltip,
+        onPressed: onTap,
+        iconSize: 24,
+        style: IconButton.styleFrom(
+          minimumSize: const Size(48, 48),
+          backgroundColor: kCard,
+          foregroundColor: color,
+          side: BorderSide(color: color == kInk ? kLine : color, width: 1.5),
+        ),
+        icon: Icon(icon),
+      );
 }
 
 class _Composer extends StatelessWidget {
   final Assistant a;
   final TextEditingController text;
-  const _Composer({required this.a, required this.text});
+  final VoidCallback onClose;
+  const _Composer({required this.a, required this.text, required this.onClose});
 
   void _send() {
     final v = text.text.trim();
@@ -457,27 +561,13 @@ class _Composer extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // hold to talk
-          GestureDetector(
-            onTapDown: (_) => a.pressTalk(),
-            onTapUp: (_) => a.releaseTalk(),
-            onTapCancel: () => a.releaseTalk(),
-            child: Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: listening ? kClay : const Color(0xFFF0F4F1),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: listening ? kClay : const Color(0xFFD8E0D9)),
-              ),
-              child: Icon(listening ? Icons.graphic_eq : Icons.mic, size: 24, color: listening ? kCard : kClay),
-            ),
-          ),
-          const SizedBox(width: 6),
+          _RoundIcon(icon: Icons.mic, tooltip: 'Talk instead', onTap: onClose, color: kClay),
+        const SizedBox(width: 6),
           Expanded(
             child: TextField(
               controller: text,
               enabled: !working && a.phase != Phase.loading,
+            autofocus: true,
               textInputAction: TextInputAction.send,
               style: const TextStyle(fontSize: 15),
               decoration: const InputDecoration(
@@ -513,6 +603,65 @@ class _Composer extends StatelessWidget {
                   ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Full-screen emergency card: the scripted answer, the 911 / SOS call to action and the
+/// matching first-aid steps, shown the moment the router flags an emergency.
+class _EmergencyTakeover extends StatelessWidget {
+  final Assistant a;
+  final ChatMessage m;
+  const _EmergencyTakeover({required this.a, required this.m});
+
+  @override
+  Widget build(BuildContext context) {
+    final topic = RegExp(r'topic (\w+)').firstMatch(m.meta ?? '')?.group(1);
+    final section = topic == null ? null : a.guide?.byId(topic);
+    return Scaffold(
+      backgroundColor: kClay,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            Row(children: [
+              const Icon(Icons.emergency, color: kCard, size: 28),
+              const SizedBox(width: 8),
+              Expanded(child: Text('EMERGENCY', style: label(kCard, size: 22))),
+              IconButton(
+                tooltip: 'Back to chat',
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.close, color: kCard, size: 28),
+              ),
+            ]),
+            const SizedBox(height: 16),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Text(m.text, style: const TextStyle(color: kCard, fontSize: 22, fontWeight: FontWeight.w700, height: 1.35)),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const SosBanner(onClay: true),
+            const SizedBox(height: 12),
+            if (section != null)
+              FilledButton.icon(
+                style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(56)),
+                icon: const Icon(Icons.format_list_numbered),
+                label: Text('STEP-BY-STEP: ${section.title.toUpperCase()}'),
+                onPressed: () => Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => StepsScreen(assistant: a, section: section, name: section.title)),
+                ),
+              ),
+            const SizedBox(height: 8),
+            OutlinedButton(
+              style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(52)),
+              onPressed: () => Navigator.pop(context),
+              child: const Text('BACK TO CHAT'),
+            ),
+          ]),
+        ),
       ),
     );
   }
