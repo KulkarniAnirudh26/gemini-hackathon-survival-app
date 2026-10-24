@@ -27,7 +27,7 @@ android {
         // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-        ndk { abiFilters += "arm64-v8a" }
+        ndk { abiFilters += "arm64-v8a";"x86_64"}
     }
 
     packaging {
