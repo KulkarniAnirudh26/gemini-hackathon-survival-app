@@ -56,6 +56,48 @@ Non-map regions (legend, notes) are excluded via `exclude=[(x0, y0, x1, y1), ...
 
 On the Yosemite map, the median error over 29 reference places is ~170 m (vs ~1.3 km for label centres); peaks and viewpoints are within ~20–170 m.
 
+### Map tiles (MBTiles)
+
+```bash
+python -m geopdf_locator.tiles data/yosemite.pdf out/yosemite.mbtiles --max-zoom 14
+```
+
+Renders the GeoPDF into a standard MBTiles raster tileset (JPEG, Web Mercator, zooms 9–14:
+2,471 tiles, ~24 MB, ~2 min) for any offline map view (`flutter_map`, MapLibre, Leaflet). Each
+tile is drawn from the PDF's vector content at its own zoom, so text stays sharp, and it uses
+the same georeference as the place search and guidance: on the Yosemite map, 106 of 118
+snapped places land exactly on a dark map-symbol pixel at zoom 14 (8 of 118 for points 300 m
+away). Zoom 14 is ~7.5 m per pixel; use `--max-zoom 13` for ~8 MB.
+
+### NPS Park Tiles overlay (vector)
+
+```bash
+brew install pmtiles
+python scripts/extract_park_tiles.py data/yosemite.pdf out/parktiles [--mbtiles]
+```
+
+Cuts the GeoPDF's footprint out of the NPS nationwide
+[Park Tiles](https://www.nps.gov/maps/web/blog/tilejson/index.html) vector tilesets (MVT, zoom
+0–15, PMTiles) with HTTP range requests: ~15 s, ~23 MB for Yosemite: `boundary` (park,
+wilderness), `data` (roads, trails, buildings, parking), `hydro` (streams, lakes) and
+`label-point` (511 named points: restrooms, trailheads, bus stops, campgrounds, viewpoints…).
+`--mbtiles` also writes vector MBTiles copies (`pip install pmtiles`). NPS/USGS data, public domain.
+
+It is a second layer, not a replacement: it is sharp at any zoom and has amenities the printed
+map lacks, but not the printed map's seasonal closures and notices (still from the PDF). The
+two agree: 26 places named in both are a median 141 m apart, and roads/trails/streams overlay
+the printed ones.
+
+Try both together (PDF tiles as base, Park Tiles on top, layer toggles):
+
+```bash
+python tools/map-viewer/serve.py out/yosemite.mbtiles out/parktiles tools/map-viewer/index.html 8766
+# open http://127.0.0.1:8766/
+```
+
+The viewer loads MapLibre and its label fonts from the web; an offline app must bundle the
+renderer's glyph files too.
+
 ### Mobile app (Android)
 
 The app doesn't parse the PDF: `python scripts/build_android_assets.py data/yosemite.pdf` exports

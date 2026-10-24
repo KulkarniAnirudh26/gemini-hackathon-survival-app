@@ -1,0 +1,33 @@
+<!doctype html><meta charset=utf-8><title>Yosemite layers</title>
+<link rel=stylesheet href=https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css>
+<script src=https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js></script>
+<script src=https://unpkg.com/pmtiles@3.2.1/dist/pmtiles.js></script>
+<style>html,body,#m{height:100%;margin:0;font:14px system-ui}#p{position:absolute;top:10px;left:10px;background:#fff;padding:8px 10px;border-radius:6px;box-shadow:0 1px 4px #0004}#p label{display:block}</style>
+<div id=m></div><div id=p>
+<label><input type=checkbox id=base checked> NPS park map (PDF tiles)</label>
+<label><input type=checkbox id=park checked> NPS Park Tiles overlay</label>
+<label>Base opacity <input type=range id=op min=0 max=1 step=0.1 value=1></label></div>
+<script>
+const protocol = new pmtiles.Protocol(); maplibregl.addProtocol("pmtiles", protocol.tile);
+const pm = n => ({type:"vector", url:`pmtiles://${location.origin}/parktiles/yosemite-${n}.pmtiles`});
+const overlay = [
+ {id:"wild", type:"line", source:"boundary", "source-layer":"nps_wilderness_poly", paint:{"line-color":"#2e7d32","line-width":1.5,"line-dasharray":[3,2]}},
+ {id:"bound", type:"line", source:"boundary", "source-layer":"nps_bound_poly", paint:{"line-color":"#1b5e20","line-width":3}},
+ {id:"flow", type:"line", source:"hydro", "source-layer":"nps_hydrography_flowline", minzoom:11, paint:{"line-color":"#1e88e5","line-width":1}},
+ {id:"road", type:"line", source:"data", "source-layer":"nps_road", paint:{"line-color":"#d81b60","line-width":["interpolate",["linear"],["zoom"],9,1,15,4]}},
+ {id:"trail", type:"line", source:"data", "source-layer":"nps_trail", minzoom:11, paint:{"line-color":"#6a1b9a","line-width":2,"line-dasharray":[2,1]}},
+ {id:"poi", type:"circle", source:"label", "source-layer":"nps_point", minzoom:11, paint:{"circle-radius":5,"circle-color":["match",["get","class"],"Restroom","#00897b","Camping","#43a047","Trail","#6a1b9a","Parking","#546e7a","View","#f4511e","#3949ab"],"circle-stroke-color":"#fff","circle-stroke-width":1.5}},
+ {id:"poi-label", type:"symbol", source:"label", "source-layer":"nps_point", minzoom:13, layout:{"text-field":["get","name"],"text-font":["Noto Sans Regular"],"text-size":12,"text-offset":[0,1.1],"text-anchor":"top"}, paint:{"text-color":"#222","text-halo-color":"#fff","text-halo-width":1.5}},
+];
+const map = new maplibregl.Map({container:"m", center:[-119.533,37.746], zoom:13.5, maxZoom:15.5,
+ style:{version:8, glyphs:"https://protomaps.github.io/basemaps-assets/fonts/{fontstack}/{range}.pbf",
+  sources:{pdf:{type:"raster", tiles:[location.origin+"/tiles/{z}/{x}/{y}.jpg"], tileSize:256, minzoom:9, maxzoom:14, attribution:"NPS"},
+   boundary:pm("boundary"), data:pm("data"), hydro:pm("hydro"), label:pm("label-point")},
+  layers:[{id:"bg",type:"background",paint:{"background-color":"#eee"}},{id:"pdf",type:"raster",source:"pdf"}, ...overlay]}});
+map.addControl(new maplibregl.NavigationControl());
+map.on("click","poi",e=>{const p=e.features[0].properties;new maplibregl.Popup().setLngLat(e.lngLat).setHTML(`<b>${p.name}</b><br>${p.class||""}`).addTo(map)});
+const vis=(ids,on)=>ids.forEach(i=>map.setLayoutProperty(i,"visibility",on?"visible":"none"));
+base.onchange=()=>vis(["pdf"],base.checked); park.onchange=()=>vis(overlay.map(l=>l.id),park.checked);
+op.oninput=()=>map.setPaintProperty("pdf","raster-opacity",+op.value);
+window.map=map;
+</script>

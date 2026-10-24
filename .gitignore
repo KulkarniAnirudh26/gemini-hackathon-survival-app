@@ -10,3 +10,5 @@ android/.kotlin/
 android/**/build/
 android/local.properties
 android/captures/
+*.mbtiles
+*.pmtiles
