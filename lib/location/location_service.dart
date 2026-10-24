@@ -37,6 +37,15 @@ class LocationService extends ChangeNotifier {
   final List<Fix> _unsaved = [];
   Fix? _simulated;
 
+  /// The real GPS fix is outside Yosemite: the app shows a demo position instead (Mirror Lake trail),
+  /// until the user taps "use real GPS".
+  bool demoMode = false;
+  bool _demoDismissed = false;
+  Fix? realFix;
+
+  static const demoLat = 37.7445, demoLon = -119.5510;
+  static bool inPark(double lat, double lon) => lat > 37.49 && lat < 38.19 && lon > -119.89 && lon < -119.20;
+
   Future<void> start() async {
     await _loadBreadcrumbs();
     await _refreshBattery();
@@ -45,11 +54,17 @@ class LocationService extends ChangeNotifier {
     if (perm == LocationPermission.denied) perm = await Geolocator.requestPermission();
     if (perm == LocationPermission.denied || perm == LocationPermission.deniedForever) {
       permissionDenied = true;
+      _maybeDemo();
       notifyListeners();
       return;
     }
     final last = await Geolocator.getLastKnownPosition();
-    if (last != null) _onPosition(last);
+    if (last != null) {
+      _onPosition(last);
+    } else {
+      _maybeDemo();
+      notifyListeners();
+    }
     _restartStream();
   }
 
@@ -102,20 +117,45 @@ class LocationService extends ChangeNotifier {
 
   /// Demo / testing: pin a position (long-press on the map).
   void simulate(double lat, double lon) {
+    demoMode = false;
     _simulated = Fix(lat, lon, 5, null, DateTime.now(), simulated: true);
     fix = _simulated;
     _addCrumb(fix!);
     notifyListeners();
   }
 
+  /// Back to the real GPS (also ends demo mode, even outside the park).
   void clearSimulation() {
     _simulated = null;
+    demoMode = false;
+    _demoDismissed = true;
+    fix = realFix;
     notifyListeners();
   }
 
+  void _maybeDemo() {
+    if (_simulated != null || _demoDismissed) return;
+    final r = realFix;
+    if (r == null || !inPark(r.lat, r.lon)) {
+      demoMode = true;
+      _simulated = Fix(demoLat, demoLon, 5, null, DateTime.now(), simulated: true);
+      fix = _simulated;
+    }
+  }
+
   void _onPosition(Position p) {
-    if (_simulated != null) return;
-    fix = Fix(p.latitude, p.longitude, p.accuracy, p.altitude, p.timestamp);
+    realFix = Fix(p.latitude, p.longitude, p.accuracy, p.altitude, p.timestamp);
+    if (demoMode && inPark(p.latitude, p.longitude)) {
+      // a real fix inside the park ends the demo automatically
+      demoMode = false;
+      _simulated = null;
+    }
+    _maybeDemo();
+    if (_simulated != null) {
+      notifyListeners();
+      return;
+    }
+    fix = realFix;
     _addCrumb(fix!);
     notifyListeners();
   }

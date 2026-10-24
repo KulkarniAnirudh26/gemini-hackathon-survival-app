@@ -44,14 +44,14 @@ class TrailRouter {
     final g = geo.graph;
     final want = target ?? (Poi p) => p.isWayOut;
     final (start, snapD) = g.nearestNode(lat, lon);
-    if (start < 0 || snapD > maxSnapM) return _straightLine(lat, lon, want);
+    if (start < 0 || snapD > maxSnapM) return _extraGoals != null ? null : _straightLine(lat, lon, want);
 
     // destination node -> poi
-    final goals = <int, Poi>{};
+    final goals = <int, Poi>{...?_extraGoals};
     for (final p in geo.pois) {
       if (p.node >= 0 && want(p)) goals.putIfAbsent(p.node, () => p);
     }
-    if (goals.isEmpty) return _straightLine(lat, lon, want);
+    if (goals.isEmpty) return _extraGoals != null ? null : _straightLine(lat, lon, want);
 
     final n = g.nodeCount;
     final dist = <int, double>{start: 0};
@@ -88,7 +88,7 @@ class TrailRouter {
         }
       }
     }
-    if (reached == null) return _straightLine(lat, lon, want);
+    if (reached == null) return _extraGoals != null ? null : _straightLine(lat, lon, want);
 
     // walk back
     final edgePath = <int>[];
@@ -124,6 +124,45 @@ class TrailRouter {
       initialBearing: bearingDeg(lat, lon, firstAhead.latitude, firstAhead.longitude),
       trailNames: names.toSet().toList(),
       offTrail: false,
+    );
+  }
+
+  /// Route to an arbitrary place (a tapped map point): snaps it to the trail graph as a goal.
+  RouteResult? routeToPlace(double lat, double lon, String name, double toLat, double toLon) {
+    final (node, d) = geo.graph.nearestNode(toLat, toLon);
+    final place = Poi(name, PoiType.trailhead, toLat, toLon, geo.dem.elevation(toLat, toLon), d < 400 ? node : -1);
+    if (place.node < 0) return _straightLineTo(lat, lon, place);
+    final r = _routeWithGoals(lat, lon, {place.node: place});
+    return r ?? _straightLineTo(lat, lon, place);
+  }
+
+  RouteResult? _routeWithGoals(double lat, double lon, Map<int, Poi> goals) {
+    final saved = _extraGoals;
+    _extraGoals = goals;
+    try {
+      return routeOut(lat, lon, target: (_) => false);
+    } finally {
+      _extraGoals = saved;
+    }
+  }
+
+  Map<int, Poi>? _extraGoals;
+
+  RouteResult _straightLineTo(double lat, double lon, Poi p) {
+    final d = haversineM(lat, lon, p.lat, p.lon);
+    final e0 = geo.dem.elevation(lat, lon) ?? 0;
+    final e1 = p.elev ?? e0;
+    final up = (e1 - e0).clamp(0, double.infinity).toDouble();
+    return RouteResult(
+      target: p,
+      points: [LatLng(lat, lon), p.latLng],
+      distanceM: d,
+      ascentM: up,
+      descentM: (e0 - e1).clamp(0, double.infinity).toDouble(),
+      walkTime: naismith(d * 1.4, up, paceFactor: 1.6),
+      initialBearing: bearingDeg(lat, lon, p.lat, p.lon),
+      trailNames: const [],
+      offTrail: true,
     );
   }
 

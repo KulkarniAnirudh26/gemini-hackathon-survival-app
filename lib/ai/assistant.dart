@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 import '../geo/geo_data.dart';
+import '../geo/nps_layers.dart';
 import '../geo/trail_router.dart';
 import '../location/location_service.dart';
 import '../rag/guide.dart';
@@ -32,6 +33,7 @@ class Assistant extends ChangeNotifier {
   final LocationService location;
   GeoData? geo;
   TrailRouter? router;
+  NpsLayers? nps;
   Guide? guide;
   late final QuestionRouter questionRouter = QuestionRouter(ai);
 
@@ -54,6 +56,7 @@ class Assistant extends ChangeNotifier {
       guide = await Guide.load();
       geo = await GeoData.load();
       router = TrailRouter(geo!);
+      nps = await NpsLayers.load();
     } catch (e) {
       status = 'Map data missing: $e';
     }
