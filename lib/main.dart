@@ -21,11 +21,11 @@ class SurvivalApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => MaterialApp(
-        title: 'Yosemite Survival',
-        debugShowCheckedModeBanner: false,
-        theme: survivalTheme(),
-        home: Shell(assistant: assistant, location: location),
-      );
+    title: 'Sherpa',
+    debugShowCheckedModeBanner: false,
+    theme: survivalTheme(),
+    home: Shell(assistant: assistant, location: location),
+  );
 }
 
 class Shell extends StatefulWidget {
@@ -38,7 +38,7 @@ class Shell extends StatefulWidget {
 }
 
 class _ShellState extends State<Shell> with WidgetsBindingObserver {
-  int _tab = 0;
+  int _tab = 1; // open on the assistant
 
   @override
   void initState() {
@@ -60,22 +60,72 @@ class _ShellState extends State<Shell> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     final pages = [
-      HomeScreen(assistant: widget.assistant, location: widget.location),
       // the map is only built while visible (battery: no rendering in the background)
-      if (_tab == 1) MapScreen(assistant: widget.assistant, location: widget.location) else const SizedBox(),
+      if (_tab == 0) MapScreen(assistant: widget.assistant, location: widget.location) else const SizedBox(),
+      HomeScreen(assistant: widget.assistant, location: widget.location),
       GuideScreen(assistant: widget.assistant),
     ];
     return Scaffold(
-      body: SafeArea(child: IndexedStack(index: _tab, children: pages)),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _tab,
-        onDestinationSelected: (i) => setState(() => _tab = i),
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.mic_none), selectedIcon: Icon(Icons.mic), label: 'Talk'),
-          NavigationDestination(icon: Icon(Icons.map_outlined), selectedIcon: Icon(Icons.map), label: 'Map'),
-          NavigationDestination(icon: Icon(Icons.menu_book_outlined), selectedIcon: Icon(Icons.menu_book), label: 'Guide'),
-        ],
+      body: SafeArea(
+        child: Column(
+          children: [
+            const _Header(),
+            Expanded(
+              child: IndexedStack(index: _tab, children: pages),
+            ),
+          ],
+        ),
+      ),
+      bottomNavigationBar: DecoratedBox(
+        decoration: const BoxDecoration(
+          border: Border(top: BorderSide(color: kLine)),
+        ),
+        child: NavigationBar(
+          selectedIndex: _tab,
+          onDestinationSelected: (i) => setState(() => _tab = i),
+          destinations: const [
+            NavigationDestination(
+              icon: Icon(Icons.explore_outlined, color: kInkMuted),
+              selectedIcon: Icon(Icons.explore, color: kInk),
+              label: 'TRAIL MAP',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.auto_awesome_outlined, color: kInkMuted),
+              selectedIcon: Icon(Icons.auto_awesome, color: kMoss),
+              label: 'GEMMA AI',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.emergency_outlined, color: kClay),
+              selectedIcon: Icon(Icons.emergency, color: kClay),
+              label: 'SOS & AID',
+            ),
+          ],
+        ),
       ),
     );
   }
+}
+
+class _Header extends StatelessWidget {
+  const _Header();
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+    decoration: const BoxDecoration(
+      border: Border(bottom: BorderSide(color: kLine)),
+    ),
+    child: Row(
+      children: [
+        Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(color: kInk, borderRadius: BorderRadius.circular(8)),
+          child: const Icon(Icons.landscape, color: kClay, size: 22),
+        ),
+        const SizedBox(width: 8),
+        Text('SHERPA', style: label(kInk, size: 20).copyWith(letterSpacing: 0.4)),
+      ],
+    ),
+  );
 }

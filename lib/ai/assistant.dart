@@ -18,6 +18,7 @@ class ChatMessage {
   final bool user;
   String text;
   String? meta;
+  final DateTime at = DateTime.now();
   ChatMessage(this.user, this.text, {this.meta});
 }
 

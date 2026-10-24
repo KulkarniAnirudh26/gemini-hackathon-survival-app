@@ -28,60 +28,60 @@ class _Style {
   const _Style(this.icon, this.color, this.minZoom);
 }
 
-const _roadColor = Color(0xFFD7CCC8);
-const _waterFill = Color(0xFF1B4F72);
-const _streamColor = Color(0xFF4A90C2);
+const _roadColor = Color(0xFF9E958A);
+const _waterFill = Color(0xFFA9CCE3);
+const _streamColor = Color(0xFF3E86BF);
 const _parkFill = Color(0x1A66BB6A);
-const _buildingFill = Color(0xFF8D6E63);
-const _parkingFill = Color(0xFF424242);
+const _buildingFill = Color(0xFFB9A89E);
+const _parkingFill = Color(0xFFD5DAD5);
 
 _Style _styleFor(NpsPoint p) {
   switch (p.kind) {
     case 'trailhead':
-      return const _Style(Icons.hiking, kAccent, 11);
+      return const _Style(Icons.hiking, kClay, 11);
     case 'entrance station':
-      return const _Style(Icons.flag, kGood, 10);
+      return const _Style(Icons.flag, kMoss, 10);
     case 'ranger station':
     case 'first aid station':
-      return const _Style(Icons.local_hospital, kDanger, 11);
+      return const _Style(Icons.local_hospital, kClay, 11);
     case 'visitor center':
     case 'information':
-      return const _Style(Icons.info, kDanger, 11);
+      return const _Style(Icons.info, kClay, 11);
     case 'drinking water':
     case 'spring':
       return const _Style(Icons.water_drop, kWater, 12);
     case 'campground':
     case 'backcountry campsite':
-      return const _Style(Icons.cabin, Colors.white, 12);
+      return const _Style(Icons.cabin, kInk, 12);
     case 'hut':
     case 'historic cabin':
     case 'shelter':
-      return const _Style(Icons.house_siding, Colors.white, 12);
+      return const _Style(Icons.house_siding, kInk, 12);
     case 'waterfall':
     case 'falls':
       return const _Style(Icons.waves, kWater, 12);
     case 'viewpoint':
       return const _Style(Icons.visibility, kTrail, 13);
     case 'parking lot':
-      return const _Style(Icons.local_parking, kMuted, 14);
+      return const _Style(Icons.local_parking, kInkMuted, 14);
     case 'lodging':
     case 'store':
     case 'food service':
     case 'gas station':
-      return const _Style(Icons.storefront, kMuted, 14);
+      return const _Style(Icons.storefront, kInkMuted, 14);
     case 'restroom':
-      return const _Style(Icons.wc, kMuted, 15);
+      return const _Style(Icons.wc, kInkMuted, 15);
     case 'bus stop / shuttle stop':
-      return const _Style(Icons.directions_bus, kMuted, 15);
+      return const _Style(Icons.directions_bus, kInkMuted, 15);
     case 'peak':
     case 'summit':
-      return const _Style(Icons.landscape, Color(0xFFBCAAA4), 12);
+      return const _Style(Icons.landscape, kTrail, 12);
     case 'small lake':
     case 'lake':
     case 'reservoir':
       return const _Style(Icons.water, _streamColor, 13);
     default:
-      return _Style(Icons.place, kMuted, p.isLabel ? 13 : 14);
+      return _Style(Icons.place, kInkMuted, p.isLabel ? 13 : 14);
   }
 }
 
@@ -134,10 +134,10 @@ class _MapScreenState extends State<MapScreen> {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: p.isLabel ? 11 : 10,
-                  color: p.isLabel ? s.color : Colors.white,
+                  color: p.isLabel ? s.color : kInk,
                   fontStyle: p.isLabel && p.kind.contains('lake') ? FontStyle.italic : FontStyle.normal,
                   fontWeight: p.isLabel ? FontWeight.w600 : FontWeight.w500,
-                  shadows: const [Shadow(blurRadius: 3, color: Colors.black), Shadow(blurRadius: 6, color: Colors.black)],
+                  shadows: const [Shadow(blurRadius: 3, color: kCard), Shadow(blurRadius: 6, color: kCard)],
                 ),
               ),
           ]),
@@ -154,7 +154,7 @@ class _MapScreenState extends State<MapScreen> {
     final s = _styleFor(p);
     showModalBottomSheet(
       context: context,
-      backgroundColor: kSurface,
+      backgroundColor: kCard,
       showDragHandle: true,
       builder: (ctx) => Padding(
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
@@ -172,7 +172,7 @@ class _MapScreenState extends State<MapScreen> {
               if (f != null)
                 '${formatDistance(haversineM(f.lat, f.lon, p.lat, p.lon))} ${compassWord(bearingDeg(f.lat, f.lon, p.lat, p.lon))} of you',
             ].join(' · '),
-            style: const TextStyle(color: kMuted),
+            style: const TextStyle(color: kInkMuted),
           ),
           if (p.description != null) ...[
             const SizedBox(height: 10),
@@ -234,7 +234,7 @@ class _MapScreenState extends State<MapScreen> {
               initialZoom: 14,
               minZoom: 9,
               maxZoom: 17,
-              backgroundColor: kBlack,
+              backgroundColor: kGround,
               cameraConstraint: CameraConstraint.contain(bounds: bounds),
               interactionOptions: const InteractionOptions(flags: InteractiveFlag.all & ~InteractiveFlag.rotate),
               onPositionChanged: (camera, _) {
@@ -251,7 +251,8 @@ class _MapScreenState extends State<MapScreen> {
             ),
             children: [
               OverlayImageLayer(overlayImages: [
-                OverlayImage(bounds: bounds, imageProvider: const AssetImage('assets/geo/hillshade.png')),
+                // the hillshade is rendered dark; fade it over the light canvas
+                OverlayImage(bounds: bounds, opacity: 0.35, imageProvider: const AssetImage('assets/geo/hillshade.png')),
               ]),
               PolygonLayer(polygons: _park),
               PolygonLayer(polygons: _water),
@@ -266,10 +267,10 @@ class _MapScreenState extends State<MapScreen> {
                 ]),
               if (route != null)
                 PolylineLayer(polylines: [
-                  Polyline(points: route.points, color: Colors.black, strokeWidth: 8),
+                  Polyline(points: route.points, color: kCard, strokeWidth: 8),
                   Polyline(
                     points: route.points,
-                    color: kGood,
+                    color: kMoss,
                     strokeWidth: 5,
                     pattern: route.offTrail ? StrokePattern.dashed(segments: const [10, 8]) : const StrokePattern.solid(),
                   ),
@@ -277,7 +278,7 @@ class _MapScreenState extends State<MapScreen> {
               MarkerLayer(markers: _markers(nps, z)),
               if (route != null)
                 MarkerLayer(markers: [
-                  Marker(point: route.target.latLng, width: 36, height: 36, child: const Icon(Icons.flag_circle, color: kGood, size: 34)),
+                  Marker(point: route.target.latLng, width: 36, height: 36, child: const Icon(Icons.flag_circle, color: kMoss, size: 34)),
                 ]),
               if (me != null)
                 MarkerLayer(markers: [
@@ -288,7 +289,7 @@ class _MapScreenState extends State<MapScreen> {
                     child: Container(
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: f!.simulated ? kAccent : kWater,
+                        color: f!.simulated ? kClay : kWater,
                         border: Border.all(color: Colors.white, width: 3),
                       ),
                     ),
@@ -304,11 +305,11 @@ class _MapScreenState extends State<MapScreen> {
             child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               if (widget.location.demoMode)
                 Card(
-                  color: const Color(0xFF3E2723),
+                  color: const Color(0xFFFFDBCF),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     child: Row(children: [
-                      const Icon(Icons.science, color: kAccent, size: 18),
+                      const Icon(Icons.science, color: kClay, size: 18),
                       const SizedBox(width: 8),
                       const Expanded(
                         child: Text('Demo position: you are outside Yosemite. Long-press the map to move.',
@@ -330,10 +331,10 @@ class _MapScreenState extends State<MapScreen> {
                           Text(
                             '${formatDistance(route.distanceM)} · +${route.ascentM.round()} m / -${route.descentM.round()} m · ~${formatDuration(route.walkTime)}'
                             ' · head ${compassShort(route.initialBearing)}${route.offTrail ? ' · off trail' : ''}',
-                            style: const TextStyle(color: kMuted),
+                            style: const TextStyle(color: kInkMuted),
                           ),
                           if (s.untilSunset != null && !s.untilSunset!.isNegative && route.walkTime > s.untilSunset!)
-                            const Text('Longer than the daylight left: plan for the night.', style: TextStyle(color: kDanger)),
+                            const Text('Longer than the daylight left: plan for the night.', style: TextStyle(color: kClay)),
                         ]),
                       ),
                       if (_custom != null)
