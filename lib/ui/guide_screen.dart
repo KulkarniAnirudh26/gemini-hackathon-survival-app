@@ -26,7 +26,20 @@ class GuideScreen extends StatelessWidget {
                   child: ExpansionTile(
                     title: Text(s.title, style: const TextStyle(fontWeight: FontWeight.w600)),
                     subtitle: Text(s.summary, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: kMuted)),
-                    trailing: IconButton(icon: const Icon(Icons.volume_up, color: kAccent), onPressed: () => assistant.ai.speak(s.summary)),
+                    trailing: assistant.speaking && assistant.speakingSource == 'guide:${s.id}'
+                        ? IconButton(
+                            tooltip: 'Stop',
+                            icon: const Icon(Icons.stop_circle, color: kDanger, size: 32),
+                            onPressed: assistant.stopSpeaking,
+                          )
+                        : IconButton(
+                            tooltip: 'Read aloud',
+                            icon: const Icon(Icons.volume_up, color: kAccent),
+                            onPressed: () async {
+                              if (assistant.speaking) await assistant.stopSpeaking();
+                              assistant.speak('${s.title}. ${s.summary}', source: 'guide:${s.id}');
+                            },
+                          ),
                     childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                     children: [
                       Text(s.summary, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),

@@ -67,15 +67,37 @@ class _ShellState extends State<Shell> with WidgetsBindingObserver {
     ];
     return Scaffold(
       body: SafeArea(child: IndexedStack(index: _tab, children: pages)),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _tab,
-        onDestinationSelected: (i) => setState(() => _tab = i),
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.mic_none), selectedIcon: Icon(Icons.mic), label: 'Talk'),
-          NavigationDestination(icon: Icon(Icons.map_outlined), selectedIcon: Icon(Icons.map), label: 'Map'),
-          NavigationDestination(icon: Icon(Icons.menu_book_outlined), selectedIcon: Icon(Icons.menu_book), label: 'Guide'),
-        ],
-      ),
+      bottomNavigationBar: Column(mainAxisSize: MainAxisSize.min, children: [
+        // speech can be stopped from every tab
+        ListenableBuilder(
+          listenable: widget.assistant,
+          builder: (_, _) => widget.assistant.speaking
+              ? Material(
+                  color: const Color(0xFF4A1515),
+                  child: InkWell(
+                    onTap: widget.assistant.stopSpeaking,
+                    child: const SizedBox(
+                      height: 52,
+                      child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                        Icon(Icons.stop_circle, color: Colors.white, size: 28),
+                        SizedBox(width: 10),
+                        Text('Stop speaking', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+                      ]),
+                    ),
+                  ),
+                )
+              : const SizedBox.shrink(),
+        ),
+        NavigationBar(
+          selectedIndex: _tab,
+          onDestinationSelected: (i) => setState(() => _tab = i),
+          destinations: const [
+            NavigationDestination(icon: Icon(Icons.mic_none), selectedIcon: Icon(Icons.mic), label: 'Talk'),
+            NavigationDestination(icon: Icon(Icons.map_outlined), selectedIcon: Icon(Icons.map), label: 'Map'),
+            NavigationDestination(icon: Icon(Icons.menu_book_outlined), selectedIcon: Icon(Icons.menu_book), label: 'Guide'),
+          ],
+        ),
+      ]),
     );
   }
 }

@@ -88,6 +88,7 @@ class AiCore(private val context: Context, private val emit: (Map<String, Any?>)
         .onFailure { Log.e(TAG, "kitten", it); status["kittenError"] = it.message }
         .isSuccess
     status["gemmaPresent"] = File(modelsDir, GEMMA_FILE).exists()
+    status["voices"] = voices()
     status
   }
 
@@ -211,9 +212,25 @@ class AiCore(private val context: Context, private val emit: (Map<String, Any?>)
     SentenceSplitter.split(stripForSpeech(text)).forEach { speechQueue.trySend(it) }
   }
 
+  /** Bumped by [stopSpeaking]: a sentence synthesized under an older generation is dropped. */
+  @Volatile private var speechGen = 0
+
+  /** Calm defaults: a warm voice, a little slower than the publisher's pace. */
+  @Volatile var voice: String? = null
+  @Volatile var speed: Float = 0.85f
+
+  fun voices(): List<String> = tts?.voices ?: emptyList()
+
+  fun setVoice(name: String?, newSpeed: Float) {
+    voice = name?.takeIf { it in voices() }
+    speed = newSpeed.coerceIn(0.6f, 1.3f)
+  }
+
   fun stopSpeaking() {
+    speechGen++
     while (speechQueue.tryReceive().isSuccess) {}
     player?.stop()
+    emit(mapOf("type" to "tts_done"))
   }
 
   private fun startSpeechWorker() {
@@ -225,11 +242,15 @@ class AiCore(private val context: Context, private val emit: (Map<String, Any?>)
           val p = player ?: continue
           val clean = stripForSpeech(sentence)
           if (clean.isBlank()) continue
+          val gen = speechGen
           try {
             emit(mapOf("type" to "tts_start", "text" to clean))
-            val audio = s.synthesize(clean.take(LiteRtSpeaker.MAX_CHARS), null, 1f)
+            val audio = s.synthesize(clean.take(LiteRtSpeaker.MAX_CHARS), voice, speed)
+            if (gen != speechGen) continue // stopped while synthesizing
             p.play(audio.samples)
-            if (speechQueue.isEmpty) {
+            // a short breath between sentences: slower, calmer delivery
+            if (gen == speechGen) p.play(FloatArray(s.sampleRate * SENTENCE_PAUSE_MS / 1000))
+            if (speechQueue.isEmpty && gen == speechGen) {
               p.drain()
               emit(mapOf("type" to "tts_done"))
             }
@@ -252,6 +273,7 @@ class AiCore(private val context: Context, private val emit: (Map<String, Any?>)
     private const val MAX_SAMPLES = SAMPLE_RATE * 16 // Zipformer's 16 s window
     private const val MIN_SAMPLES = SAMPLE_RATE / 4
     private const val LLM_IDLE_MS = 5 * 60 * 1000L
+    private const val SENTENCE_PAUSE_MS = 280
 
     fun normalizeTranscript(text: String): String {
       val t = text.trim().lowercase()

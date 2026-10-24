@@ -32,5 +32,7 @@ class AiBridge {
   Future<void> cancelGenerate() => _method.invokeMethod('cancelGenerate');
   Future<void> speak(String text) => _method.invokeMethod('speak', {'text': text});
   Future<void> stopSpeaking() => _method.invokeMethod('stopSpeaking');
+  Future<void> setVoice(String? voice, double speed) =>
+      _method.invokeMethod('setVoice', {'voice': voice, 'speed': speed});
   Future<void> unloadLlm() => _method.invokeMethod('unloadLlm');
 }

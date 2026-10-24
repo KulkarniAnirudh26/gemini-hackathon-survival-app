@@ -22,6 +22,13 @@ class Templates {
     }
   }
 
+  /// A short reassurance before the facts when the person sounds worried or at risk.
+  static String calm(RouteDecision d) {
+    if (d.urgency >= 1.5) return "Okay, stay with me. You're doing the right thing. ";
+    if (d.urgency >= 0.8) return "Okay, I've got you. ";
+    return '';
+  }
+
   static const _noFix = 'I do not have a GPS fix yet. Step into the open with a clear view of the sky and ask me again in a minute.';
 
   static String water(Situation s) {

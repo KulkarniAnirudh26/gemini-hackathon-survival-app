@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../ai/assistant.dart';
 import '../ai/situation.dart';
@@ -239,8 +240,77 @@ class _StatusLine extends StatelessWidget {
           Icon(a.llmLoaded ? Icons.memory : Icons.memory_outlined, size: 14, color: a.llmLoaded ? kAccent : kMuted),
           const SizedBox(width: 4),
           Expanded(child: Text(a.status, style: const TextStyle(color: kMuted, fontSize: 12), overflow: TextOverflow.ellipsis)),
-          Text('templates ${a.templateAnswers} · gemma ${a.llmAnswers}', style: const TextStyle(color: kMuted, fontSize: 11)),
+          Text('⚡ quick ${a.templateAnswers} · 🧠 gemma ${a.llmAnswers}', style: const TextStyle(color: kMuted, fontSize: 11)),
+          IconButton(
+            visualDensity: VisualDensity.compact,
+            tooltip: 'Voice',
+            icon: const Icon(Icons.record_voice_over, size: 18, color: kMuted),
+            onPressed: () => showModalBottomSheet(
+              context: context,
+              backgroundColor: kSurface,
+              showDragHandle: true,
+              builder: (_) => _VoiceSheet(a: a),
+            ),
+          ),
         ]),
+      );
+}
+
+/// Pick the KittenTTS voice and pace; "Test" speaks a calm sample line.
+class _VoiceSheet extends StatelessWidget {
+  final Assistant a;
+  const _VoiceSheet({required this.a});
+
+  static String _label(String v) {
+    final m = RegExp(r'expr-voice-(\d)-(m|f)').firstMatch(v);
+    if (m == null) return v;
+    return '${m.group(2) == 'f' ? 'Female' : 'Male'} voice ${int.parse(m.group(1)!) - 1}';
+  }
+
+  @override
+  Widget build(BuildContext context) => ListenableBuilder(
+        listenable: a,
+        builder: (context, _) => Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Text('Voice', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+            const Text('KittenTTS, on-device. A slower pace sounds calmer.', style: TextStyle(color: kMuted)),
+            const SizedBox(height: 12),
+            Wrap(spacing: 8, runSpacing: 8, children: [
+              for (final v in a.voices)
+                ChoiceChip(
+                  label: Text(_label(v)),
+                  selected: (a.voice ?? (a.voices.isEmpty ? null : a.voices.first)) == v,
+                  onSelected: (_) => a.setVoice(v, a.speed),
+                ),
+            ]),
+            const SizedBox(height: 12),
+            Row(children: [
+              const Text('Pace'),
+              Expanded(
+                child: Slider(
+                  value: a.speed,
+                  min: 0.7,
+                  max: 1.1,
+                  divisions: 8,
+                  label: '${a.speed.toStringAsFixed(2)}x',
+                  onChanged: (v) => a.setVoice(a.voice, v),
+                ),
+              ),
+              Text('${a.speed.toStringAsFixed(2)}x'),
+            ]),
+            const SizedBox(height: 8),
+            FilledButton.icon(
+              icon: Icon(a.speaking ? Icons.stop : Icons.play_arrow),
+              label: Text(a.speaking ? 'Stop' : 'Test voice'),
+              onPressed: () async {
+                if (a.speaking) return a.stopSpeaking();
+                a.speak("Okay, I'm here with you. Take a slow breath. We'll find the way out together, one step at a time.",
+                    source: 'voice-test');
+              },
+            ),
+          ]),
+        ),
       );
 }
 
@@ -249,47 +319,85 @@ class _Composer extends StatelessWidget {
   final TextEditingController text;
   const _Composer({required this.a, required this.text});
 
+  void _send() {
+    final v = text.text.trim();
+    if (v.isEmpty) return;
+    a.ask(v);
+    text.clear();
+  }
+
   @override
   Widget build(BuildContext context) {
     final listening = a.phase == Phase.listening;
     final working = a.busy && !listening;
+    final stopMode = working || a.speaking;
+    final loading = a.phase == Phase.loading;
+    final color = loading
+        ? kSurfaceHigh
+        : listening
+            ? kDanger
+            : stopMode
+                ? const Color(0xFF616161)
+                : kAccent;
+    final caption = loading
+        ? 'Loading models…'
+        : listening
+            ? 'Listening… release to send'
+            : stopMode
+                ? 'Tap to stop'
+                : 'Hold to talk';
+    final icon = listening
+        ? Icons.graphic_eq
+        : stopMode
+            ? Icons.stop
+            : Icons.mic;
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
-      child: Row(children: [
-        Expanded(
-          child: TextField(
-            controller: text,
-            enabled: !working && a.phase != Phase.loading,
-            textInputAction: TextInputAction.send,
-            decoration: const InputDecoration(
-              hintText: 'Or type a question',
-              filled: true,
-              fillColor: kSurface,
-              border: OutlineInputBorder(borderSide: BorderSide.none, borderRadius: BorderRadius.all(Radius.circular(24))),
-              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        Row(children: [
+          Expanded(
+            child: TextField(
+              controller: text,
+              enabled: !working && !loading,
+              textInputAction: TextInputAction.send,
+              style: const TextStyle(fontSize: 14),
+              decoration: const InputDecoration(
+                isDense: true,
+                hintText: 'Or type a question',
+                filled: true,
+                fillColor: kSurface,
+                border: OutlineInputBorder(borderSide: BorderSide.none, borderRadius: BorderRadius.all(Radius.circular(20))),
+                contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              ),
+              onSubmitted: (_) => _send(),
             ),
-            onSubmitted: (v) {
-              if (v.trim().isEmpty) return;
-              a.ask(v.trim());
-              text.clear();
-            },
+          ),
+          IconButton(onPressed: working || loading ? null : _send, icon: const Icon(Icons.send, color: kAccent)),
+        ]),
+        const SizedBox(height: 10),
+        GestureDetector(
+          onTapDown: stopMode || loading
+              ? null
+              : (_) {
+                  HapticFeedback.mediumImpact();
+                  a.pressTalk();
+                },
+          onTapUp: stopMode || loading ? null : (_) => a.releaseTalk(),
+          onTapCancel: stopMode || loading ? null : () => a.releaseTalk(),
+          onTap: stopMode ? a.stop : null,
+          child: Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: color,
+              border: Border.all(color: listening ? Colors.white : Colors.transparent, width: 4),
+            ),
+            child: Icon(icon, size: 60, color: Colors.black),
           ),
         ),
-        const SizedBox(width: 10),
-        if (working || a.phase == Phase.speaking)
-          IconButton.filledTonal(iconSize: 32, onPressed: a.stop, icon: const Icon(Icons.stop))
-        else
-          GestureDetector(
-            onTapDown: (_) => a.pressTalk(),
-            onTapUp: (_) => a.releaseTalk(),
-            onTapCancel: () => a.releaseTalk(),
-            child: Container(
-              width: 72,
-              height: 72,
-              decoration: BoxDecoration(shape: BoxShape.circle, color: listening ? kDanger : kAccent),
-              child: Icon(listening ? Icons.graphic_eq : Icons.mic, size: 36, color: Colors.black),
-            ),
-          ),
+        const SizedBox(height: 6),
+        Text(caption, style: TextStyle(color: listening ? kDanger : kMuted, fontSize: 14, fontWeight: FontWeight.w600)),
       ]),
     );
   }

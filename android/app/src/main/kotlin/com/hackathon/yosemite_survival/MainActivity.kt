@@ -60,6 +60,10 @@ class MainActivity : FlutterActivity() {
             "cancelGenerate" -> { ai.cancelGenerate(); result.success(null) }
             "speak" -> { ai.speak(call.argument<String>("text")!!); result.success(null) }
             "stopSpeaking" -> { ai.stopSpeaking(); result.success(null) }
+            "setVoice" -> {
+              ai.setVoice(call.argument<String>("voice"), (call.argument<Double>("speed") ?: 0.85).toFloat())
+              result.success(null)
+            }
             "unloadLlm" -> { ai.unloadLlm(); result.success(null) }
             "status" -> result.success(mapOf("llmLoaded" to ai.llmLoaded()))
             else -> result.notImplemented()

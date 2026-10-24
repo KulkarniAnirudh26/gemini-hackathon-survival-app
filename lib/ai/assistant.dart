@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../geo/geo_data.dart';
 import '../geo/nps_layers.dart';
@@ -21,9 +22,10 @@ class ChatMessage {
   ChatMessage(this.user, this.text, {this.meta});
 }
 
-const systemPrompt = '''You are a calm, practical wilderness survival guide inside an offline phone app in Yosemite National Park.
-The user may be lost, injured, cold, scared or low on battery. Speak to them directly.
-Rules: answer in one to three short spoken sentences, most important action first. No markdown, no lists.
+const systemPrompt = '''You are a calm, warm and practical wilderness survival guide inside an offline phone app in Yosemite National Park.
+The user may be lost, injured, cold, scared or low on battery. Speak to them gently and directly, like a steady friend beside them.
+Start with a few words of reassurance (for example "You're doing the right thing." or "Okay, we'll handle this together."), then give the single most important action.
+Rules: answer in two to four short, simple spoken sentences. Use calm, plain words; never sound alarmed. No markdown, no lists.
 Use the SITUATION, ROUTE, NEAREST and GUIDE data given with the question; never invent trails, places or distances.
 If anything sounds life-threatening, tell them to call 911 or use Satellite SOS.''';
 
@@ -45,6 +47,13 @@ class Assistant extends ChangeNotifier {
   ChatMessage? _streaming;
   StreamSubscription<Map<String, dynamic>>? _eventsSub;
   int templateAnswers = 0, llmAnswers = 0;
+
+  /// True while KittenTTS is speaking anything (chat, guide, map), so every screen can offer Stop.
+  bool speaking = false;
+  String? speakingSource; // e.g. 'guide:bear', 'chat', 'map'
+  List<String> voices = const [];
+  String? voice;
+  double speed = 0.85;
 
   Assistant(this.location);
 
@@ -68,6 +77,8 @@ class Assistant extends ChangeNotifier {
       final dir = await ai.modelsDir();
       models = await ai.init(dir!);
       questionRouter.layaReady = models['laya'] == true;
+      voices = [for (final v in (models['voices'] as List?) ?? const []) v as String];
+      await _loadVoicePrefs();
       final missing = [
         if (models['zipformer'] != true) 'speech',
         if (models['laya'] != true) 'router',
@@ -101,10 +112,15 @@ class Assistant extends ChangeNotifier {
         if (phase == Phase.thinking) phase = Phase.ready;
         status = 'Ready.';
       case 'tts_start':
-        phase = Phase.speaking;
+        speaking = true;
+        if (phase == Phase.ready) phase = Phase.speaking;
       case 'tts_done':
-        if (_streaming == null) phase = Phase.ready;
+        speaking = false;
+        speakingSource = null;
+        if (status == 'Speaking…') status = 'Ready.';
+        if (_streaming == null && phase == Phase.speaking) phase = Phase.ready;
       case 'error':
+        speaking = false;
         status = 'Error: ${e['message']}';
         _streaming = null;
         phase = Phase.ready;
@@ -162,27 +178,71 @@ class Assistant extends ChangeNotifier {
 
     switch (route) {
       case Route.emergency:
-        _say(Templates.emergency(decision, g), decision, 'emergency script');
+        _say(Templates.emergency(decision, g), decision, '🚨 Laya → emergency script, then Gemma');
         // then let Gemma add situation-specific advice, unless the battery is critical
         if (!critical && models['gemmaPresent'] == true) await _llm(text, decision, s);
       case Route.template:
         templateAnswers++;
-        _say(Templates.answer(decision.intent, s), decision, 'template, no LLM');
+        _say(Templates.calm(decision) + Templates.answer(decision.intent, s), decision, '⚡ Laya → instant answer from map data (no LLM)');
       case Route.guide:
         templateAnswers++;
         final topic = decision.topicConfidence >= 0.5 ? decision.topic : g.search(text, k: 1).firstOrNull?.section.id;
-        _say(Templates.guideSummary(topic ?? 'lost_stop', g), decision, 'guide: ${topic ?? 'lost_stop'}');
+        final title = g.byId(topic ?? 'lost_stop')?.title ?? 'guide';
+        _say(Templates.calm(decision) + Templates.guideSummary(topic ?? 'lost_stop', g), decision,
+            '⚡ Laya → survival guide: $title (no LLM)');
       case Route.llm:
         await _llm(text, decision, s);
     }
   }
 
   void _say(String text, RouteDecision d, String how) {
-    messages.add(ChatMessage(false, text, meta: '$how · $d'));
+    messages.add(ChatMessage(false, text, meta: '$how\n$d'));
     phase = Phase.speaking;
     status = 'Speaking…';
     notifyListeners();
+    speak(text, source: 'chat');
+  }
+
+  /// Speak from any screen; [source] lets a screen show its own stop toggle.
+  void speak(String text, {required String source}) {
+    speakingSource = source;
+    speaking = true;
+    notifyListeners();
     ai.speak(text);
+  }
+
+  Future<void> stopSpeaking() async {
+    speaking = false;
+    speakingSource = null;
+    if (status == 'Speaking…') status = 'Ready.';
+    if (phase == Phase.speaking) phase = Phase.ready;
+    notifyListeners();
+    await ai.stopSpeaking();
+  }
+
+  Future<void> setVoice(String? v, double s) async {
+    voice = v;
+    speed = s;
+    notifyListeners();
+    await ai.setVoice(v, s);
+    try {
+      final p = await SharedPreferences.getInstance();
+      if (v == null) {
+        await p.remove('voice');
+      } else {
+        await p.setString('voice', v);
+      }
+      await p.setDouble('speed', s);
+    } catch (_) {}
+  }
+
+  Future<void> _loadVoicePrefs() async {
+    try {
+      final p = await SharedPreferences.getInstance();
+      voice = p.getString('voice') ?? (voices.contains('expr-voice-2-f') ? 'expr-voice-2-f' : null);
+      speed = p.getDouble('speed') ?? 0.85;
+    } catch (_) {}
+    await ai.setVoice(voice, speed);
   }
 
   Future<void> _llm(String question, RouteDecision d, Situation s) async {
@@ -195,19 +255,21 @@ class Assistant extends ChangeNotifier {
       if (hits.length < 2 && hits.every((x) => x.section.id != h.section.id)) hits.add(h);
     }
     final prompt = '${s.contextBlock(hits)}\n\nQuestion: $question';
-    final msg = ChatMessage(false, '', meta: 'Gemma 4 E2B · $d · guide: ${hits.map((h) => h.section.id).join(', ')}');
+    final msg = ChatMessage(false, '',
+        meta: '🧠 Laya → Gemma 4 E2B (needs reasoning) · guide: ${hits.map((h) => h.section.id).join(', ')}\n$d');
     messages.add(msg);
     _streaming = msg;
     phase = llmLoaded ? Phase.thinking : Phase.loadingLlm;
     status = llmLoaded ? 'Thinking…' : 'Waking up Gemma…';
     notifyListeners();
-    if (!llmLoaded) ai.speak('Let me think about that.');
+    if (!llmLoaded) speak("Okay. Give me a moment to think about that.", source: 'chat');
+    speakingSource = 'chat';
     await ai.generate(systemPrompt, prompt);
   }
 
   Future<void> stop() async {
     await ai.cancelGenerate();
-    await ai.stopSpeaking();
+    await stopSpeaking();
     _streaming = null;
     phase = Phase.ready;
     status = 'Stopped.';

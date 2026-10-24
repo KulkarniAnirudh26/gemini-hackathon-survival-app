@@ -29,8 +29,8 @@ class RouteDecision {
 
   @override
   String toString() =>
-      '${route.name} · ${intent.name} ${(intentConfidence * 100).round()}% · topic ${topic ?? '-'} '
-      '· urgency ${urgency.toStringAsFixed(1)} · reasoning ${(needsReasoning * 100).round()}% · $source ${ms}ms';
+      'intent ${intent.name} ${(intentConfidence * 100).round()}% · topic ${topic ?? '-'} ${(topicConfidence * 100).round()}% '
+      '· urgency ${urgency.toStringAsFixed(1)}/3 · needs reasoning ${(needsReasoning * 100).round()}% · $source $ms ms';
 }
 
 /// Laya decides whether a question can be answered from data (template), from the guide, or
@@ -147,6 +147,10 @@ class QuestionRouter {
     if (intent == Intent.emergency || urgency >= 2.5) return Route.emergency;
     if (_lookup.contains(intent) && conf >= 0.55 && reasoning < 0.5) return Route.template;
     if (intent == Intent.survivalHowto && conf >= 0.6 && topicConf >= 0.5 && reasoning < 0.5) return Route.guide;
+    // "there is a bear near me": Laya may call the intent "other" but is sure of the topic
+    if ((intent == Intent.other || intent == Intent.survivalHowto) && topicConf >= 0.6 && reasoning < 0.5) {
+      return Route.guide;
+    }
     return Route.llm;
   }
 

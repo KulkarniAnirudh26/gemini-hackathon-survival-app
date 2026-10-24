@@ -201,7 +201,8 @@ class _MapScreenState extends State<MapScreen> {
                 final dist = f == null
                     ? ''
                     : ' It is ${spokenDistance(haversineM(f.lat, f.lon, p.lat, p.lon))} to the ${compassWord(bearingDeg(f.lat, f.lon, p.lat, p.lon))}.';
-                a.ai.speak('${p.name}, ${p.kind}.$dist ${p.description?.replaceAll(RegExp(r'<[^>]+>'), '') ?? ''}');
+                Navigator.pop(ctx); // the global "Stop speaking" bar is then visible
+                a.speak('${p.name}, ${p.kind}.$dist ${p.description?.replaceAll(RegExp(r'<[^>]+>'), '') ?? ''}', source: 'map');
               },
             ),
           ]),
