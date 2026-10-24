@@ -1,0 +1,5135 @@
+{
+ "searches": [
+  {
+   "query": "ANSEL ADAMS",
+   "label": "ANSEL ADAMS",
+   "lat": 37.63801022495108,
+   "lon": -119.22686313373718
+  },
+  {
+   "query": "ASPEN VALLEY",
+   "label": "ASPEN VALLEY",
+   "lat": 37.83698332112383,
+   "lon": -119.77648827862848
+  },
+  {
+   "query": "Alder Creek",
+   "label": "Alder Creek",
+   "lat": 37.59214537641019,
+   "lon": -119.66920719938241
+  },
+  {
+   "query": "Amelia Earhart Peak",
+   "label": "Amelia Earhart Peak",
+   "lat": 37.78823129807596,
+   "lon": -119.2861262230216
+  },
+  {
+   "query": "Arch Rock Entrance",
+   "label": "Arch Rock Entrance",
+   "lat": 37.6884843563408,
+   "lon": -119.73257662279507
+  },
+  {
+   "query": "BUENA VISTA CREST",
+   "label": "BUENA VISTA CREST",
+   "lat": 37.60340716461038,
+   "lon": -119.47305690074673
+  },
+  {
+   "query": "Babcock Lake",
+   "label": "Babcock Lake",
+   "lat": 37.75871378661745,
+   "lon": -119.40914947843717
+  },
+  {
+   "query": "Badger Pass Ski Area",
+   "label": "Badger Pass Ski Area",
+   "lat": 37.661226104208644,
+   "lon": -119.66387229922702
+  },
+  {
+   "query": "Bald Mountain",
+   "label": "Bald Mountain",
+   "lat": 37.85765813932668,
+   "lon": -119.79809909494804
+  },
+  {
+   "query": "Banner Peak",
+   "label": "Banner Peak",
+   "lat": 37.69616049243943,
+   "lon": -119.19461111424741
+  },
+  {
+   "query": "Barney Lake",
+   "label": "Barney Lake",
+   "lat": 38.14005782643797,
+   "lon": -119.429869269888
+  },
+  {
+   "query": "Benson Lake",
+   "label": "Benson Lake",
+   "lat": 38.01041730631324,
+   "lon": -119.52150584996427
+  },
+  {
+   "query": "Benson Pass",
+   "label": "Benson Pass",
+   "lat": 38.00999178725593,
+   "lon": -119.45649148338003
+  },
+  {
+   "query": "Bernice Lake",
+   "label": "Bernice Lake",
+   "lat": 37.76137323581966,
+   "lon": -119.33122957297199
+  },
+  {
+   "query": "Big Oak Flat Entrance",
+   "label": "Big Oak Flat Entrance",
+   "lat": 37.815562204999644,
+   "lon": -119.83672258282097
+  },
+  {
+   "query": "Big Oak Flat Rd",
+   "label": "Big Oak Flat Rd",
+   "lat": 37.72870399837533,
+   "lon": -119.74496212423682
+  },
+  {
+   "query": "Big Oak Flat Road",
+   "label": "Big Oak Flat Road",
+   "lat": 37.765600327677255,
+   "lon": -119.83434130089186
+  },
+  {
+   "query": "Birch Lake",
+   "label": "Birch Lake",
+   "lat": 37.87713460942038,
+   "lon": -119.84990161151484
+  },
+  {
+   "query": "Bishop Creek",
+   "label": "Bishop Creek",
+   "lat": 37.62098122639589,
+   "lon": -119.69705928666238
+  },
+  {
+   "query": "Bond Pass",
+   "label": "Bond Pass",
+   "lat": 38.169083043782194,
+   "lon": -119.61713457234927
+  },
+  {
+   "query": "Bridalveil Creek",
+   "label": "Bridalveil Creek",
+   "lat": 37.663708825259796,
+   "lon": -119.62295327455438
+  },
+  {
+   "query": "Buck Camp",
+   "label": "Buck Camp",
+   "lat": 37.561027761693914,
+   "lon": -119.49079462728093
+  },
+  {
+   "query": "Buckeye Pass",
+   "label": "Buckeye Pass",
+   "lat": 38.137788837982704,
+   "lon": -119.4623338178641
+  },
+  {
+   "query": "Budd Lake",
+   "label": "Budd Lake",
+   "lat": 37.839922195436365,
+   "lon": -119.38918879003997
+  },
+  {
+   "query": "Buena Vista Creek",
+   "label": "Buena Vista Creek",
+   "lat": 37.62172979912021,
+   "lon": -119.50832695436105
+  },
+  {
+   "query": "Buena Vista Peak",
+   "label": "Buena Vista Peak",
+   "lat": 37.59321105953785,
+   "lon": -119.52353489289251
+  },
+  {
+   "query": "Bunnell Point",
+   "label": "Bunnell Point",
+   "lat": 37.73969500930631,
+   "lon": -119.46628543116165
+  },
+  {
+   "query": "Burro Pass",
+   "label": "Burro Pass",
+   "lat": 38.08591472521506,
+   "lon": -119.38667201020642
+  },
+  {
+   "query": "CATHEDRAL RANGE",
+   "label": "CATHEDRAL RANGE",
+   "lat": 37.810243123202916,
+   "lon": -119.34548249894132
+  },
+  {
+   "query": "CLARK RANGE",
+   "label": "CLARK RANGE",
+   "lat": 37.65311246658914,
+   "lon": -119.40004014921008
+  },
+  {
+   "query": "COLD CANYON",
+   "label": "COLD CANYON",
+   "lat": 37.94444654448797,
+   "lon": -119.40418109849317
+  },
+  {
+   "query": "Cascade Creek",
+   "label": "Cascade Creek",
+   "lat": 37.75991656020091,
+   "lon": -119.70012046531957
+  },
+  {
+   "query": "Cathedral Lakes",
+   "label": "Cathedral Lakes",
+   "lat": 37.84002701205183,
+   "lon": -119.42688965846949
+  },
+  {
+   "query": "Cathedral Peak",
+   "label": "Cathedral Peak",
+   "lat": 37.84698014853552,
+   "lon": -119.4058143875488
+  },
+  {
+   "query": "Cherry Creek",
+   "label": "Cherry Creek",
+   "lat": 38.16012901618899,
+   "lon": -119.66949914251016
+  },
+  {
+   "query": "Cherry Lake",
+   "label": "Cherry Lake",
+   "lat": 37.99672782112201,
+   "lon": -119.90070482524952
+  },
+  {
+   "query": "Chilnualna Creek",
+   "label": "Chilnualna Creek",
+   "lat": 37.58187461051809,
+   "lon": -119.58922781372475
+  },
+  {
+   "query": "Chilnualna Fall",
+   "label": "Chilnualna Fall",
+   "lat": 37.56108611071941,
+   "lon": -119.59955778140257
+  },
+  {
+   "query": "Chinquapin",
+   "label": "Chinquapin",
+   "lat": 37.6535230790512,
+   "lon": -119.7040339105194
+  },
+  {
+   "query": "Chiquito Pass",
+   "label": "Chiquito Pass",
+   "lat": 37.53750850370689,
+   "lon": -119.45944674498705
+  },
+  {
+   "query": "Clouds Rest",
+   "label": "Clouds Rest",
+   "lat": 37.76773380073096,
+   "lon": -119.48939020793485
+  },
+  {
+   "query": "Conness Creek",
+   "label": "Conness Creek",
+   "lat": 37.928770048766864,
+   "lon": -119.38556941741894
+  },
+  {
+   "query": "Crane Creek",
+   "label": "Crane Creek",
+   "lat": 37.722700361003014,
+   "lon": -119.76002808392546
+  },
+  {
+   "query": "Crane Flat",
+   "label": "Crane Flat",
+   "lat": 37.748903587521326,
+   "lon": -119.80035782927627
+  },
+  {
+   "query": "Creek",
+   "label": "Creek",
+   "lat": 37.897994812779416,
+   "lon": -119.63886360792863
+  },
+  {
+   "query": "Crescent Lake",
+   "label": "Crescent Lake",
+   "lat": 37.56378332711112,
+   "lon": -119.54354122561287
+  },
+  {
+   "query": "Crown Lake",
+   "label": "Crown Lake",
+   "lat": 38.114527019531515,
+   "lon": -119.4364716332739
+  },
+  {
+   "query": "DANA MEADOWS",
+   "label": "DANA MEADOWS",
+   "lat": 37.89376496015837,
+   "lon": -119.26134927156251
+  },
+  {
+   "query": "Dana Fork",
+   "label": "Dana Fork",
+   "lat": 37.880870785201765,
+   "lon": -119.25635098671712
+  },
+  {
+   "query": "Delaney Creek",
+   "label": "Delaney Creek",
+   "lat": 37.878784940305074,
+   "lon": -119.35366000810718
+  },
+  {
+   "query": "Dewey Point",
+   "label": "Dewey Point",
+   "lat": 37.70379906031363,
+   "lon": -119.65024193682737
+  },
+  {
+   "query": "Dog Lake",
+   "label": "Dog Lake",
+   "lat": 37.89464397557802,
+   "lon": -119.33519058363031
+  },
+  {
+   "query": "Donohue Pass",
+   "label": "Donohue Pass",
+   "lat": 37.75454790237047,
+   "lon": -119.24080432657064
+  },
+  {
+   "query": "Donohue Peak",
+   "label": "Donohue Peak",
+   "lat": 37.77507100993172,
+   "lon": -119.23041149379058
+  },
+  {
+   "query": "Dorothy Lake",
+   "label": "Dorothy Lake",
+   "lat": 38.17360713895065,
+   "lon": -119.5757739411649
+  },
+  {
+   "query": "Dorothy Lake Pass",
+   "label": "Dorothy Lake Pass",
+   "lat": 38.18703459319313,
+   "lon": -119.58979832147165
+  },
+  {
+   "query": "EMIGRANT WILDERNESS",
+   "label": "EMIGRANT WILDERNESS",
+   "lat": 38.12900226875091,
+   "lon": -119.80185358356115
+  },
+  {
+   "query": "East Fork",
+   "label": "East Fork",
+   "lat": 38.106522587269225,
+   "lon": -119.76036011628628
+  },
+  {
+   "query": "Echo Creek",
+   "label": "Echo Creek",
+   "lat": 37.80270467806359,
+   "lon": -119.39577995066092
+  },
+  {
+   "query": "Echo Peaks",
+   "label": "Echo Peaks",
+   "lat": 37.83319270817466,
+   "lon": -119.403022584466
+  },
+  {
+   "query": "El Capitan",
+   "label": "El Capitan",
+   "lat": 37.73306534792067,
+   "lon": -119.63802525225721
+  },
+  {
+   "query": "El Portal",
+   "label": "El Portal",
+   "lat": 37.67585803059577,
+   "lon": -119.78510174663114
+  },
+  {
+   "query": "El Portal Road",
+   "label": "El Portal Road",
+   "lat": 37.680957240067976,
+   "lon": -119.75795575758724
+  },
+  {
+   "query": "Eleanor Creek",
+   "label": "Eleanor Creek",
+   "lat": 38.01131863549767,
+   "lon": -119.82074760208648
+  },
+  {
+   "query": "Elizabeth Lake",
+   "label": "Elizabeth Lake",
+   "lat": 37.84263557067741,
+   "lon": -119.35471130889663
+  },
+  {
+   "query": "Ellery Lake",
+   "label": "Ellery Lake",
+   "lat": 37.93242082711305,
+   "lon": -119.2248343685634
+  },
+  {
+   "query": "Emeric Lake",
+   "label": "Emeric Lake",
+   "lat": 37.777219797412855,
+   "lon": -119.39311387778264
+  },
+  {
+   "query": "Emigrant Lake",
+   "label": "Emigrant Lake",
+   "lat": 38.17879931535617,
+   "lon": -119.70022432235713
+  },
+  {
+   "query": "Entrance",
+   "label": "Entrance",
+   "lat": 37.50004245723593,
+   "lon": -119.62742077054672
+  },
+  {
+   "query": "Evelyn Lake",
+   "label": "Evelyn Lake",
+   "lat": 37.803847919297866,
+   "lon": -119.31420234245348
+  },
+  {
+   "query": "Evergreen Road",
+   "label": "Evergreen Road",
+   "lat": 37.86321008771675,
+   "lon": -119.87070067294307
+  },
+  {
+   "query": "Fairview Dome Medlicott Dome",
+   "label": "Fairview Dome Medlicott Dome",
+   "lat": 37.85774951656418,
+   "lon": -119.42540867146572
+  },
+  {
+   "query": "Falls Creek",
+   "label": "Falls Creek",
+   "lat": 38.10424927786532,
+   "lon": -119.6320897774303
+  },
+  {
+   "query": "Fernandez Pass",
+   "label": "Fernandez Pass",
+   "lat": 37.583519134757914,
+   "lon": -119.37250921557286
+  },
+  {
+   "query": "Fish Camp",
+   "label": "Fish Camp",
+   "lat": 37.47574647548889,
+   "lon": -119.64454790010102
+  },
+  {
+   "query": "Fletcher Creek",
+   "label": "Fletcher Creek",
+   "lat": 37.776534888246914,
+   "lon": -119.37257647845475
+  },
+  {
+   "query": "Foerster Peak",
+   "label": "Foerster Peak",
+   "lat": 37.68992423044737,
+   "lon": -119.29032064004623
+  },
+  {
+   "query": "Foresta",
+   "label": "Foresta",
+   "lat": 37.70212642927346,
+   "lon": -119.74912428701995
+  },
+  {
+   "query": "Frog Creek",
+   "label": "Frog Creek",
+   "lat": 38.00005007506177,
+   "lon": -119.79434115754994
+  },
+  {
+   "query": "GRAND CANYON OF THE TUOLUMNE RIVER",
+   "label": "GRAND CANYON OF THE TUOLUMNE RIVER",
+   "lat": 37.93082552124255,
+   "lon": -119.50325807357981
+  },
+  {
+   "query": "Gale Peak",
+   "label": "Gale Peak",
+   "lat": 37.56729081004308,
+   "lon": -119.38711826910595
+  },
+  {
+   "query": "Gardisky Lake",
+   "label": "Gardisky Lake",
+   "lat": 37.96088582863802,
+   "lon": -119.24629664409001
+  },
+  {
+   "query": "Gaylor Lakes",
+   "label": "Gaylor Lakes",
+   "lat": 37.9102384429196,
+   "lon": -119.259935593733
+  },
+  {
+   "query": "Gaylor Peak",
+   "label": "Gaylor Peak",
+   "lat": 37.919327961828685,
+   "lon": -119.26512321456381
+  },
+  {
+   "query": "Givens Lake",
+   "label": "Givens Lake",
+   "lat": 37.58207646346144,
+   "lon": -119.47395863073694
+  },
+  {
+   "query": "Glacier Point",
+   "label": "Glacier Point",
+   "lat": 37.73062097637727,
+   "lon": -119.57381646631312
+  },
+  {
+   "query": "Glacier Point Rd",
+   "label": "Glacier Point Rd",
+   "lat": 37.67204522910835,
+   "lon": -119.61222884919152
+  },
+  {
+   "query": "Glacier Point Road",
+   "label": "Glacier Point Road",
+   "lat": 37.691697255006865,
+   "lon": -119.66299989548297
+  },
+  {
+   "query": "Glen Aulin",
+   "label": "Glen Aulin",
+   "lat": 37.9088932211425,
+   "lon": -119.41825325257422
+  },
+  {
+   "query": "Granite Lakes",
+   "label": "Granite Lakes",
+   "lat": 37.92123871650382,
+   "lon": -119.2860408135123
+  },
+  {
+   "query": "Grant Lakes",
+   "label": "Grant Lakes",
+   "lat": 37.88402227794179,
+   "lon": -119.5328257346866
+  },
+  {
+   "query": "Gray Peak",
+   "label": "Gray Peak",
+   "lat": 37.67322203878403,
+   "lon": -119.41845842056621
+  },
+  {
+   "query": "Green Lake",
+   "label": "Green Lake",
+   "lat": 38.08552243863714,
+   "lon": -119.29738078914366
+  },
+  {
+   "query": "Grouse Creek",
+   "label": "Grouse Creek",
+   "lat": 37.689277089185715,
+   "lon": -119.70461777362847
+  },
+  {
+   "query": "HALL RESEARCH",
+   "label": "HALL RESEARCH",
+   "lat": 37.961589538937794,
+   "lon": -119.29777038612488
+  },
+  {
+   "query": "HARVEY MONROE",
+   "label": "HARVEY MONROE",
+   "lat": 37.96816729812719,
+   "lon": -119.30191365002875
+  },
+  {
+   "query": "HETCH HETCHY RESERVOIR",
+   "label": "HETCH HETCHY RESERVOIR",
+   "lat": 37.95146462264413,
+   "lon": -119.75541580839906
+  },
+  {
+   "query": "HOOVER WILDERNESS",
+   "label": "HOOVER WILDERNESS",
+   "lat": 38.10579141743347,
+   "lon": -119.36611095545348
+  },
+  {
+   "query": "HORIZON RIDGE",
+   "label": "HORIZON RIDGE",
+   "lat": 37.651323675429275,
+   "lon": -119.56967007767106
+  },
+  {
+   "query": "HORSE RIDGE",
+   "label": "HORSE RIDGE",
+   "lat": 37.61400980618598,
+   "lon": -119.54259322635193
+  },
+  {
+   "query": "HUMBOLDT TOIYABE",
+   "label": "HUMBOLDT TOIYABE",
+   "lat": 38.14007457523991,
+   "lon": -119.2971348838247
+  },
+  {
+   "query": "Half Dome",
+   "label": "Half Dome",
+   "lat": 37.746028958399684,
+   "lon": -119.53303335617669
+  },
+  {
+   "query": "Harden Lake",
+   "label": "Harden Lake",
+   "lat": 37.90006093536082,
+   "lon": -119.67274171800318
+  },
+  {
+   "query": "Hart Lakes",
+   "label": "Hart Lakes",
+   "lat": 37.624855279229024,
+   "lon": -119.52731402064451
+  },
+  {
+   "query": "Haystack Peak",
+   "label": "Haystack Peak",
+   "lat": 38.105525641650274,
+   "lon": -119.6842708675965
+  },
+  {
+   "query": "Hetch Hetchy Backpackers Camp",
+   "label": "Hetch Hetchy Backpackers Camp",
+   "lat": 37.9443856493844,
+   "lon": -119.78508725710466
+  },
+  {
+   "query": "Hetch Hetchy Entrance",
+   "label": "Hetch Hetchy Entrance",
+   "lat": 37.894565430510205,
+   "lon": -119.84086365940817
+  },
+  {
+   "query": "Hetch Hetchy Road",
+   "label": "Hetch Hetchy Road",
+   "lat": 37.91804835183685,
+   "lon": -119.81693833797104
+  },
+  {
+   "query": "Highway 120",
+   "label": "Highway 120",
+   "lat": 37.95748383443875,
+   "lon": -119.19316794814836
+  },
+  {
+   "query": "Hodgdon Meadow",
+   "label": "Hodgdon Meadow",
+   "lat": 37.79679666818527,
+   "lon": -119.8678251384511
+  },
+  {
+   "query": "Huckleberry Lake",
+   "label": "Huckleberry Lake",
+   "lat": 38.13370727753553,
+   "lon": -119.72415169223372
+  },
+  {
+   "query": "INYO NATIONAL FOREST",
+   "label": "INYO NATIONAL FOREST",
+   "lat": 37.98924041467797,
+   "lon": -119.22379834427156
+  },
+  {
+   "query": "Illilouette Creek",
+   "label": "Illilouette Creek",
+   "lat": 37.670269352947166,
+   "lon": -119.50195133123347
+  },
+  {
+   "query": "Information Station",
+   "label": "Information Station",
+   "lat": 37.81032146556131,
+   "lon": -119.83103521220274
+  },
+  {
+   "query": "Inspiration Point Old Inspiration Point",
+   "label": "Inspiration Point Old Inspiration Point",
+   "lat": 37.711866907294436,
+   "lon": -119.68708590947254
+  },
+  {
+   "query": "Ireland Lake",
+   "label": "Ireland Lake",
+   "lat": 37.78178486701536,
+   "lon": -119.29951486956604
+  },
+  {
+   "query": "Isberg Pass",
+   "label": "Isberg Pass",
+   "lat": 37.64156707063586,
+   "lon": -119.31758877163227
+  },
+  {
+   "query": "Isberg Peak",
+   "label": "Isberg Peak",
+   "lat": 37.6517105101172,
+   "lon": -119.32263913544675
+  },
+  {
+   "query": "JACK MAIN CANYON",
+   "label": "JACK MAIN CANYON",
+   "lat": 38.05509971931456,
+   "lon": -119.68076928603045
+  },
+  {
+   "query": "John Muir Trail",
+   "label": "John Muir Trail",
+   "lat": 37.83790239001741,
+   "lon": -119.4192711302386
+  },
+  {
+   "query": "Johnson Lake",
+   "label": "Johnson Lake",
+   "lat": 37.56347669338904,
+   "lon": -119.50864095582534
+  },
+  {
+   "query": "Johnson Peak",
+   "label": "Johnson Peak",
+   "lat": 37.83723208288547,
+   "lon": -119.348517198336
+  },
+  {
+   "query": "KERRICK CANYON",
+   "label": "KERRICK CANYON",
+   "lat": 38.05077235274547,
+   "lon": -119.54595282907518
+  },
+  {
+   "query": "KOIP CREST",
+   "label": "KOIP CREST",
+   "lat": 37.792265560596896,
+   "lon": -119.20285889530221
+  },
+  {
+   "query": "KUNA CREST",
+   "label": "KUNA CREST",
+   "lat": 37.82982561358353,
+   "lon": -119.24824018492414
+  },
+  {
+   "query": "Kendrick Creek",
+   "label": "Kendrick Creek",
+   "lat": 38.06049045204544,
+   "lon": -119.75520929792695
+  },
+  {
+   "query": "Kibbie Lake",
+   "label": "Kibbie Lake",
+   "lat": 38.04965164602083,
+   "lon": -119.83745916461368
+  },
+  {
+   "query": "Koip Peak",
+   "label": "Koip Peak",
+   "lat": 37.81234604905067,
+   "lon": -119.20289278135145
+  },
+  {
+   "query": "LAKE ELEANOR",
+   "label": "Lake Eleanor",
+   "lat": 37.970326263360384,
+   "lon": -119.87366236340965
+  },
+  {
+   "query": "LITTLE YOSEMITE VALLEY",
+   "label": "LITTLE YOSEMITE VALLEY",
+   "lat": 37.73106436841691,
+   "lon": -119.49517884321519
+  },
+  {
+   "query": "LYELL CANYON",
+   "label": "LYELL CANYON",
+   "lat": 37.81999523010529,
+   "lon": -119.26764022585942
+  },
+  {
+   "query": "Lake Eleanor",
+   "label": "Lake Eleanor",
+   "lat": 37.970326263360384,
+   "lon": -119.87366236340965
+  },
+  {
+   "query": "Lake Vernon",
+   "label": "Lake Vernon",
+   "lat": 38.008224065795986,
+   "lon": -119.71667694824993
+  },
+  {
+   "query": "Laurel Lake",
+   "label": "Laurel Lake",
+   "lat": 37.998565790216624,
+   "lon": -119.8076992858185
+  },
+  {
+   "query": "Lee Vining",
+   "label": "Lee Vining",
+   "lat": 37.954455144444395,
+   "lon": -119.11847420751441
+  },
+  {
+   "query": "Lembert Dome",
+   "label": "Lembert Dome",
+   "lat": 37.88237524327265,
+   "lon": -119.34509882738948
+  },
+  {
+   "query": "Lewis Creek",
+   "label": "Lewis Creek",
+   "lat": 37.759173114260236,
+   "lon": -119.3596237213085
+  },
+  {
+   "query": "Long Mountain",
+   "label": "Long Mountain",
+   "lat": 37.66732941205454,
+   "lon": -119.29528985325375
+  },
+  {
+   "query": "Lower Merced Pass Lake",
+   "label": "Lower Merced Pass Lake",
+   "lat": 37.62417644081406,
+   "lon": -119.46526102626643
+  },
+  {
+   "query": "Lukens Lake",
+   "label": "Lukens Lake",
+   "lat": 37.85994118393927,
+   "lon": -119.62606264361762
+  },
+  {
+   "query": "Lundy Lake",
+   "label": "Lundy Lake",
+   "lat": 38.02226978777186,
+   "lon": -119.23114263622432
+  },
+  {
+   "query": "Lyell Fork",
+   "label": "Lyell Fork",
+   "lat": 37.85367964733466,
+   "lon": -119.28973365219905
+  },
+  {
+   "query": "MARIPOSA GROVE",
+   "label": "Mariposa Grove",
+   "lat": 37.502230504641204,
+   "lon": -119.61086317659839
+  },
+  {
+   "query": "MATTERHORN CANYON",
+   "label": "MATTERHORN CANYON",
+   "lat": 38.02192099606399,
+   "lon": -119.42581808160143
+  },
+  {
+   "query": "MERCED GROVE",
+   "label": "MERCED GROVE",
+   "lat": 37.7475655243347,
+   "lon": -119.8488925814886
+  },
+  {
+   "query": "MIGUEL MEADOW",
+   "label": "MIGUEL MEADOW",
+   "lat": 37.956982742024834,
+   "lon": -119.8333563950015
+  },
+  {
+   "query": "MONO LAKE",
+   "label": "MONO LAKE",
+   "lat": 37.99715035270075,
+   "lon": -119.09326502375806
+  },
+  {
+   "query": "MONO MEADOW",
+   "label": "MONO MEADOW",
+   "lat": 37.66897076424139,
+   "lon": -119.57692884438343
+  },
+  {
+   "query": "Mammoth Peak",
+   "label": "Mammoth Peak",
+   "lat": 37.85498179600044,
+   "lon": -119.26383522064636
+  },
+  {
+   "query": "Many Island Lake",
+   "label": "Many Island Lake",
+   "lat": 38.07759634869544,
+   "lon": -119.80679104017062
+  },
+  {
+   "query": "Mariposa Grove",
+   "label": "Mariposa Grove",
+   "lat": 37.502230504641204,
+   "lon": -119.61086317659839
+  },
+  {
+   "query": "Mariposa Grove Road",
+   "label": "Mariposa Grove Road",
+   "lat": 37.519115125614064,
+   "lon": -119.66515353445156
+  },
+  {
+   "query": "Mariposa Grove Welcome Plaza",
+   "label": "Mariposa Grove Welcome Plaza",
+   "lat": 37.50613868489638,
+   "lon": -119.62782828269333
+  },
+  {
+   "query": "Mary Lake",
+   "label": "Mary Lake",
+   "lat": 38.14052307759785,
+   "lon": -119.57117701157466
+  },
+  {
+   "query": "Mather",
+   "label": "Mather",
+   "lat": 37.881489321642235,
+   "lon": -119.85814634305663
+  },
+  {
+   "query": "Matterhorn Peak",
+   "label": "Matterhorn Peak",
+   "lat": 38.09273549657974,
+   "lon": -119.38146013214912
+  },
+  {
+   "query": "Maxwell Lake",
+   "label": "Maxwell Lake",
+   "lat": 38.16106224432435,
+   "lon": -119.68116436866313
+  },
+  {
+   "query": "May Lake",
+   "label": "May Lake",
+   "lat": 37.844650018780136,
+   "lon": -119.49071778186882
+  },
+  {
+   "query": "McCabe Lakes",
+   "label": "McCabe Lakes",
+   "lat": 37.9946462831067,
+   "lon": -119.33798363660837
+  },
+  {
+   "query": "McGURK MEADOW",
+   "label": "McGURK MEADOW",
+   "lat": 37.67889740271299,
+   "lon": -119.61322094197969
+  },
+  {
+   "query": "Merced Lake",
+   "label": "Merced Lake",
+   "lat": 37.73732415090441,
+   "lon": -119.39590058869955
+  },
+  {
+   "query": "Merced Pass",
+   "label": "Merced Pass",
+   "lat": 37.61313262106271,
+   "lon": -119.42655857510324
+  },
+  {
+   "query": "Merced Peak",
+   "label": "Merced Peak",
+   "lat": 37.63473971663588,
+   "lon": -119.3942127671767
+  },
+  {
+   "query": "Merced River",
+   "label": "Merced River",
+   "lat": 37.66427952492836,
+   "lon": -119.86514510840904
+  },
+  {
+   "query": "Middle Tuolumne River",
+   "label": "Middle Tuolumne River",
+   "lat": 37.870975249823616,
+   "lon": -119.81461168109396
+  },
+  {
+   "query": "Mono Basin Scenic Area Visitor Center",
+   "label": "Mono Basin Scenic Area Visitor Center",
+   "lat": 37.972533264056416,
+   "lon": -119.09022898188331
+  },
+  {
+   "query": "Mono Pass",
+   "label": "Mono Pass",
+   "lat": 37.85547992830842,
+   "lon": -119.20051890620908
+  },
+  {
+   "query": "Moraine Mountain",
+   "label": "Moraine Mountain",
+   "lat": 37.591840033298986,
+   "lon": -119.45308533363149
+  },
+  {
+   "query": "Morrison",
+   "label": "Morrison",
+   "lat": 37.901307251313625,
+   "lon": -119.6324692826646
+  },
+  {
+   "query": "Moss Creek",
+   "label": "Moss Creek",
+   "lat": 37.71094674640801,
+   "lon": -119.81490056892207
+  },
+  {
+   "query": "Mount Ansel Adams",
+   "label": "Mount Ansel Adams",
+   "lat": 37.69748113281275,
+   "lon": -119.28005756491095
+  },
+  {
+   "query": "Mount Clark",
+   "label": "Mount Clark",
+   "lat": 37.69650866787758,
+   "lon": -119.42887523281826
+  },
+  {
+   "query": "Mount Conness",
+   "label": "Mount Conness",
+   "lat": 37.96670802546237,
+   "lon": -119.3210885246479
+  },
+  {
+   "query": "Mount Dana",
+   "label": "Mount Dana",
+   "lat": 37.89958235582406,
+   "lon": -119.22118587801208
+  },
+  {
+   "query": "Mount Florence",
+   "label": "Mount Florence",
+   "lat": 37.73929871221043,
+   "lon": -119.31589081207015
+  },
+  {
+   "query": "Mount Gibbs",
+   "label": "Mount Gibbs",
+   "lat": 37.87675008475963,
+   "lon": -119.21145169374073
+  },
+  {
+   "query": "Mount Gibson",
+   "label": "Mount Gibson",
+   "lat": 37.999330353699534,
+   "lon": -119.69913564044094
+  },
+  {
+   "query": "Mount Hoffmann",
+   "label": "Mount Hoffmann",
+   "lat": 37.84653481941834,
+   "lon": -119.5106971724025
+  },
+  {
+   "query": "Mount Lyell",
+   "label": "Mount Lyell",
+   "lat": 37.73899291217904,
+   "lon": -119.27213707124416
+  },
+  {
+   "query": "Mount Maclure",
+   "label": "Mount Maclure",
+   "lat": 37.74313891563079,
+   "lon": -119.28074732192385
+  },
+  {
+   "query": "Mount Ritter",
+   "label": "Mount Ritter",
+   "lat": 37.68856458616983,
+   "lon": -119.19998682116837
+  },
+  {
+   "query": "Mount Starr King",
+   "label": "Mount Starr King",
+   "lat": 37.70664763998029,
+   "lon": -119.52188859566775
+  },
+  {
+   "query": "Mount Watkins",
+   "label": "Mount Watkins",
+   "lat": 37.77376020572619,
+   "lon": -119.51981409358596
+  },
+  {
+   "query": "NATIONAL FOREST",
+   "label": "NATIONAL FOREST",
+   "lat": 38.12993254491762,
+   "lon": -119.29713793912423
+  },
+  {
+   "query": "NATURAL AREA",
+   "label": "NATURAL AREA",
+   "lat": 37.95501119052248,
+   "lon": -119.29574712974865
+  },
+  {
+   "query": "Nelson Lake",
+   "label": "Nelson Lake",
+   "lat": 37.80958920631639,
+   "lon": -119.36650416324316
+  },
+  {
+   "query": "North Peak",
+   "label": "North Peak",
+   "lat": 37.98196264099383,
+   "lon": -119.31455212795618
+  },
+  {
+   "query": "OShaughnessy Dam",
+   "label": "OShaughnessy Dam",
+   "lat": 37.94777448737747,
+   "lon": -119.80572777279139
+  },
+  {
+   "query": "Olmsted Point",
+   "label": "Olmsted Point",
+   "lat": 37.81025358348527,
+   "lon": -119.48554965014553
+  },
+  {
+   "query": "Ostrander Lake",
+   "label": "Ostrander Lake",
+   "lat": 37.62289985287453,
+   "lon": -119.56742686287559
+  },
+  {
+   "query": "Ostrander Ski Hut",
+   "label": "Ostrander Ski Hut",
+   "lat": 37.62722119201286,
+   "lon": -119.54961465184246
+  },
+  {
+   "query": "Otter Lake",
+   "label": "Otter Lake",
+   "lat": 38.08737847557448,
+   "lon": -119.66469072601299
+  },
+  {
+   "query": "Ottoway Lakes",
+   "label": "Ottoway Lakes",
+   "lat": 37.638162948536504,
+   "lon": -119.41093219941477
+  },
+  {
+   "query": "PATE VALLEY",
+   "label": "PATE VALLEY",
+   "lat": 37.93378416728169,
+   "lon": -119.60220843890606
+  },
+  {
+   "query": "PLEASANT VALLEY",
+   "label": "PLEASANT VALLEY",
+   "lat": 37.989697504534824,
+   "lon": -119.56969917245519
+  },
+  {
+   "query": "POOPENAUT VALLEY",
+   "label": "POOPENAUT VALLEY",
+   "lat": 37.930002185273736,
+   "lon": -119.81575320580413
+  },
+  {
+   "query": "Pacific Crest Trail",
+   "label": "Pacific Crest Trail",
+   "lat": 38.156903503150176,
+   "lon": -119.61070703227605
+  },
+  {
+   "query": "Pacific Crest Trail and John Muir Trail",
+   "label": "Pacific Crest Trail and John Muir Trail",
+   "lat": 37.76168575069008,
+   "lon": -119.2232350581418
+  },
+  {
+   "query": "Parker Pass",
+   "label": "Parker Pass",
+   "lat": 37.833447698415334,
+   "lon": -119.21456786778924
+  },
+  {
+   "query": "Peeler Lake",
+   "label": "Peeler Lake",
+   "lat": 38.11865947654987,
+   "lon": -119.45884221231391
+  },
+  {
+   "query": "Pettit Peak",
+   "label": "Pettit Peak",
+   "lat": 37.9871812129104,
+   "lon": -119.48061635985363
+  },
+  {
+   "query": "Piute Creek",
+   "label": "Piute Creek",
+   "lat": 38.03130533589784,
+   "lon": -119.4991792950128
+  },
+  {
+   "query": "Piute Mountain",
+   "label": "Piute Mountain",
+   "lat": 38.03290597046711,
+   "lon": -119.54739643495225
+  },
+  {
+   "query": "Porcupine Flat",
+   "label": "Porcupine Flat",
+   "lat": 37.81105364439636,
+   "lon": -119.56675562282953
+  },
+  {
+   "query": "Post Peak",
+   "label": "Post Peak",
+   "lat": 37.628044094169816,
+   "lon": -119.32811270453719
+  },
+  {
+   "query": "Post Peak Pass",
+   "label": "Post Peak Pass",
+   "lat": 37.6340099723175,
+   "lon": -119.34572358984889
+  },
+  {
+   "query": "Pothole Dome",
+   "label": "Pothole Dome",
+   "lat": 37.879820160213356,
+   "lon": -119.3934328325356
+  },
+  {
+   "query": "Potter Point",
+   "label": "Potter Point",
+   "lat": 37.81376193710359,
+   "lon": -119.28051294341671
+  },
+  {
+   "query": "RANCHERIA MOUNTAIN",
+   "label": "RANCHERIA MOUNTAIN",
+   "lat": 37.95245917702813,
+   "lon": -119.61755578705127
+  },
+  {
+   "query": "RODGERS CANYON",
+   "label": "RODGERS CANYON",
+   "lat": 37.971346874856124,
+   "lon": -119.51917132337633
+  },
+  {
+   "query": "Rafferty Creek",
+   "label": "Rafferty Creek",
+   "lat": 37.83389983409134,
+   "lon": -119.32528169177728
+  },
+  {
+   "query": "Ragged Peak",
+   "label": "Ragged Peak",
+   "lat": 37.93376967156468,
+   "lon": -119.35165799995036
+  },
+  {
+   "query": "Rancheria Creek",
+   "label": "Rancheria Creek",
+   "lat": 38.09762908075071,
+   "lon": -119.49880196552206
+  },
+  {
+   "query": "Rancheria Falls",
+   "label": "Rancheria Falls",
+   "lat": 37.959713924326834,
+   "lon": -119.6960355298611
+  },
+  {
+   "query": "Red Peak",
+   "label": "Red Peak",
+   "lat": 37.65205383612707,
+   "lon": -119.41042224214941
+  },
+  {
+   "query": "Richardson Peak",
+   "label": "Richardson Peak",
+   "lat": 38.08331698078491,
+   "lon": -119.69234901008929
+  },
+  {
+   "query": "Rock Island Pass",
+   "label": "Rock Island Pass",
+   "lat": 38.103281444260254,
+   "lon": -119.473256421064
+  },
+  {
+   "query": "Rodgers Lake",
+   "label": "Rodgers Lake",
+   "lat": 37.98991353395904,
+   "lon": -119.48864767756666
+  },
+  {
+   "query": "Roosevelt Lake",
+   "label": "Roosevelt Lake",
+   "lat": 37.96934421339492,
+   "lon": -119.34571488687457
+  },
+  {
+   "query": "Royal Arch Lake",
+   "label": "Royal Arch Lake",
+   "lat": 37.575885177018264,
+   "lon": -119.49154345341788
+  },
+  {
+   "query": "SAWTOOTH RIDGE",
+   "label": "SAWTOOTH RIDGE",
+   "lat": 38.09869732046863,
+   "lon": -119.40152706164334
+  },
+  {
+   "query": "SEE VALLEY MAP BELOW",
+   "label": "SEE VALLEY MAP BELOW",
+   "lat": 37.71136377755564,
+   "lon": -119.5439737356647
+  },
+  {
+   "query": "SIERRA NATIONAL FOREST",
+   "label": "SIERRA NATIONAL FOREST",
+   "lat": 37.50769373234846,
+   "lon": -119.43246141377628
+  },
+  {
+   "query": "STANISLAUS",
+   "label": "STANISLAUS",
+   "lat": 37.70006520188769,
+   "lon": -119.84267938109252
+  },
+  {
+   "query": "STANISLAUS NATIONAL FOREST",
+   "label": "STANISLAUS NATIONAL FOREST",
+   "lat": 38.14571054722914,
+   "lon": -119.79769390899544
+  },
+  {
+   "query": "STUBBLEFIELD CANYON",
+   "label": "STUBBLEFIELD CANYON",
+   "lat": 38.09835814639581,
+   "lon": -119.57080713516304
+  },
+  {
+   "query": "SUMMIT MEADOW",
+   "label": "SUMMIT MEADOW",
+   "lat": 37.66792309682306,
+   "lon": -119.64864454754108
+  },
+  {
+   "query": "Saddlebag Lake",
+   "label": "Saddlebag Lake",
+   "lat": 37.96561059564711,
+   "lon": -119.26420579144424
+  },
+  {
+   "query": "Schofield Peak",
+   "label": "Schofield Peak",
+   "lat": 38.09812236301935,
+   "lon": -119.67052447325368
+  },
+  {
+   "query": "Siesta Lake",
+   "label": "Siesta Lake",
+   "lat": 37.84602002993772,
+   "lon": -119.65954275463727
+  },
+  {
+   "query": "Sing Peak",
+   "label": "Sing Peak",
+   "lat": 37.55326319057645,
+   "lon": -119.38797384555642
+  },
+  {
+   "query": "Slide Mountain",
+   "label": "Slide Mountain",
+   "lat": 38.09376970605257,
+   "lon": -119.44701227774136
+  },
+  {
+   "query": "Smedberg Lake",
+   "label": "Smedberg Lake",
+   "lat": 38.01836803270232,
+   "lon": -119.4923014917459
+  },
+  {
+   "query": "Smith Peak",
+   "label": "Smith Peak",
+   "lat": 37.926629398467945,
+   "lon": -119.73475156784863
+  },
+  {
+   "query": "Snow Creek",
+   "label": "Snow Creek",
+   "lat": 37.79086736948008,
+   "lon": -119.53618531426353
+  },
+  {
+   "query": "South",
+   "label": "South",
+   "lat": 37.50553331523081,
+   "lon": -119.63313853213667
+  },
+  {
+   "query": "South Fork Merced River",
+   "label": "South Fork Merced River",
+   "lat": 37.531068716036145,
+   "lon": -119.56940141962914
+  },
+  {
+   "query": "South Fork Tuolumne River",
+   "label": "South Fork Tuolumne River",
+   "lat": 37.80483027693634,
+   "lon": -119.7703790915068
+  },
+  {
+   "query": "Spiller Creek",
+   "label": "Spiller Creek",
+   "lat": 38.050133404006665,
+   "lon": -119.38819012372863
+  },
+  {
+   "query": "Styx Pass",
+   "label": "Styx Pass",
+   "lat": 38.097218422543826,
+   "lon": -119.80426514073095
+  },
+  {
+   "query": "Summit Lake",
+   "label": "Summit Lake",
+   "lat": 38.05796244730164,
+   "lon": -119.3151169880281
+  },
+  {
+   "query": "Sunrise",
+   "label": "Sunrise",
+   "lat": 37.79618389604183,
+   "lon": -119.43258339429505
+  },
+  {
+   "query": "Sunrise Creek",
+   "label": "Sunrise Creek",
+   "lat": 37.767037276010804,
+   "lon": -119.46719572524901
+  },
+  {
+   "query": "Sunrise Lakes",
+   "label": "Sunrise Lakes",
+   "lat": 37.81105700920567,
+   "lon": -119.43991430773927
+  },
+  {
+   "query": "TENAYA CANYON",
+   "label": "TENAYA CANYON",
+   "lat": 37.79221770959951,
+   "lon": -119.48061737828677
+  },
+  {
+   "query": "TILTILL MOUNTAIN",
+   "label": "TILTILL MOUNTAIN",
+   "lat": 38.030043393058335,
+   "lon": -119.66073311784734
+  },
+  {
+   "query": "TILTILL VALLEY",
+   "label": "TILTILL VALLEY",
+   "lat": 37.971645216557704,
+   "lon": -119.69127595186384
+  },
+  {
+   "query": "TUOLUMNE GROVE",
+   "label": "TUOLUMNE GROVE",
+   "lat": 37.76800801002399,
+   "lon": -119.82040121907644
+  },
+  {
+   "query": "TUOLUMNE MEADOWS",
+   "label": "TUOLUMNE MEADOWS",
+   "lat": 37.875028121947395,
+   "lon": -119.34434171490989
+  },
+  {
+   "query": "TURNER RIDGE",
+   "label": "TURNER RIDGE",
+   "lat": 37.571227651350725,
+   "lon": -119.65651680450938
+  },
+  {
+   "query": "TWIN LAKES",
+   "label": "TWIN LAKES",
+   "lat": 38.15666368614504,
+   "lon": -119.3489037863102
+  },
+  {
+   "query": "Table Lake",
+   "label": "Table Lake",
+   "lat": 37.98277276960495,
+   "lon": -119.55104008794598
+  },
+  {
+   "query": "Tamarack Creek",
+   "label": "Tamarack Creek",
+   "lat": 37.759108332765436,
+   "lon": -119.7261635606753
+  },
+  {
+   "query": "Tamarack Flat",
+   "label": "Tamarack Flat",
+   "lat": 37.75256543900144,
+   "lon": -119.73645823038515
+  },
+  {
+   "query": "Ten Lakes",
+   "label": "Ten Lakes",
+   "lat": 37.898678412471554,
+   "lon": -119.52202150119689
+  },
+  {
+   "query": "Tenaya Creek",
+   "label": "Tenaya Creek",
+   "lat": 37.77875933794029,
+   "lon": -119.50288727131985
+  },
+  {
+   "query": "Tenaya Lake",
+   "label": "Tenaya Lake",
+   "lat": 37.833066931189975,
+   "lon": -119.46446863896514
+  },
+  {
+   "query": "Tilden Lake",
+   "label": "Tilden Lake",
+   "lat": 38.10408542316783,
+   "lon": -119.59203350453272
+  },
+  {
+   "query": "Tiltill Creek",
+   "label": "Tiltill Creek",
+   "lat": 37.98043153844522,
+   "lon": -119.70545950864633
+  },
+  {
+   "query": "Tioga Lake",
+   "label": "Tioga Lake",
+   "lat": 37.937954798601844,
+   "lon": -119.2428137415142
+  },
+  {
+   "query": "Tioga Pass Entrance",
+   "label": "Tioga Pass Entrance",
+   "lat": 37.91715938996747,
+   "lon": -119.23104458888514
+  },
+  {
+   "query": "Tioga Peak",
+   "label": "Tioga Peak",
+   "lat": 37.950154360192705,
+   "lon": -119.24255806849526
+  },
+  {
+   "query": "Tioga Road",
+   "label": "Tioga Road",
+   "lat": 37.841630099096946,
+   "lon": -119.45717545384078
+  },
+  {
+   "query": "To Carson City NV",
+   "label": "To Carson City NV",
+   "lat": 38.0301046911569,
+   "lon": -119.17169558087485
+  },
+  {
+   "query": "To Fresno",
+   "label": "To Fresno",
+   "lat": 37.480190277320474,
+   "lon": -119.63613453107075
+  },
+  {
+   "query": "To Mammoth Lakes",
+   "label": "To Mammoth Lakes",
+   "lat": 37.93917374693578,
+   "lon": -119.0840676463539
+  },
+  {
+   "query": "To Manteca",
+   "label": "To Manteca",
+   "lat": 37.812586408878204,
+   "lon": -119.87943511460439
+  },
+  {
+   "query": "To Merced",
+   "label": "To Merced",
+   "lat": 37.65034243165252,
+   "lon": -119.8868030590889
+  },
+  {
+   "query": "Tower Peak",
+   "label": "Tower Peak",
+   "lat": 38.143892691998566,
+   "lon": -119.54724716505376
+  },
+  {
+   "query": "Tresidder Peak",
+   "label": "Tresidder Peak",
+   "lat": 37.83135575788626,
+   "lon": -119.42259872175546
+  },
+  {
+   "query": "Triple Divide Peak",
+   "label": "Triple Divide Peak",
+   "lat": 37.63198974750063,
+   "lon": -119.37030652978845
+  },
+  {
+   "query": "Triple Peak Fork",
+   "label": "Triple Peak Fork",
+   "lat": 37.65598516681274,
+   "lon": -119.33865543216342
+  },
+  {
+   "query": "Tueeulala Falls",
+   "label": "Tueeulala Falls",
+   "lat": 37.965544389472676,
+   "lon": -119.78528446280097
+  },
+  {
+   "query": "Tunnel",
+   "label": "Tunnel",
+   "lat": 37.72222114313483,
+   "lon": -119.71411637578986
+  },
+  {
+   "query": "Tunnel View",
+   "label": "Tunnel View",
+   "lat": 37.71661523194164,
+   "lon": -119.67636759470874
+  },
+  {
+   "query": "Tuolumne Meadows Visitor Center",
+   "label": "Tuolumne Meadows Visitor Center",
+   "lat": 37.864952866333454,
+   "lon": -119.35115989354372
+  },
+  {
+   "query": "Tuolumne Peak",
+   "label": "Tuolumne Peak",
+   "lat": 37.876153762445,
+   "lon": -119.48384997776398
+  },
+  {
+   "query": "Tuolumne River",
+   "label": "Tuolumne River",
+   "lat": 37.90533262949131,
+   "lon": -119.42750724560436
+  },
+  {
+   "query": "Twin Lakes",
+   "label": "TWIN LAKES",
+   "lat": 38.15666368614504,
+   "lon": -119.3489037863102
+  },
+  {
+   "query": "Unicorn Peak",
+   "label": "Unicorn Peak",
+   "lat": 37.84083921695362,
+   "lon": -119.37983633303892
+  },
+  {
+   "query": "Upper McCabe Lake",
+   "label": "Upper McCabe Lake",
+   "lat": 38.00282434165829,
+   "lon": -119.31962216604786
+  },
+  {
+   "query": "Upper Merced Pass Lake",
+   "label": "Upper Merced Pass Lake",
+   "lat": 37.62147305217542,
+   "lon": -119.42979376695583
+  },
+  {
+   "query": "VIRGINIA CANYON",
+   "label": "VIRGINIA CANYON",
+   "lat": 38.01174381858376,
+   "lon": -119.37623418119706
+  },
+  {
+   "query": "Valley View",
+   "label": "Valley View",
+   "lat": 37.71639605646128,
+   "lon": -119.66333968182356
+  },
+  {
+   "query": "Virginia Lake",
+   "label": "Virginia Lake",
+   "lat": 37.96090977241879,
+   "lon": -119.43753913640927
+  },
+  {
+   "query": "Virginia Lakes",
+   "label": "Virginia Lakes",
+   "lat": 38.0496307205548,
+   "lon": -119.2698214319624
+  },
+  {
+   "query": "Virginia Pass",
+   "label": "Virginia Pass",
+   "lat": 38.068615387017594,
+   "lon": -119.3203564563659
+  },
+  {
+   "query": "Virginia Peak",
+   "label": "Virginia Peak",
+   "lat": 38.065527611260315,
+   "lon": -119.35792340083316
+  },
+  {
+   "query": "Vogelsang",
+   "label": "Vogelsang",
+   "lat": 37.79530257219455,
+   "lon": -119.34424426937217
+  },
+  {
+   "query": "Vogelsang Lake",
+   "label": "Vogelsang Lake",
+   "lat": 37.784278624488486,
+   "lon": -119.33190447011907
+  },
+  {
+   "query": "Vogelsang Peak",
+   "label": "Vogelsang Peak",
+   "lat": 37.77425771541301,
+   "lon": -119.34945716586262
+  },
+  {
+   "query": "Volunteer Peak",
+   "label": "Volunteer Peak",
+   "lat": 38.00569815959071,
+   "lon": -119.48782964426633
+  },
+  {
+   "query": "WILDERNESS",
+   "label": "WILDERNESS",
+   "lat": 37.63002145663102,
+   "lon": -119.22686609645186
+  },
+  {
+   "query": "Wapama Falls",
+   "label": "Wapama Falls",
+   "lat": 37.96587089409604,
+   "lon": -119.74851456959605
+  },
+  {
+   "query": "Washburn Lake",
+   "label": "Washburn Lake",
+   "lat": 37.71239409482085,
+   "lon": -119.38385692203782
+  },
+  {
+   "query": "Waterwheel Falls",
+   "label": "Waterwheel Falls",
+   "lat": 37.922869032579165,
+   "lon": -119.47334558025904
+  },
+  {
+   "query": "Waugh Lake",
+   "label": "Waugh Lake",
+   "lat": 37.75687619131973,
+   "lon": -119.19673542696988
+  },
+  {
+   "query": "Wawona",
+   "label": "Wawona",
+   "lat": 37.54942655407723,
+   "lon": -119.67871767554875
+  },
+  {
+   "query": "Wawona Dome",
+   "label": "Wawona Dome",
+   "lat": 37.553801377065234,
+   "lon": -119.61438901539093
+  },
+  {
+   "query": "Wawona Road",
+   "label": "Wawona Road",
+   "lat": 37.606937463268274,
+   "lon": -119.68249731251734
+  },
+  {
+   "query": "Wawona Visitor Center",
+   "label": "Wawona Visitor Center",
+   "lat": 37.547427669472064,
+   "lon": -119.59628439830598
+  },
+  {
+   "query": "White Mountain",
+   "label": "White Mountain",
+   "lat": 37.94762608957639,
+   "lon": -119.30893389506271
+  },
+  {
+   "query": "White Wolf",
+   "label": "White Wolf",
+   "lat": 37.87265696338063,
+   "lon": -119.65084052092506
+  },
+  {
+   "query": "Whorl Mountain",
+   "label": "Whorl Mountain",
+   "lat": 38.074951042292355,
+   "lon": -119.38227774881771
+  },
+  {
+   "query": "Wilma Lake",
+   "label": "Wilma Lake",
+   "lat": 38.073151104921834,
+   "lon": -119.62951360442574
+  },
+  {
+   "query": "YOSEMITE NATIONAL PARK",
+   "label": "YOSEMITE NATIONAL PARK",
+   "lat": 37.88928335638744,
+   "lon": -119.62603676615656
+  },
+  {
+   "query": "YOSEMITE VALLEY",
+   "label": "YOSEMITE VALLEY",
+   "lat": 37.72625582126593,
+   "lon": -119.6173314771448
+  },
+  {
+   "query": "YOSEMITE WILDERNESS",
+   "label": "YOSEMITE WILDERNESS",
+   "lat": 37.913871039751534,
+   "lon": -119.54148787916571
+  },
+  {
+   "query": "Yosemite Creek",
+   "label": "Yosemite Creek",
+   "lat": 37.82619121085603,
+   "lon": -119.59350296472465
+  },
+  {
+   "query": "Yosemite History Center",
+   "label": "Yosemite History Center",
+   "lat": 37.53921501663591,
+   "lon": -119.65703162247853
+  },
+  {
+   "query": "Yosemite Valley Welcome Center",
+   "label": "Yosemite Valley Welcome Center",
+   "lat": 37.75085261991393,
+   "lon": -119.59315498462627
+  },
+  {
+   "query": "Yosemite West",
+   "label": "Yosemite West",
+   "lat": 37.645697557676684,
+   "lon": -119.71997194990517
+  },
+  {
+   "query": "Young Lakes",
+   "label": "Young Lakes",
+   "lat": 37.94037690279458,
+   "lon": -119.33990079076487
+  }
+ ],
+ "positions": [
+  {
+   "lat": 38.173685385354794,
+   "lon": -119.88375569003847,
+   "guidance": []
+  },
+  {
+   "lat": 38.112378093177384,
+   "lon": -119.88375569003847,
+   "guidance": []
+  },
+  {
+   "lat": 38.0510192981763,
+   "lon": -119.88375569003847,
+   "guidance": []
+  },
+  {
+   "lat": 37.98960902751392,
+   "lon": -119.88375569003846,
+   "guidance": []
+  },
+  {
+   "lat": 37.92814730861183,
+   "lon": -119.88375569003843,
+   "guidance": []
+  },
+  {
+   "lat": 37.866634169151375,
+   "lon": -119.88375569003843,
+   "guidance": [
+    {
+     "text": "Hetch Hetchy Road vehicle length limit of 25 ft (7.6 m) width limit of 8 ft (2.4 m)",
+     "reason": "along Hetch Hetchy Road"
+    }
+   ]
+  },
+  {
+   "lat": 37.80506963707389,
+   "lon": -119.88375569003843,
+   "guidance": []
+  },
+  {
+   "lat": 37.74345374058145,
+   "lon": -119.8837556900384,
+   "guidance": []
+  },
+  {
+   "lat": 37.68178650813713,
+   "lon": -119.88375569003837,
+   "guidance": []
+  },
+  {
+   "lat": 37.62006796846543,
+   "lon": -119.88375569003837,
+   "guidance": []
+  },
+  {
+   "lat": 37.55829815055282,
+   "lon": -119.88375569003837,
+   "guidance": []
+  },
+  {
+   "lat": 37.4964770836482,
+   "lon": -119.88375569003834,
+   "guidance": []
+  },
+  {
+   "lat": 38.173685385354794,
+   "lon": -119.81011160681321,
+   "guidance": []
+  },
+  {
+   "lat": 38.112378093177384,
+   "lon": -119.81011160681321,
+   "guidance": []
+  },
+  {
+   "lat": 38.0510192981763,
+   "lon": -119.81011160681321,
+   "guidance": []
+  },
+  {
+   "lat": 37.98960902751392,
+   "lon": -119.81011160681318,
+   "guidance": []
+  },
+  {
+   "lat": 37.92814730861183,
+   "lon": -119.81011160681315,
+   "guidance": [
+    {
+     "text": "Hetch Hetchy Road vehicle length limit of 25 ft (7.6 m) width limit of 8 ft (2.4 m)",
+     "reason": "along Hetch Hetchy Road"
+    }
+   ]
+  },
+  {
+   "lat": 37.866634169151375,
+   "lon": -119.81011160681315,
+   "guidance": []
+  },
+  {
+   "lat": 37.80506963707389,
+   "lon": -119.81011160681315,
+   "guidance": [
+    {
+     "text": "Information Station (summer only)",
+     "reason": "nearby (1.9 km)"
+    }
+   ]
+  },
+  {
+   "lat": 37.74345374058145,
+   "lon": -119.81011160681312,
+   "guidance": [
+    {
+     "text": "Facilities along Tioga Road available summer only",
+     "reason": "along Tioga Road"
+    },
+    {
+     "text": "Restrooms are available at picnic areas, campgrounds, trailheads, and roadside pullouts along Tioga Road",
+     "reason": "along Tioga Road"
+    }
+   ]
+  },
+  {
+   "lat": 37.68178650813713,
+   "lon": -119.81011160681312,
+   "guidance": []
+  },
+  {
+   "lat": 37.62006796846543,
+   "lon": -119.8101116068131,
+   "guidance": []
+  },
+  {
+   "lat": 37.55829815055282,
+   "lon": -119.8101116068131,
+   "guidance": []
+  },
+  {
+   "lat": 37.49647708364818,
+   "lon": -119.81011160681308,
+   "guidance": []
+  },
+  {
+   "lat": 38.173685385354794,
+   "lon": -119.73646752358796,
+   "guidance": []
+  },
+  {
+   "lat": 38.112378093177384,
+   "lon": -119.73646752358793,
+   "guidance": []
+  },
+  {
+   "lat": 38.0510192981763,
+   "lon": -119.7364675235879,
+   "guidance": []
+  },
+  {
+   "lat": 37.98960902751392,
+   "lon": -119.7364675235879,
+   "guidance": []
+  },
+  {
+   "lat": 37.92814730861183,
+   "lon": -119.7364675235879,
+   "guidance": [
+    {
+     "text": "Hetch Hetchy Backpackers Camp (wilderness permit required)",
+     "reason": "nearby (2.1 km)"
+    }
+   ]
+  },
+  {
+   "lat": 37.866634169151375,
+   "lon": -119.73646752358788,
+   "guidance": []
+  },
+  {
+   "lat": 37.80506963707389,
+   "lon": -119.73646752358785,
+   "guidance": [
+    {
+     "text": "Tioga Road closed approx. November to May east of this point",
+     "reason": "on Tioga Road, east of the marked point"
+    },
+    {
+     "text": "Tioga Road closed approx. November to May west of this point",
+     "reason": "on Tioga Road, west of the marked point"
+    },
+    {
+     "text": "Facilities along Tioga Road available summer only",
+     "reason": "along Tioga Road"
+    },
+    {
+     "text": "Restrooms are available at picnic areas, campgrounds, trailheads, and roadside pullouts along Tioga Road",
+     "reason": "along Tioga Road"
+    }
+   ]
+  },
+  {
+   "lat": 37.74345374058145,
+   "lon": -119.73646752358785,
+   "guidance": []
+  },
+  {
+   "lat": 37.68178650813713,
+   "lon": -119.73646752358785,
+   "guidance": []
+  },
+  {
+   "lat": 37.62006796846543,
+   "lon": -119.73646752358783,
+   "guidance": []
+  },
+  {
+   "lat": 37.55829815055282,
+   "lon": -119.7364675235878,
+   "guidance": []
+  },
+  {
+   "lat": 37.49647708364818,
+   "lon": -119.7364675235878,
+   "guidance": []
+  },
+  {
+   "lat": 38.173685385354794,
+   "lon": -119.66282345193578,
+   "guidance": []
+  },
+  {
+   "lat": 38.112378093177384,
+   "lon": -119.66282345193575,
+   "guidance": []
+  },
+  {
+   "lat": 38.0510192981763,
+   "lon": -119.66282345193575,
+   "guidance": []
+  },
+  {
+   "lat": 37.98960902751392,
+   "lon": -119.66282345193574,
+   "guidance": []
+  },
+  {
+   "lat": 37.92814730861183,
+   "lon": -119.66282345193574,
+   "guidance": []
+  },
+  {
+   "lat": 37.86663416915132,
+   "lon": -119.66282345193574,
+   "guidance": [
+    {
+     "text": "Tioga Road closed approx. November to May east of this point",
+     "reason": "on Tioga Road, east of the marked point"
+    },
+    {
+     "text": "Tioga Road closed approx. November to May west of this point",
+     "reason": "on Tioga Road, west of the marked point"
+    },
+    {
+     "text": "Facilities along Tioga Road available summer only",
+     "reason": "along Tioga Road"
+    },
+    {
+     "text": "Restrooms are available at picnic areas, campgrounds, trailheads, and roadside pullouts along Tioga Road",
+     "reason": "along Tioga Road"
+    }
+   ]
+  },
+  {
+   "lat": 37.80506963707389,
+   "lon": -119.66282345193571,
+   "guidance": [
+    {
+     "text": "Restrooms are available at picnic areas, campgrounds, trailheads, and roadside pullouts along Tioga Road",
+     "reason": "nearby (2.1 km)"
+    }
+   ]
+  },
+  {
+   "lat": 37.74345374058145,
+   "lon": -119.66282345193568,
+   "guidance": []
+  },
+  {
+   "lat": 37.68178650813713,
+   "lon": -119.66282345193568,
+   "guidance": [
+    {
+     "text": "Glacier Point Road Closed approx. November to May east of this point, but may be open December to March to ski area.",
+     "reason": "on Glacier Point Road, east of the marked point"
+    }
+   ]
+  },
+  {
+   "lat": 37.62006796846543,
+   "lon": -119.66282345193568,
+   "guidance": []
+  },
+  {
+   "lat": 37.55829815055282,
+   "lon": -119.66282345193565,
+   "guidance": []
+  },
+  {
+   "lat": 37.49647708364818,
+   "lon": -119.66282345193562,
+   "guidance": []
+  },
+  {
+   "lat": 38.173685385354766,
+   "lon": -119.58917934556429,
+   "guidance": []
+  },
+  {
+   "lat": 38.112378093177384,
+   "lon": -119.58917934556429,
+   "guidance": []
+  },
+  {
+   "lat": 38.0510192981763,
+   "lon": -119.58917934556429,
+   "guidance": []
+  },
+  {
+   "lat": 37.98960902751392,
+   "lon": -119.58917934556426,
+   "guidance": []
+  },
+  {
+   "lat": 37.92814730861183,
+   "lon": -119.58917934556423,
+   "guidance": []
+  },
+  {
+   "lat": 37.86663416915132,
+   "lon": -119.58917934556423,
+   "guidance": [
+    {
+     "text": "Tioga Road closed approx. November to May east of this point",
+     "reason": "on Tioga Road, east of the marked point"
+    },
+    {
+     "text": "Tioga Road closed approx. November to May west of this point",
+     "reason": "on Tioga Road, west of the marked point"
+    },
+    {
+     "text": "Facilities along Tioga Road available summer only",
+     "reason": "along Tioga Road"
+    },
+    {
+     "text": "Restrooms are available at picnic areas, campgrounds, trailheads, and roadside pullouts along Tioga Road",
+     "reason": "along Tioga Road"
+    }
+   ]
+  },
+  {
+   "lat": 37.80506963707389,
+   "lon": -119.58917934556423,
+   "guidance": [
+    {
+     "text": "Tioga Road closed approx. November to May east of this point",
+     "reason": "on Tioga Road, east of the marked point"
+    },
+    {
+     "text": "Tioga Road closed approx. November to May west of this point",
+     "reason": "on Tioga Road, west of the marked point"
+    },
+    {
+     "text": "Facilities along Tioga Road available summer only",
+     "reason": "along Tioga Road"
+    },
+    {
+     "text": "Restrooms are available at picnic areas, campgrounds, trailheads, and roadside pullouts along Tioga Road",
+     "reason": "along Tioga Road"
+    }
+   ]
+  },
+  {
+   "lat": 37.74345374058145,
+   "lon": -119.58917934556422,
+   "guidance": []
+  },
+  {
+   "lat": 37.68178650813713,
+   "lon": -119.58917934556419,
+   "guidance": [
+    {
+     "text": "Glacier Point Road Closed approx. November to May east of this point, but may be open December to March to ski area.",
+     "reason": "on Glacier Point Road, east of the marked point"
+    }
+   ]
+  },
+  {
+   "lat": 37.62006796846543,
+   "lon": -119.58917934556419,
+   "guidance": []
+  },
+  {
+   "lat": 37.55829815055282,
+   "lon": -119.58917934556419,
+   "guidance": [
+    {
+     "text": "Wawona Visitor Center (summer only)",
+     "reason": "nearby (1.5 km)"
+    }
+   ]
+  },
+  {
+   "lat": 37.49647708364818,
+   "lon": -119.58917934556416,
+   "guidance": []
+  },
+  {
+   "lat": 38.173685385354766,
+   "lon": -119.51553528548524,
+   "guidance": []
+  },
+  {
+   "lat": 38.112378093177384,
+   "lon": -119.51553528548521,
+   "guidance": []
+  },
+  {
+   "lat": 38.0510192981763,
+   "lon": -119.51553528548521,
+   "guidance": []
+  },
+  {
+   "lat": 37.98960902751392,
+   "lon": -119.51553528548521,
+   "guidance": []
+  },
+  {
+   "lat": 37.92814730861183,
+   "lon": -119.51553528548519,
+   "guidance": []
+  },
+  {
+   "lat": 37.86663416915132,
+   "lon": -119.51553528548516,
+   "guidance": []
+  },
+  {
+   "lat": 37.80506963707389,
+   "lon": -119.51553528548516,
+   "guidance": [
+    {
+     "text": "Tioga Road closed approx. November to May east of this point",
+     "reason": "on Tioga Road, east of the marked point"
+    },
+    {
+     "text": "Tioga Road closed approx. November to May west of this point",
+     "reason": "on Tioga Road, west of the marked point"
+    },
+    {
+     "text": "Facilities along Tioga Road available summer only",
+     "reason": "along Tioga Road"
+    },
+    {
+     "text": "Restrooms are available at picnic areas, campgrounds, trailheads, and roadside pullouts along Tioga Road",
+     "reason": "along Tioga Road"
+    }
+   ]
+  },
+  {
+   "lat": 37.74345374058145,
+   "lon": -119.51553528548516,
+   "guidance": []
+  },
+  {
+   "lat": 37.68178650813711,
+   "lon": -119.51553528548514,
+   "guidance": []
+  },
+  {
+   "lat": 37.62006796846543,
+   "lon": -119.51553528548511,
+   "guidance": []
+  },
+  {
+   "lat": 37.55829815055282,
+   "lon": -119.51553528548511,
+   "guidance": []
+  },
+  {
+   "lat": 37.49647708364818,
+   "lon": -119.51553528548511,
+   "guidance": []
+  },
+  {
+   "lat": 38.173685385354766,
+   "lon": -119.44189117911377,
+   "guidance": []
+  },
+  {
+   "lat": 38.112378093177384,
+   "lon": -119.44189117911375,
+   "guidance": []
+  },
+  {
+   "lat": 38.0510192981763,
+   "lon": -119.44189117911372,
+   "guidance": []
+  },
+  {
+   "lat": 37.98960902751392,
+   "lon": -119.44189117911372,
+   "guidance": []
+  },
+  {
+   "lat": 37.92814730861183,
+   "lon": -119.44189117911372,
+   "guidance": []
+  },
+  {
+   "lat": 37.86663416915132,
+   "lon": -119.4418911791137,
+   "guidance": [
+    {
+     "text": "Tioga Road closed approx. November to May east of this point",
+     "reason": "on Tioga Road, east of the marked point"
+    },
+    {
+     "text": "Tioga Road closed approx. November to May west of this point",
+     "reason": "on Tioga Road, west of the marked point"
+    },
+    {
+     "text": "Facilities along Tioga Road available summer only",
+     "reason": "along Tioga Road"
+    },
+    {
+     "text": "Restrooms are available at picnic areas, campgrounds, trailheads, and roadside pullouts along Tioga Road",
+     "reason": "along Tioga Road"
+    }
+   ]
+  },
+  {
+   "lat": 37.80506963707389,
+   "lon": -119.44189117911367,
+   "guidance": []
+  },
+  {
+   "lat": 37.74345374058145,
+   "lon": -119.44189117911367,
+   "guidance": []
+  },
+  {
+   "lat": 37.68178650813711,
+   "lon": -119.44189117911367,
+   "guidance": []
+  },
+  {
+   "lat": 37.62006796846543,
+   "lon": -119.44189117911364,
+   "guidance": []
+  },
+  {
+   "lat": 37.55829815055282,
+   "lon": -119.44189117911363,
+   "guidance": []
+  },
+  {
+   "lat": 37.49647708364818,
+   "lon": -119.44189117911363,
+   "guidance": []
+  },
+  {
+   "lat": 38.173685385354766,
+   "lon": -119.36824711903469,
+   "guidance": []
+  },
+  {
+   "lat": 38.112378093177384,
+   "lon": -119.36824711903469,
+   "guidance": []
+  },
+  {
+   "lat": 38.0510192981763,
+   "lon": -119.36824711903468,
+   "guidance": []
+  },
+  {
+   "lat": 37.98960902751392,
+   "lon": -119.36824711903465,
+   "guidance": []
+  },
+  {
+   "lat": 37.92814730861183,
+   "lon": -119.36824711903465,
+   "guidance": []
+  },
+  {
+   "lat": 37.86663416915132,
+   "lon": -119.36824711903465,
+   "guidance": [
+    {
+     "text": "Tioga Road closed approx. November to May east of this point",
+     "reason": "on Tioga Road, east of the marked point"
+    },
+    {
+     "text": "Tioga Road closed approx. November to May west of this point",
+     "reason": "on Tioga Road, west of the marked point"
+    },
+    {
+     "text": "Facilities along Tioga Road available summer only",
+     "reason": "along Tioga Road"
+    },
+    {
+     "text": "Restrooms are available at picnic areas, campgrounds, trailheads, and roadside pullouts along Tioga Road",
+     "reason": "along Tioga Road"
+    },
+    {
+     "text": "Tuolumne Meadows Visitor Center (summer only)",
+     "reason": "nearby (1.9 km)"
+    }
+   ]
+  },
+  {
+   "lat": 37.80506963707389,
+   "lon": -119.36824711903462,
+   "guidance": []
+  },
+  {
+   "lat": 37.74345374058145,
+   "lon": -119.36824711903459,
+   "guidance": []
+  },
+  {
+   "lat": 37.68178650813711,
+   "lon": -119.36824711903459,
+   "guidance": []
+  },
+  {
+   "lat": 37.62006796846543,
+   "lon": -119.36824711903459,
+   "guidance": []
+  },
+  {
+   "lat": 37.55829815055282,
+   "lon": -119.36824711903456,
+   "guidance": []
+  },
+  {
+   "lat": 37.49647708364818,
+   "lon": -119.36824711903456,
+   "guidance": []
+  },
+  {
+   "lat": 38.173685385354766,
+   "lon": -119.2946030126632,
+   "guidance": []
+  },
+  {
+   "lat": 38.11237809317736,
+   "lon": -119.2946030126632,
+   "guidance": []
+  },
+  {
+   "lat": 38.0510192981763,
+   "lon": -119.2946030126632,
+   "guidance": []
+  },
+  {
+   "lat": 37.98960902751392,
+   "lon": -119.29460301266317,
+   "guidance": []
+  },
+  {
+   "lat": 37.92814730861183,
+   "lon": -119.29460301266316,
+   "guidance": []
+  },
+  {
+   "lat": 37.86663416915132,
+   "lon": -119.29460301266316,
+   "guidance": [
+    {
+     "text": "Tioga Road closed approx. November to May east of this point",
+     "reason": "on Tioga Road, east of the marked point"
+    },
+    {
+     "text": "Tioga Road closed approx. November to May west of this point",
+     "reason": "on Tioga Road, west of the marked point"
+    },
+    {
+     "text": "Facilities along Tioga Road available summer only",
+     "reason": "along Tioga Road"
+    },
+    {
+     "text": "Restrooms are available at picnic areas, campgrounds, trailheads, and roadside pullouts along Tioga Road",
+     "reason": "along Tioga Road"
+    }
+   ]
+  },
+  {
+   "lat": 37.80506963707386,
+   "lon": -119.29460301266316,
+   "guidance": []
+  },
+  {
+   "lat": 37.74345374058145,
+   "lon": -119.29460301266313,
+   "guidance": []
+  },
+  {
+   "lat": 37.68178650813711,
+   "lon": -119.29460301266313,
+   "guidance": []
+  },
+  {
+   "lat": 37.62006796846543,
+   "lon": -119.2946030126631,
+   "guidance": []
+  },
+  {
+   "lat": 37.558298150552794,
+   "lon": -119.2946030126631,
+   "guidance": []
+  },
+  {
+   "lat": 37.49647708364818,
+   "lon": -119.29460301266307,
+   "guidance": []
+  },
+  {
+   "lat": 38.173685385354766,
+   "lon": -119.22095895258416,
+   "guidance": []
+  },
+  {
+   "lat": 38.11237809317736,
+   "lon": -119.22095895258413,
+   "guidance": []
+  },
+  {
+   "lat": 38.0510192981763,
+   "lon": -119.22095895258413,
+   "guidance": []
+  },
+  {
+   "lat": 37.98960902751392,
+   "lon": -119.22095895258413,
+   "guidance": []
+  },
+  {
+   "lat": 37.92814730861183,
+   "lon": -119.2209589525841,
+   "guidance": [
+    {
+     "text": "Facilities along Tioga Road available summer only",
+     "reason": "along Tioga Road"
+    },
+    {
+     "text": "Restrooms are available at picnic areas, campgrounds, trailheads, and roadside pullouts along Tioga Road",
+     "reason": "along Tioga Road"
+    }
+   ]
+  },
+  {
+   "lat": 37.86663416915132,
+   "lon": -119.2209589525841,
+   "guidance": []
+  },
+  {
+   "lat": 37.80506963707386,
+   "lon": -119.22095895258407,
+   "guidance": []
+  },
+  {
+   "lat": 37.74345374058145,
+   "lon": -119.22095895258407,
+   "guidance": []
+  },
+  {
+   "lat": 37.68178650813711,
+   "lon": -119.22095895258406,
+   "guidance": []
+  },
+  {
+   "lat": 37.6200679684654,
+   "lon": -119.22095895258406,
+   "guidance": []
+  },
+  {
+   "lat": 37.558298150552794,
+   "lon": -119.22095895258403,
+   "guidance": []
+  },
+  {
+   "lat": 37.49647708364818,
+   "lon": -119.22095895258403,
+   "guidance": []
+  },
+  {
+   "lat": 38.173685385354744,
+   "lon": -119.14731484621267,
+   "guidance": []
+  },
+  {
+   "lat": 38.11237809317736,
+   "lon": -119.14731484621267,
+   "guidance": []
+  },
+  {
+   "lat": 38.0510192981763,
+   "lon": -119.14731484621267,
+   "guidance": []
+  },
+  {
+   "lat": 37.98960902751392,
+   "lon": -119.14731484621264,
+   "guidance": []
+  },
+  {
+   "lat": 37.92814730861183,
+   "lon": -119.14731484621264,
+   "guidance": [
+    {
+     "text": "Facilities along Tioga Road available summer only",
+     "reason": "along Tioga Road"
+    },
+    {
+     "text": "Restrooms are available at picnic areas, campgrounds, trailheads, and roadside pullouts along Tioga Road",
+     "reason": "along Tioga Road"
+    }
+   ]
+  },
+  {
+   "lat": 37.86663416915132,
+   "lon": -119.14731484621261,
+   "guidance": []
+  },
+  {
+   "lat": 37.80506963707386,
+   "lon": -119.14731484621261,
+   "guidance": []
+  },
+  {
+   "lat": 37.74345374058145,
+   "lon": -119.14731484621258,
+   "guidance": []
+  },
+  {
+   "lat": 37.68178650813711,
+   "lon": -119.14731484621258,
+   "guidance": []
+  },
+  {
+   "lat": 37.6200679684654,
+   "lon": -119.14731484621257,
+   "guidance": []
+  },
+  {
+   "lat": 37.558298150552794,
+   "lon": -119.14731484621257,
+   "guidance": []
+  },
+  {
+   "lat": 37.49647708364818,
+   "lon": -119.14731484621254,
+   "guidance": []
+  },
+  {
+   "lat": 38.173685385354744,
+   "lon": -119.07367073984119,
+   "guidance": []
+  },
+  {
+   "lat": 38.11237809317736,
+   "lon": -119.07367073984118,
+   "guidance": []
+  },
+  {
+   "lat": 38.0510192981763,
+   "lon": -119.07367073984118,
+   "guidance": []
+  },
+  {
+   "lat": 37.98960902751392,
+   "lon": -119.07367073984118,
+   "guidance": []
+  },
+  {
+   "lat": 37.92814730861183,
+   "lon": -119.07367073984115,
+   "guidance": []
+  },
+  {
+   "lat": 37.86663416915132,
+   "lon": -119.07367073984112,
+   "guidance": []
+  },
+  {
+   "lat": 37.80506963707386,
+   "lon": -119.07367073984112,
+   "guidance": []
+  },
+  {
+   "lat": 37.74345374058145,
+   "lon": -119.07367073984112,
+   "guidance": []
+  },
+  {
+   "lat": 37.68178650813711,
+   "lon": -119.07367073984109,
+   "guidance": []
+  },
+  {
+   "lat": 37.6200679684654,
+   "lon": -119.07367073984109,
+   "guidance": []
+  },
+  {
+   "lat": 37.558298150552794,
+   "lon": -119.07367073984109,
+   "guidance": []
+  },
+  {
+   "lat": 37.49647708364818,
+   "lon": -119.07367073984106,
+   "guidance": []
+  },
+  {
+   "lat": 37.47574493243072,
+   "lon": -119.6445456317726,
+   "guidance": []
+  },
+  {
+   "lat": 37.95445707909634,
+   "lon": -119.11847365200543,
+   "guidance": [
+    {
+     "text": "Facilities along Tioga Road available summer only",
+     "reason": "along Tioga Road"
+    },
+    {
+     "text": "Restrooms are available at picnic areas, campgrounds, trailheads, and roadside pullouts along Tioga Road",
+     "reason": "along Tioga Road"
+    }
+   ]
+  },
+  {
+   "lat": 37.64569539498621,
+   "lon": -119.71997398677149,
+   "guidance": []
+  },
+  {
+   "lat": 37.65352040346183,
+   "lon": -119.7040312487054,
+   "guidance": []
+  },
+  {
+   "lat": 37.67585579550201,
+   "lon": -119.78510251045603,
+   "guidance": []
+  },
+  {
+   "lat": 37.70212734497109,
+   "lon": -119.749121405317,
+   "guidance": []
+  },
+  {
+   "lat": 37.881487092757254,
+   "lon": -119.85814930577133,
+   "guidance": [
+    {
+     "text": "Hetch Hetchy Road vehicle length limit of 25 ft (7.6 m) width limit of 8 ft (2.4 m)",
+     "reason": "along Hetch Hetchy Road"
+    },
+    {
+     "text": "Hetch Hetchy Entrance (open sunrise to sunset)",
+     "reason": "nearby (1.7 km)"
+    }
+   ]
+  },
+  {
+   "lat": 37.480193142829435,
+   "lon": -119.63613436904728,
+   "guidance": []
+  },
+  {
+   "lat": 37.65034364121728,
+   "lon": -119.88680373322221,
+   "guidance": []
+  },
+  {
+   "lat": 37.81258545797355,
+   "lon": -119.8794315500883,
+   "guidance": []
+  },
+  {
+   "lat": 38.030102940825245,
+   "lon": -119.17169446985686,
+   "guidance": []
+  },
+  {
+   "lat": 37.93917498829144,
+   "lon": -119.08407014614441,
+   "guidance": []
+  },
+  {
+   "lat": 38.156902556697226,
+   "lon": -119.61070337517512,
+   "guidance": []
+  },
+  {
+   "lat": 37.76168845897572,
+   "lon": -119.22323149362569,
+   "guidance": []
+  },
+  {
+   "lat": 37.83790399868872,
+   "lon": -119.41926932483433,
+   "guidance": []
+  },
+  {
+   "lat": 37.958009488679274,
+   "lon": -119.40516208110125,
+   "guidance": []
+  },
+  {
+   "lat": 37.75911001635302,
+   "lon": -119.72616298202007,
+   "guidance": []
+  },
+  {
+   "lat": 37.689277858505,
+   "lon": -119.70461527383796,
+   "guidance": []
+  },
+  {
+   "lat": 37.722702301743034,
+   "lon": -119.76002799134064,
+   "guidance": []
+  },
+  {
+   "lat": 37.71094846771464,
+   "lon": -119.81490220072976,
+   "guidance": []
+  },
+  {
+   "lat": 37.620983903157224,
+   "lon": -119.69706104577423,
+   "guidance": []
+  },
+  {
+   "lat": 37.592147467294545,
+   "lon": -119.66921057872887,
+   "guidance": []
+  },
+  {
+   "lat": 37.67026656803041,
+   "lon": -119.50194850739604,
+   "guidance": []
+  },
+  {
+   "lat": 37.980432341224216,
+   "lon": -119.70545714773309,
+   "guidance": []
+  },
+  {
+   "lat": 38.01131681176805,
+   "lon": -119.82074989356113,
+   "guidance": []
+  },
+  {
+   "lat": 38.00005120594789,
+   "lon": -119.7943404863099,
+   "guidance": []
+  },
+  {
+   "lat": 37.983654661896864,
+   "lon": -119.75961841918154,
+   "guidance": []
+  },
+  {
+   "lat": 38.06048873889015,
+   "lon": -119.75521179771746,
+   "guidance": []
+  },
+  {
+   "lat": 37.98490415840265,
+   "lon": -119.65741661336438,
+   "guidance": []
+  },
+  {
+   "lat": 37.640542331185614,
+   "lon": -119.60119993545607,
+   "guidance": []
+  },
+  {
+   "lat": 37.70325554910256,
+   "lon": -119.32697293893892,
+   "guidance": []
+  },
+  {
+   "lat": 37.65598241801072,
+   "lon": -119.33865316383498,
+   "guidance": []
+  },
+  {
+   "lat": 37.581875637760916,
+   "lon": -119.5892315171181,
+   "guidance": []
+  },
+  {
+   "lat": 37.759919561345974,
+   "lon": -119.70011761833592,
+   "guidance": []
+  },
+  {
+   "lat": 37.76703698324433,
+   "lon": -119.46719609558835,
+   "guidance": []
+  },
+  {
+   "lat": 37.88087049288653,
+   "lon": -119.25635320875315,
+   "guidance": [
+    {
+     "text": "Tioga Road closed approx. November to May east of this point",
+     "reason": "on Tioga Road, east of the marked point"
+    },
+    {
+     "text": "Tioga Road closed approx. November to May west of this point",
+     "reason": "on Tioga Road, west of the marked point"
+    },
+    {
+     "text": "Facilities along Tioga Road available summer only",
+     "reason": "along Tioga Road"
+    },
+    {
+     "text": "Restrooms are available at picnic areas, campgrounds, trailheads, and roadside pullouts along Tioga Road",
+     "reason": "along Tioga Road"
+    }
+   ]
+  },
+  {
+   "lat": 37.759175969036654,
+   "lon": -119.3596244619872,
+   "guidance": []
+  },
+  {
+   "lat": 37.80270372703169,
+   "lon": -119.39577999695334,
+   "guidance": []
+  },
+  {
+   "lat": 37.77653379051368,
+   "lon": -119.37257883936799,
+   "guidance": []
+  },
+  {
+   "lat": 37.833902503168076,
+   "lon": -119.32528159919244,
+   "guidance": []
+  },
+  {
+   "lat": 37.87878709619096,
+   "lon": -119.35366297082186,
+   "guidance": [
+    {
+     "text": "Tioga Road closed approx. November to May east of this point",
+     "reason": "on Tioga Road, east of the marked point"
+    },
+    {
+     "text": "Tioga Road closed approx. November to May west of this point",
+     "reason": "on Tioga Road, west of the marked point"
+    },
+    {
+     "text": "Facilities along Tioga Road available summer only",
+     "reason": "along Tioga Road"
+    },
+    {
+     "text": "Restrooms are available at picnic areas, campgrounds, trailheads, and roadside pullouts along Tioga Road",
+     "reason": "along Tioga Road"
+    }
+   ]
+  },
+  {
+   "lat": 37.92877176500137,
+   "lon": -119.38557117653077,
+   "guidance": []
+  },
+  {
+   "lat": 38.006613553938855,
+   "lon": -119.35979889181438,
+   "guidance": []
+  },
+  {
+   "lat": 38.050132565535435,
+   "lon": -119.38818785540019,
+   "guidance": []
+  },
+  {
+   "lat": 38.10425029785786,
+   "lon": -119.63209181429661,
+   "guidance": []
+  },
+  {
+   "lat": 38.09763104805736,
+   "lon": -119.4988009470889,
+   "guidance": []
+  },
+  {
+   "lat": 37.826192380984516,
+   "lon": -119.59350162224457,
+   "guidance": [
+    {
+     "text": "Tioga Road closed approx. November to May east of this point",
+     "reason": "on Tioga Road, east of the marked point"
+    },
+    {
+     "text": "Tioga Road closed approx. November to May west of this point",
+     "reason": "on Tioga Road, west of the marked point"
+    },
+    {
+     "text": "Facilities along Tioga Road available summer only",
+     "reason": "along Tioga Road"
+    },
+    {
+     "text": "Restrooms are available at picnic areas, campgrounds, trailheads, and roadside pullouts along Tioga Road",
+     "reason": "along Tioga Road"
+    }
+   ]
+  },
+  {
+   "lat": 37.853680232180906,
+   "lon": -119.28973281893552,
+   "guidance": []
+  },
+  {
+   "lat": 37.77875794752005,
+   "lon": -119.50288898413928,
+   "guidance": []
+  },
+  {
+   "lat": 37.79086667438388,
+   "lon": -119.5361851753863,
+   "guidance": [
+    {
+     "text": "Tioga Road closed approx. November to May east of this point",
+     "reason": "on Tioga Road, east of the marked point"
+    },
+    {
+     "text": "Tioga Road closed approx. November to May west of this point",
+     "reason": "on Tioga Road, west of the marked point"
+    },
+    {
+     "text": "Facilities along Tioga Road available summer only",
+     "reason": "along Tioga Road"
+    },
+    {
+     "text": "Restrooms are available at picnic areas, campgrounds, trailheads, and roadside pullouts along Tioga Road",
+     "reason": "along Tioga Road"
+    }
+   ]
+  },
+  {
+   "lat": 38.16012908898983,
+   "lon": -119.66949879531705,
+   "guidance": []
+  },
+  {
+   "lat": 38.106524262919066,
+   "lon": -119.76036170180156,
+   "guidance": []
+  },
+  {
+   "lat": 37.62172884576273,
+   "lon": -119.50832713953072,
+   "guidance": []
+  },
+  {
+   "lat": 38.03130380438275,
+   "lon": -119.49918017456872,
+   "guidance": []
+  },
+  {
+   "lat": 37.90130597278942,
+   "lon": -119.63247104177644,
+   "guidance": []
+  },
+  {
+   "lat": 37.897996200953884,
+   "lon": -119.63886481153145,
+   "guidance": []
+  },
+  {
+   "lat": 37.90209595040821,
+   "lon": -119.86849463095848,
+   "guidance": [
+    {
+     "text": "Hetch Hetchy Entrance (open sunrise to sunset)",
+     "reason": "nearby (0.7 km)"
+    }
+   ]
+  },
+  {
+   "lat": 37.80483119136375,
+   "lon": -119.77038089691106,
+   "guidance": []
+  },
+  {
+   "lat": 37.87097393422831,
+   "lon": -119.8146139841417,
+   "guidance": []
+  },
+  {
+   "lat": 37.531066733573766,
+   "lon": -119.56939792455165,
+   "guidance": []
+  },
+  {
+   "lat": 37.6642806609729,
+   "lon": -119.86514226142542,
+   "guidance": []
+  },
+  {
+   "lat": 37.743277585204304,
+   "lon": -119.45402173664206,
+   "guidance": []
+  },
+  {
+   "lat": 37.90533372530926,
+   "lon": -119.42750618087874,
+   "guidance": []
+  },
+  {
+   "lat": 37.622900329545764,
+   "lon": -119.56742593702728,
+   "guidance": []
+  },
+  {
+   "lat": 37.56378083177236,
+   "lon": -119.54354219775367,
+   "guidance": []
+  },
+  {
+   "lat": 37.56347419804006,
+   "lon": -119.50863808569552,
+   "guidance": []
+  },
+  {
+   "lat": 37.62147052210257,
+   "lon": -119.42979668337809,
+   "guidance": []
+  },
+  {
+   "lat": 37.624173910833214,
+   "lon": -119.46526204469961,
+   "guidance": []
+  },
+  {
+   "lat": 37.57588260870456,
+   "lon": -119.49154252756956,
+   "guidance": []
+  },
+  {
+   "lat": 37.582074042109845,
+   "lon": -119.4739615471592,
+   "guidance": []
+  },
+  {
+   "lat": 37.624852749271284,
+   "lon": -119.52731124309949,
+   "guidance": []
+  },
+  {
+   "lat": 37.57003337460721,
+   "lon": -119.40620116069256,
+   "guidance": []
+  },
+  {
+   "lat": 37.63816390168319,
+   "lon": -119.4109339122342,
+   "guidance": []
+  },
+  {
+   "lat": 37.71239453429484,
+   "lon": -119.38385706091506,
+   "guidance": []
+  },
+  {
+   "lat": 37.78178530607745,
+   "lon": -119.29951690643239,
+   "guidance": []
+  },
+  {
+   "lat": 37.80384835822886,
+   "lon": -119.31420058334164,
+   "guidance": []
+  },
+  {
+   "lat": 37.75871426241647,
+   "lon": -119.40915156159593,
+   "guidance": []
+  },
+  {
+   "lat": 37.777217236059066,
+   "lon": -119.3931102206817,
+   "guidance": []
+  },
+  {
+   "lat": 37.78427906353577,
+   "lon": -119.33190289617687,
+   "guidance": []
+  },
+  {
+   "lat": 37.81105744809381,
+   "lon": -119.43991449290894,
+   "guidance": []
+  },
+  {
+   "lat": 37.761370673916936,
+   "lon": -119.33122790644498,
+   "guidance": []
+  },
+  {
+   "lat": 37.740032693028276,
+   "lon": -119.40819590093994,
+   "guidance": []
+  },
+  {
+   "lat": 37.91024092660798,
+   "lon": -119.2599331402349,
+   "guidance": [
+    {
+     "text": "Facilities along Tioga Road available summer only",
+     "reason": "along Tioga Road"
+    },
+    {
+     "text": "Restrooms are available at picnic areas, campgrounds, trailheads, and roadside pullouts along Tioga Road",
+     "reason": "along Tioga Road"
+    }
+   ]
+  },
+  {
+   "lat": 37.92123911821686,
+   "lon": -119.28603914698529,
+   "guidance": []
+  },
+  {
+   "lat": 37.9403773044031,
+   "lon": -119.33989704107908,
+   "guidance": []
+  },
+  {
+   "lat": 37.84263600937778,
+   "lon": -119.35470964236961,
+   "guidance": [
+    {
+     "text": "Tuolumne Meadows Visitor Center (summer only)",
+     "reason": "nearby (1.2 km)"
+    }
+   ]
+  },
+  {
+   "lat": 37.8400244528757,
+   "lon": -119.42689183421311,
+   "guidance": [
+    {
+     "text": "Tioga Road closed approx. November to May east of this point",
+     "reason": "on Tioga Road, east of the marked point"
+    },
+    {
+     "text": "Tioga Road closed approx. November to May west of this point",
+     "reason": "on Tioga Road, west of the marked point"
+    },
+    {
+     "text": "Facilities along Tioga Road available summer only",
+     "reason": "along Tioga Road"
+    },
+    {
+     "text": "Restrooms are available at picnic areas, campgrounds, trailheads, and roadside pullouts along Tioga Road",
+     "reason": "along Tioga Road"
+    }
+   ]
+  },
+  {
+   "lat": 37.83992263415289,
+   "lon": -119.38918902150203,
+   "guidance": []
+  },
+  {
+   "lat": 37.89464441396886,
+   "lon": -119.3351870191142,
+   "guidance": [
+    {
+     "text": "Tioga Road closed approx. November to May east of this point",
+     "reason": "on Tioga Road, east of the marked point"
+    },
+    {
+     "text": "Tioga Road closed approx. November to May west of this point",
+     "reason": "on Tioga Road, west of the marked point"
+    },
+    {
+     "text": "Facilities along Tioga Road available summer only",
+     "reason": "along Tioga Road"
+    },
+    {
+     "text": "Restrooms are available at picnic areas, campgrounds, trailheads, and roadside pullouts along Tioga Road",
+     "reason": "along Tioga Road"
+    }
+   ]
+  },
+  {
+   "lat": 37.93795468906863,
+   "lon": -119.24281480623979,
+   "guidance": [
+    {
+     "text": "Facilities along Tioga Road available summer only",
+     "reason": "along Tioga Road"
+    },
+    {
+     "text": "Restrooms are available at picnic areas, campgrounds, trailheads, and roadside pullouts along Tioga Road",
+     "reason": "along Tioga Road"
+    }
+   ]
+  },
+  {
+   "lat": 37.93242115573737,
+   "lon": -119.22483182248048,
+   "guidance": [
+    {
+     "text": "Facilities along Tioga Road available summer only",
+     "reason": "along Tioga Road"
+    },
+    {
+     "text": "Restrooms are available at picnic areas, campgrounds, trailheads, and roadside pullouts along Tioga Road",
+     "reason": "along Tioga Road"
+    }
+   ]
+  },
+  {
+   "lat": 37.9608859746367,
+   "lon": -119.24629608858099,
+   "guidance": []
+  },
+  {
+   "lat": 37.96934136674838,
+   "lon": -119.345714377658,
+   "guidance": []
+  },
+  {
+   "lat": 37.960909918417414,
+   "lon": -119.43754052518179,
+   "guidance": []
+  },
+  {
+   "lat": 37.98991364341478,
+   "lon": -119.48864522406856,
+   "guidance": []
+  },
+  {
+   "lat": 37.89867852206324,
+   "lon": -119.52202483425093,
+   "guidance": []
+  },
+  {
+   "lat": 37.88401939145231,
+   "lon": -119.53282522547,
+   "guidance": []
+  },
+  {
+   "lat": 37.853638306004086,
+   "lon": -119.49563815657645,
+   "guidance": []
+  },
+  {
+   "lat": 37.809589316040594,
+   "lon": -119.36650360773417,
+   "guidance": []
+  },
+  {
+   "lat": 37.75687329985371,
+   "lon": -119.19673866743906,
+   "guidance": []
+  },
+  {
+   "lat": 38.05796255665575,
+   "lon": -119.31511828421579,
+   "guidance": []
+  },
+  {
+   "lat": 38.00282445109474,
+   "lon": -119.31962350852797,
+   "guidance": []
+  },
+  {
+   "lat": 38.14005797207974,
+   "lon": -119.42987255664958,
+   "guidance": []
+  },
+  {
+   "lat": 38.1186566357026,
+   "lon": -119.45884549907552,
+   "guidance": []
+  },
+  {
+   "lat": 38.11452716522425,
+   "lon": -119.4364710777649,
+   "guidance": []
+  },
+  {
+   "lat": 38.14052329605911,
+   "lon": -119.57118027519006,
+   "guidance": []
+  },
+  {
+   "lat": 38.178799460920594,
+   "lon": -119.70022381314054,
+   "guidance": []
+  },
+  {
+   "lat": 38.16105940512746,
+   "lon": -119.68116383630034,
+   "guidance": []
+  },
+  {
+   "lat": 38.133704437273735,
+   "lon": -119.72415305786004,
+   "guidance": []
+  },
+  {
+   "lat": 38.073148262305004,
+   "lon": -119.62951304891675,
+   "guidance": []
+  },
+  {
+   "lat": 38.08737563351067,
+   "lon": -119.66469019365019,
+   "guidance": []
+  },
+  {
+   "lat": 38.04964880249095,
+   "lon": -119.83745865539709,
+   "guidance": []
+  },
+  {
+   "lat": 38.07759649446179,
+   "lon": -119.80679431535914,
+   "guidance": []
+  },
+  {
+   "lat": 37.99856294470353,
+   "lon": -119.80769687861284,
+   "guidance": []
+  },
+  {
+   "lat": 37.90006104495044,
+   "lon": -119.67274498161858,
+   "guidance": []
+  },
+  {
+   "lat": 37.99672796704942,
+   "lon": -119.90070621112878,
+   "guidance": []
+  },
+  {
+   "lat": 37.87713475558542,
+   "lon": -119.84990489827642,
+   "guidance": [
+    {
+     "text": "Hetch Hetchy Road vehicle length limit of 25 ft (7.6 m) width limit of 8 ft (2.4 m)",
+     "reason": "along Hetch Hetchy Road"
+    }
+   ]
+  },
+  {
+   "lat": 38.018368178586655,
+   "lon": -119.4923009825293,
+   "guidance": []
+  },
+  {
+   "lat": 38.010414424785,
+   "lon": -119.52150909043345,
+   "guidance": []
+  },
+  {
+   "lat": 37.982769886990404,
+   "lon": -119.55104330526895,
+   "guidance": []
+  },
+  {
+   "lat": 38.00822118418151,
+   "lon": -119.71667470306772,
+   "guidance": []
+  },
+  {
+   "lat": 37.85993829650614,
+   "lon": -119.62606208810863,
+   "guidance": [
+    {
+     "text": "Tioga Road closed approx. November to May east of this point",
+     "reason": "on Tioga Road, east of the marked point"
+    },
+    {
+     "text": "Tioga Road closed approx. November to May west of this point",
+     "reason": "on Tioga Road, west of the marked point"
+    },
+    {
+     "text": "Facilities along Tioga Road available summer only",
+     "reason": "along Tioga Road"
+    },
+    {
+     "text": "Restrooms are available at picnic areas, campgrounds, trailheads, and roadside pullouts along Tioga Road",
+     "reason": "along Tioga Road"
+    }
+   ]
+  },
+  {
+   "lat": 37.846020139607774,
+   "lon": -119.65954027799295,
+   "guidance": [
+    {
+     "text": "Tioga Road closed approx. November to May east of this point",
+     "reason": "on Tioga Road, east of the marked point"
+    },
+    {
+     "text": "Tioga Road closed approx. November to May west of this point",
+     "reason": "on Tioga Road, west of the marked point"
+    },
+    {
+     "text": "Facilities along Tioga Road available summer only",
+     "reason": "along Tioga Road"
+    },
+    {
+     "text": "Restrooms are available at picnic areas, campgrounds, trailheads, and roadside pullouts along Tioga Road",
+     "reason": "along Tioga Road"
+    }
+   ]
+  },
+  {
+   "lat": 37.83306981967544,
+   "lon": -119.46446567625047,
+   "guidance": [
+    {
+     "text": "Tioga Road closed approx. November to May east of this point",
+     "reason": "on Tioga Road, east of the marked point"
+    },
+    {
+     "text": "Tioga Road closed approx. November to May west of this point",
+     "reason": "on Tioga Road, west of the marked point"
+    },
+    {
+     "text": "Facilities along Tioga Road available summer only",
+     "reason": "along Tioga Road"
+    },
+    {
+     "text": "Restrooms are available at picnic areas, campgrounds, trailheads, and roadside pullouts along Tioga Road",
+     "reason": "along Tioga Road"
+    }
+   ]
+  },
+  {
+   "lat": 37.9656101211819,
+   "lon": -119.26420324536132,
+   "guidance": []
+  },
+  {
+   "lat": 38.04963086637687,
+   "lon": -119.26982337624392,
+   "guidance": []
+  },
+  {
+   "lat": 38.085524989271875,
+   "lon": -119.29737805789105,
+   "guidance": []
+  },
+  {
+   "lat": 38.173606119927165,
+   "lon": -119.57577653354025,
+   "guidance": []
+  },
+  {
+   "lat": 38.13048868024074,
+   "lon": -119.66233140983576,
+   "guidance": []
+  },
+  {
+   "lat": 38.104083164607836,
+   "lon": -119.59203021777112,
+   "guidance": []
+  },
+  {
+   "lat": 38.022270006586695,
+   "lon": -119.23114217330013,
+   "guidance": []
+  },
+  {
+   "lat": 37.994647851870766,
+   "lon": -119.33798571976713,
+   "guidance": []
+  },
+  {
+   "lat": 37.98737305919633,
+   "lon": -119.85624558220233,
+   "guidance": []
+  },
+  {
+   "lat": 37.95146670339226,
+   "lon": -119.75541658379701,
+   "guidance": [
+    {
+     "text": "No swimming or boating",
+     "reason": "nearby (0.9 km)"
+    },
+    {
+     "text": "Hetch Hetchy Backpackers Camp (wilderness permit required)",
+     "reason": "nearby (1.2 km)"
+    }
+   ]
+  },
+  {
+   "lat": 38.15666397736227,
+   "lon": -119.34890748970355,
+   "guidance": []
+  },
+  {
+   "lat": 37.99715235919097,
+   "lon": -119.09326261655238,
+   "guidance": []
+  },
+  {
+   "lat": 37.561087285038944,
+   "lon": -119.59955407800919,
+   "guidance": [
+    {
+     "text": "Wawona Visitor Center (summer only)",
+     "reason": "nearby (1.7 km)"
+    }
+   ]
+  },
+  {
+   "lat": 37.95971388782656,
+   "lon": -119.6960371500957,
+   "guidance": []
+  },
+  {
+   "lat": 37.96587319341922,
+   "lon": -119.7485146390347,
+   "guidance": [
+    {
+     "text": "No swimming or boating",
+     "reason": "nearby (2.3 km)"
+    }
+   ]
+  },
+  {
+   "lat": 37.96554435297533,
+   "lon": -119.7852845322396,
+   "guidance": [
+    {
+     "text": "No swimming or boating",
+     "reason": "nearby (2.5 km)"
+    }
+   ]
+  },
+  {
+   "lat": 37.92286658583572,
+   "lon": -119.47334720049365,
+   "guidance": []
+  },
+  {
+   "lat": 37.507827406746294,
+   "lon": -119.58979276638148,
+   "guidance": []
+  },
+  {
+   "lat": 37.74756585378368,
+   "lon": -119.84889615179125,
+   "guidance": []
+  },
+  {
+   "lat": 37.7680083027866,
+   "lon": -119.82040099918747,
+   "guidance": [
+    {
+     "text": "Facilities along Tioga Road available summer only",
+     "reason": "along Tioga Road"
+    },
+    {
+     "text": "Restrooms are available at picnic areas, campgrounds, trailheads, and roadside pullouts along Tioga Road",
+     "reason": "along Tioga Road"
+    }
+   ]
+  },
+  {
+   "lat": 37.53921655838267,
+   "lon": -119.65702979392805,
+   "guidance": []
+  },
+  {
+   "lat": 37.5494280956128,
+   "lon": -119.67871401844782,
+   "guidance": []
+  },
+  {
+   "lat": 37.50223160643488,
+   "lon": -119.61086264423558,
+   "guidance": [
+    {
+     "text": "Mariposa Grove Road Closed approx. December to April. Use mandatory shuttle approx. April to November. 25 ft vehicle limit and no trailers allowed.",
+     "reason": "nearby (1.8 km)"
+    }
+   ]
+  },
+  {
+   "lat": 37.627219615422725,
+   "lon": -119.54961740624128,
+   "guidance": []
+  },
+  {
+   "lat": 37.5610271745337,
+   "lon": -119.49079166456626,
+   "guidance": []
+  },
+  {
+   "lat": 37.66122445504387,
+   "lon": -119.663871072478,
+   "guidance": [
+    {
+     "text": "Glacier Point Road Closed approx. November to May east of this point, but may be open December to March to ski area.",
+     "reason": "on Glacier Point Road, east of the marked point"
+    },
+    {
+     "text": "Badger Pass Ski Area (winter only)",
+     "reason": "nearby (1.2 km)"
+    }
+   ]
+  },
+  {
+   "lat": 37.6637102544881,
+   "lon": -119.62295241814466,
+   "guidance": [
+    {
+     "text": "Glacier Point Road Closed approx. November to May east of this point, but may be open December to March to ski area.",
+     "reason": "on Glacier Point Road, east of the marked point"
+    }
+   ]
+  },
+  {
+   "lat": 37.71639664239489,
+   "lon": -119.66334014474772,
+   "guidance": []
+  },
+  {
+   "lat": 37.79679440015855,
+   "lon": -119.86782718689055,
+   "guidance": []
+  },
+  {
+   "lat": 37.7489032946831,
+   "lon": -119.80035504015818,
+   "guidance": [
+    {
+     "text": "Facilities along Tioga Road available summer only",
+     "reason": "along Tioga Road"
+    },
+    {
+     "text": "Restrooms are available at picnic areas, campgrounds, trailheads, and roadside pullouts along Tioga Road",
+     "reason": "along Tioga Road"
+    }
+   ]
+  },
+  {
+   "lat": 37.75256756197352,
+   "lon": -119.73645520980494,
+   "guidance": []
+  },
+  {
+   "lat": 37.9443850287506,
+   "lon": -119.78508733811638,
+   "guidance": [
+    {
+     "text": "Hetch Hetchy Road vehicle length limit of 25 ft (7.6 m) width limit of 8 ft (2.4 m)",
+     "reason": "along Hetch Hetchy Road"
+    },
+    {
+     "text": "No swimming or boating",
+     "reason": "nearby (1.8 km)"
+    }
+   ]
+  },
+  {
+   "lat": 37.811051449955436,
+   "lon": -119.56675849295938,
+   "guidance": [
+    {
+     "text": "Tioga Road closed approx. November to May east of this point",
+     "reason": "on Tioga Road, east of the marked point"
+    },
+    {
+     "text": "Tioga Road closed approx. November to May west of this point",
+     "reason": "on Tioga Road, west of the marked point"
+    },
+    {
+     "text": "Facilities along Tioga Road available summer only",
+     "reason": "along Tioga Road"
+    },
+    {
+     "text": "Restrooms are available at picnic areas, campgrounds, trailheads, and roadside pullouts along Tioga Road",
+     "reason": "along Tioga Road"
+    }
+   ]
+  },
+  {
+   "lat": 37.826192380984516,
+   "lon": -119.59350162224457,
+   "guidance": [
+    {
+     "text": "Tioga Road closed approx. November to May east of this point",
+     "reason": "on Tioga Road, east of the marked point"
+    },
+    {
+     "text": "Tioga Road closed approx. November to May west of this point",
+     "reason": "on Tioga Road, west of the marked point"
+    },
+    {
+     "text": "Facilities along Tioga Road available summer only",
+     "reason": "along Tioga Road"
+    },
+    {
+     "text": "Restrooms are available at picnic areas, campgrounds, trailheads, and roadside pullouts along Tioga Road",
+     "reason": "along Tioga Road"
+    }
+   ]
+  },
+  {
+   "lat": 37.87265637868496,
+   "lon": -119.65084079867957,
+   "guidance": [
+    {
+     "text": "Tioga Road closed approx. November to May east of this point",
+     "reason": "on Tioga Road, east of the marked point"
+    },
+    {
+     "text": "Tioga Road closed approx. November to May west of this point",
+     "reason": "on Tioga Road, west of the marked point"
+    },
+    {
+     "text": "Facilities along Tioga Road available summer only",
+     "reason": "along Tioga Road"
+    },
+    {
+     "text": "Restrooms are available at picnic areas, campgrounds, trailheads, and roadside pullouts along Tioga Road",
+     "reason": "along Tioga Road"
+    }
+   ]
+  },
+  {
+   "lat": 37.73732151494794,
+   "lon": -119.39590132937822,
+   "guidance": []
+  },
+  {
+   "lat": 37.97032797862439,
+   "lon": -119.87365970738222,
+   "guidance": [
+    {
+     "text": "Lake Eleanor (summer only)",
+     "reason": "nearby (0.8 km)"
+    }
+   ]
+  },
+  {
+   "lat": 37.73062115944638,
+   "lon": -119.5738197067823,
+   "guidance": [
+    {
+     "text": "Glacier Point Road Closed approx. November to May east of this point, but may be open December to March to ski area.",
+     "reason": "on Glacier Point Road, east of the marked point"
+    }
+   ]
+  },
+  {
+   "lat": 37.71661263186872,
+   "lon": -119.67637039539997,
+   "guidance": []
+  },
+  {
+   "lat": 37.81025446127114,
+   "lon": -119.48555071487115,
+   "guidance": [
+    {
+     "text": "Tioga Road closed approx. November to May east of this point",
+     "reason": "on Tioga Road, east of the marked point"
+    },
+    {
+     "text": "Tioga Road closed approx. November to May west of this point",
+     "reason": "on Tioga Road, west of the marked point"
+    },
+    {
+     "text": "Facilities along Tioga Road available summer only",
+     "reason": "along Tioga Road"
+    },
+    {
+     "text": "Restrooms are available at picnic areas, campgrounds, trailheads, and roadside pullouts along Tioga Road",
+     "reason": "along Tioga Road"
+    }
+   ]
+  },
+  {
+   "lat": 37.506136701771524,
+   "lon": -119.62782927798028,
+   "guidance": [
+    {
+     "text": "Mariposa Grove Road Closed approx. December to April. Use mandatory shuttle approx. April to November. 25 ft vehicle limit and no trailers allowed.",
+     "reason": "nearby (0.4 km)"
+    }
+   ]
+  },
+  {
+   "lat": 37.66792511228697,
+   "lon": -119.64864128392568,
+   "guidance": [
+    {
+     "text": "Glacier Point Road Closed approx. November to May east of this point, but may be open December to March to ski area.",
+     "reason": "on Glacier Point Road, east of the marked point"
+    },
+    {
+     "text": "Badger Pass Ski Area (winter only)",
+     "reason": "nearby (2.1 km)"
+    }
+   ]
+  },
+  {
+   "lat": 37.678899381239475,
+   "lon": -119.61322145119627,
+   "guidance": [
+    {
+     "text": "Glacier Point Road Closed approx. November to May east of this point, but may be open December to March to ski area.",
+     "reason": "on Glacier Point Road, east of the marked point"
+    }
+   ]
+  },
+  {
+   "lat": 37.668969774845756,
+   "lon": -119.57692937674624,
+   "guidance": [
+    {
+     "text": "Glacier Point Road Closed approx. November to May east of this point, but may be open December to March to ski area.",
+     "reason": "on Glacier Point Road, east of the marked point"
+    }
+   ]
+  },
+  {
+   "lat": 37.89376452176232,
+   "lon": -119.26135144730613,
+   "guidance": [
+    {
+     "text": "Tioga Road closed approx. November to May east of this point",
+     "reason": "on Tioga Road, east of the marked point"
+    },
+    {
+     "text": "Tioga Road closed approx. November to May west of this point",
+     "reason": "on Tioga Road, west of the marked point"
+    },
+    {
+     "text": "Facilities along Tioga Road available summer only",
+     "reason": "along Tioga Road"
+    },
+    {
+     "text": "Restrooms are available at picnic areas, campgrounds, trailheads, and roadside pullouts along Tioga Road",
+     "reason": "along Tioga Road"
+    }
+   ]
+  },
+  {
+   "lat": 37.956980843941025,
+   "lon": -119.83335541128764,
+   "guidance": []
+  },
+  {
+   "lat": 37.875027318016734,
+   "lon": -119.34434157603262,
+   "guidance": [
+    {
+     "text": "Tioga Road closed approx. November to May east of this point",
+     "reason": "on Tioga Road, east of the marked point"
+    },
+    {
+     "text": "Tioga Road closed approx. November to May west of this point",
+     "reason": "on Tioga Road, west of the marked point"
+    },
+    {
+     "text": "Facilities along Tioga Road available summer only",
+     "reason": "along Tioga Road"
+    },
+    {
+     "text": "Restrooms are available at picnic areas, campgrounds, trailheads, and roadside pullouts along Tioga Road",
+     "reason": "along Tioga Road"
+    }
+   ]
+  },
+  {
+   "lat": 37.57122970613014,
+   "lon": -119.65651405011054,
+   "guidance": []
+  },
+  {
+   "lat": 37.61400866937251,
+   "lon": -119.54259412905405,
+   "guidance": []
+  },
+  {
+   "lat": 37.60340936520818,
+   "lon": -119.47305898390552,
+   "guidance": []
+  },
+  {
+   "lat": 37.65311202676382,
+   "lon": -119.40004251012333,
+   "guidance": []
+  },
+  {
+   "lat": 37.651322502533475,
+   "lon": -119.569670957227,
+   "guidance": []
+  },
+  {
+   "lat": 37.64265044761258,
+   "lon": -119.75298951866752,
+   "guidance": []
+  },
+  {
+   "lat": 37.73106506407533,
+   "lon": -119.49517551016118,
+   "guidance": []
+  },
+  {
+   "lat": 37.792215295098806,
+   "lon": -119.48062075763319,
+   "guidance": []
+  },
+  {
+   "lat": 38.03004321073197,
+   "lon": -119.66073105783478,
+   "guidance": []
+  },
+  {
+   "lat": 38.0219234395081,
+   "lon": -119.42581479483984,
+   "guidance": []
+  },
+  {
+   "lat": 38.01174111947954,
+   "lon": -119.37623459782881,
+   "guidance": []
+  },
+  {
+   "lat": 38.05077169655633,
+   "lon": -119.54595407897045,
+   "guidance": []
+  },
+  {
+   "lat": 38.055101833576785,
+   "lon": -119.68076944805392,
+   "guidance": []
+  },
+  {
+   "lat": 38.09835923933305,
+   "lon": -119.5708086396666,
+   "guidance": []
+  },
+  {
+   "lat": 38.09869950633295,
+   "lon": -119.40152909850968,
+   "guidance": []
+  },
+  {
+   "lat": 37.9300041935996,
+   "lon": -119.81575166658125,
+   "guidance": [
+    {
+     "text": "Hetch Hetchy Road vehicle length limit of 25 ft (7.6 m) width limit of 8 ft (2.4 m)",
+     "reason": "along Hetch Hetchy Road"
+    }
+   ]
+  },
+  {
+   "lat": 37.930823805056,
+   "lon": -119.50326066595518,
+   "guidance": []
+  },
+  {
+   "lat": 37.95245954206673,
+   "lon": -119.61755222253517,
+   "guidance": []
+  },
+  {
+   "lat": 37.97134442972647,
+   "lon": -119.51917303619577,
+   "guidance": []
+  },
+  {
+   "lat": 37.989698453153856,
+   "lon": -119.56970130190638,
+   "guidance": []
+  },
+  {
+   "lat": 37.93378511662327,
+   "lon": -119.60220867036816,
+   "guidance": []
+  },
+  {
+   "lat": 37.971643391841496,
+   "lon": -119.69127405387474,
+   "guidance": []
+  },
+  {
+   "lat": 37.81024246486344,
+   "lon": -119.34547925847214,
+   "guidance": []
+  },
+  {
+   "lat": 37.82982290779463,
+   "lon": -119.24823773142604,
+   "guidance": []
+  },
+  {
+   "lat": 37.819997387710785,
+   "lon": -119.26763902225659,
+   "guidance": []
+  },
+  {
+   "lat": 37.79226321926442,
+   "lon": -119.20285940451879,
+   "guidance": []
+  },
+  {
+   "lat": 37.944444828619424,
+   "lon": -119.40418369086854,
+   "guidance": []
+  },
+  {
+   "lat": 37.836981493065444,
+   "lon": -119.77648646165113,
+   "guidance": []
+  },
+  {
+   "lat": 37.72625391723501,
+   "lon": -119.61733226411589,
+   "guidance": []
+  },
+  {
+   "lat": 37.553799762217956,
+   "lon": -119.61438945516886,
+   "guidance": [
+    {
+     "text": "Wawona Visitor Center (summer only)",
+     "reason": "nearby (1.8 km)"
+    }
+   ]
+  },
+  {
+   "lat": 37.71186650444042,
+   "lon": -119.68708736768369,
+   "guidance": []
+  },
+  {
+   "lat": 37.703801624209085,
+   "lon": -119.65024163592666,
+   "guidance": []
+  },
+  {
+   "lat": 37.746030495860126,
+   "lon": -119.53302999997645,
+   "guidance": []
+  },
+  {
+   "lat": 37.70664606507643,
+   "lon": -119.52188831791324,
+   "guidance": []
+  },
+  {
+   "lat": 37.55326458522734,
+   "lon": -119.38797551208344,
+   "guidance": []
+  },
+  {
+   "lat": 37.56729191087596,
+   "lon": -119.38711845427561,
+   "guidance": []
+  },
+  {
+   "lat": 37.63474022989234,
+   "lon": -119.39420998963168,
+   "guidance": []
+  },
+  {
+   "lat": 37.667330731277865,
+   "lon": -119.29529230675185,
+   "guidance": []
+  },
+  {
+   "lat": 37.68992606214405,
+   "lon": -119.29031684406803,
+   "guidance": []
+  },
+  {
+   "lat": 37.697482341609344,
+   "lon": -119.28005492624317,
+   "guidance": []
+  },
+  {
+   "lat": 37.65205515562185,
+   "lon": -119.4104257603731,
+   "guidance": []
+  },
+  {
+   "lat": 37.7389950355405,
+   "lon": -119.27213665461241,
+   "guidance": []
+  },
+  {
+   "lat": 37.73930094539168,
+   "lon": -119.31589192308816,
+   "guidance": []
+  },
+  {
+   "lat": 37.69651009647412,
+   "lon": -119.42887898250405,
+   "guidance": []
+  },
+  {
+   "lat": 37.77507097333987,
+   "lon": -119.23041403987352,
+   "guidance": []
+  },
+  {
+   "lat": 37.85548285246818,
+   "lon": -119.20051575832476,
+   "guidance": []
+  },
+  {
+   "lat": 37.876751582959024,
+   "lon": -119.21145266588147,
+   "guidance": []
+  },
+  {
+   "lat": 37.926629909701624,
+   "lon": -119.73474868614569,
+   "guidance": [
+    {
+     "text": "Hetch Hetchy Backpackers Camp (wilderness permit required)",
+     "reason": "nearby (2.3 km)"
+    }
+   ]
+  },
+  {
+   "lat": 37.857656713840896,
+   "lon": -119.79810242800205,
+   "guidance": []
+  },
+  {
+   "lat": 37.950156879037976,
+   "lon": -119.24255691118483,
+   "guidance": [
+    {
+     "text": "Facilities along Tioga Road available summer only",
+     "reason": "along Tioga Road"
+    },
+    {
+     "text": "Restrooms are available at picnic areas, campgrounds, trailheads, and roadside pullouts along Tioga Road",
+     "reason": "along Tioga Road"
+    }
+   ]
+  },
+  {
+   "lat": 37.9667103612561,
+   "lon": -119.32108736733748,
+   "guidance": []
+  },
+  {
+   "lat": 37.91933044521018,
+   "lon": -119.26512094623537,
+   "guidance": [
+    {
+     "text": "Facilities along Tioga Road available summer only",
+     "reason": "along Tioga Road"
+    },
+    {
+     "text": "Restrooms are available at picnic areas, campgrounds, trailheads, and roadside pullouts along Tioga Road",
+     "reason": "along Tioga Road"
+    }
+   ]
+  },
+  {
+   "lat": 37.98196282343981,
+   "lon": -119.31454944299601,
+   "guidance": []
+  },
+  {
+   "lat": 37.947626856207876,
+   "lon": -119.30893690406977,
+   "guidance": []
+  },
+  {
+   "lat": 37.89958228276382,
+   "lon": -119.22118365597608,
+   "guidance": []
+  },
+  {
+   "lat": 37.81234575646366,
+   "lon": -119.20288972605192,
+   "guidance": []
+  },
+  {
+   "lat": 37.69616199430435,
+   "lon": -119.19460741085405,
+   "guidance": []
+  },
+  {
+   "lat": 37.68856359703547,
+   "lon": -119.19998483059446,
+   "guidance": []
+  },
+  {
+   "lat": 37.85497982217922,
+   "lon": -119.26383156354544,
+   "guidance": [
+    {
+     "text": "Facilities along Tioga Road available summer only",
+     "reason": "nearby (1.8 km)"
+    }
+   ]
+  },
+  {
+   "lat": 37.84697843039352,
+   "lon": -119.40581434125639,
+   "guidance": []
+  },
+  {
+   "lat": 37.84653522153912,
+   "lon": -119.51069351530157,
+   "guidance": []
+  },
+  {
+   "lat": 37.876152885443126,
+   "lon": -119.48385178316825,
+   "guidance": []
+  },
+  {
+   "lat": 37.98718176020939,
+   "lon": -119.48061316567686,
+   "guidance": []
+  },
+  {
+   "lat": 38.03290491301553,
+   "lon": -119.5473951387646,
+   "guidance": []
+  },
+  {
+   "lat": 38.08331610625516,
+   "lon": -119.69235104695564,
+   "guidance": []
+  },
+  {
+   "lat": 37.58351656670751,
+   "lon": -119.37251060434534,
+   "guidance": []
+  },
+  {
+   "lat": 37.63198916090006,
+   "lon": -119.37030347448892,
+   "guidance": []
+  },
+  {
+   "lat": 37.73969680316363,
+   "lon": -119.46628598667064,
+   "guidance": []
+  },
+  {
+   "lat": 37.77375801017736,
+   "lon": -119.51981770439448,
+   "guidance": []
+  },
+  {
+   "lat": 37.67322035324361,
+   "lon": -119.41845777247237,
+   "guidance": []
+  },
+  {
+   "lat": 37.628042590926114,
+   "lon": -119.32811062137841,
+   "guidance": []
+  },
+  {
+   "lat": 37.63400740600983,
+   "lon": -119.34572196961429,
+   "guidance": []
+  },
+  {
+   "lat": 37.641569380077755,
+   "lon": -119.31759085479104,
+   "guidance": []
+  },
+  {
+   "lat": 37.65171285589653,
+   "lon": -119.32264219074625,
+   "guidance": []
+  },
+  {
+   "lat": 37.743139611175756,
+   "lon": -119.28074514618025,
+   "guidance": []
+  },
+  {
+   "lat": 37.754546548096954,
+   "lon": -119.24080488207966,
+   "guidance": []
+  },
+  {
+   "lat": 37.813759889033854,
+   "lon": -119.28051002699445,
+   "guidance": []
+  },
+  {
+   "lat": 37.9337671886708,
+   "lon": -119.35166068491054,
+   "guidance": []
+  },
+  {
+   "lat": 38.14389371143741,
+   "lon": -119.5472434385142,
+   "guidance": []
+  },
+  {
+   "lat": 38.13779109550034,
+   "lon": -119.46233441966551,
+   "guidance": []
+  },
+  {
+   "lat": 38.10328341141472,
+   "lon": -119.47325614330948,
+   "guidance": []
+  },
+  {
+   "lat": 38.16908027768959,
+   "lon": -119.61713508156586,
+   "guidance": []
+  },
+  {
+   "lat": 38.1870329921656,
+   "lon": -119.589800358338,
+   "guidance": []
+  },
+  {
+   "lat": 38.09721915118003,
+   "lon": -119.80426865895463,
+   "guidance": []
+  },
+  {
+   "lat": 38.09376905024904,
+   "lon": -119.44701362022144,
+   "guidance": []
+  },
+  {
+   "lat": 38.08591304909262,
+   "lon": -119.38667094548083,
+   "guidance": []
+  },
+  {
+   "lat": 38.092736298128706,
+   "lon": -119.38146036361121,
+   "guidance": []
+  },
+  {
+   "lat": 38.07495147960725,
+   "lon": -119.38227950792955,
+   "guidance": []
+  },
+  {
+   "lat": 38.068616188831,
+   "lon": -119.32035923391092,
+   "guidance": []
+  },
+  {
+   "lat": 38.065528923374,
+   "lon": -119.35792548399192,
+   "guidance": []
+  },
+  {
+   "lat": 38.105527535889,
+   "lon": -119.68427350626426,
+   "guidance": []
+  },
+  {
+   "lat": 38.09812046858865,
+   "lon": -119.67052271414184,
+   "guidance": []
+  },
+  {
+   "lat": 37.833447223097366,
+   "lon": -119.214569950948,
+   "guidance": []
+  },
+  {
+   "lat": 37.837233106594674,
+   "lon": -119.34852067026728,
+   "guidance": [
+    {
+     "text": "Tuolumne Meadows Visitor Center (summer only)",
+     "reason": "nearby (1.9 km)"
+    }
+   ]
+  },
+  {
+   "lat": 37.84083907071658,
+   "lon": -119.37983725888728,
+   "guidance": []
+  },
+  {
+   "lat": 37.882373124030465,
+   "lon": -119.34510003099234,
+   "guidance": [
+    {
+     "text": "Tioga Road closed approx. November to May east of this point",
+     "reason": "on Tioga Road, east of the marked point"
+    },
+    {
+     "text": "Tioga Road closed approx. November to May west of this point",
+     "reason": "on Tioga Road, west of the marked point"
+    },
+    {
+     "text": "Facilities along Tioga Road available summer only",
+     "reason": "along Tioga Road"
+    },
+    {
+     "text": "Restrooms are available at picnic areas, campgrounds, trailheads, and roadside pullouts along Tioga Road",
+     "reason": "along Tioga Road"
+    }
+   ]
+  },
+  {
+   "lat": 37.879822827627876,
+   "lon": -119.39343635075929,
+   "guidance": [
+    {
+     "text": "Tioga Road closed approx. November to May east of this point",
+     "reason": "on Tioga Road, east of the marked point"
+    },
+    {
+     "text": "Tioga Road closed approx. November to May west of this point",
+     "reason": "on Tioga Road, west of the marked point"
+    },
+    {
+     "text": "Facilities along Tioga Road available summer only",
+     "reason": "along Tioga Road"
+    },
+    {
+     "text": "Restrooms are available at picnic areas, campgrounds, trailheads, and roadside pullouts along Tioga Road",
+     "reason": "along Tioga Road"
+    }
+   ]
+  },
+  {
+   "lat": 38.005699144480204,
+   "lon": -119.48782607975022,
+   "guidance": []
+  },
+  {
+   "lat": 38.009990145869565,
+   "lon": -119.45649430721747,
+   "guidance": []
+  },
+  {
+   "lat": 37.83319559665524,
+   "lon": -119.40302323255985,
+   "guidance": []
+  },
+  {
+   "lat": 37.857746555943486,
+   "lon": -119.42540524582685,
+   "guidance": [
+    {
+     "text": "Tioga Road closed approx. November to May east of this point",
+     "reason": "on Tioga Road, east of the marked point"
+    },
+    {
+     "text": "Tioga Road closed approx. November to May west of this point",
+     "reason": "on Tioga Road, west of the marked point"
+    },
+    {
+     "text": "Facilities along Tioga Road available summer only",
+     "reason": "along Tioga Road"
+    },
+    {
+     "text": "Restrooms are available at picnic areas, campgrounds, trailheads, and roadside pullouts along Tioga Road",
+     "reason": "along Tioga Road"
+    }
+   ]
+  },
+  {
+   "lat": 37.7882292858835,
+   "lon": -119.28612256592065,
+   "guidance": []
+  },
+  {
+   "lat": 37.774255629655656,
+   "lon": -119.3494535550541,
+   "guidance": []
+  },
+  {
+   "lat": 37.83135652572936,
+   "lon": -119.42259895321753,
+   "guidance": []
+  },
+  {
+   "lat": 37.99932798246333,
+   "lon": -119.69913922810326,
+   "guidance": []
+  },
+  {
+   "lat": 37.59321124294614,
+   "lon": -119.52353415221384,
+   "guidance": []
+  },
+  {
+   "lat": 37.591840950357295,
+   "lon": -119.45308885185518,
+   "guidance": []
+  },
+  {
+   "lat": 37.61313144756398,
+   "lon": -119.42655811217908,
+   "guidance": []
+  },
+  {
+   "lat": 37.53750850370689,
+   "lon": -119.4594447081207,
+   "guidance": []
+  },
+  {
+   "lat": 37.767732483294296,
+   "lon": -119.48938849511542,
+   "guidance": []
+  },
+  {
+   "lat": 37.733062638587356,
+   "lon": -119.63802291449014,
+   "guidance": []
+  },
+  {
+   "lat": 37.94777638569919,
+   "lon": -119.80572490266151,
+   "guidance": [
+    {
+     "text": "Hetch Hetchy Road vehicle length limit of 25 ft (7.6 m) width limit of 8 ft (2.4 m)",
+     "reason": "along Hetch Hetchy Road"
+    }
+   ]
+  },
+  {
+   "lat": 37.745274793607535,
+   "lon": -119.40648937728064,
+   "guidance": []
+  },
+  {
+   "lat": 37.795302023467315,
+   "lon": -119.34424297318448,
+   "guidance": []
+  },
+  {
+   "lat": 37.7961830912515,
+   "lon": -119.4325802464107,
+   "guidance": []
+  },
+  {
+   "lat": 37.84464855648541,
+   "lon": -119.49071579129487,
+   "guidance": []
+  },
+  {
+   "lat": 37.90889446300939,
+   "lon": -119.41825302111214,
+   "guidance": []
+  },
+  {
+   "lat": 38.14007588601555,
+   "lon": -119.29713534674886,
+   "guidance": []
+  },
+  {
+   "lat": 38.129933855875414,
+   "lon": -119.29713534674886,
+   "guidance": []
+  },
+  {
+   "lat": 38.14571302294741,
+   "lon": -119.79769285584295,
+   "guidance": []
+  },
+  {
+   "lat": 37.7000629308944,
+   "lon": -119.84267682343646,
+   "guidance": []
+  },
+  {
+   "lat": 37.68986004776784,
+   "lon": -119.83795923266139,
+   "guidance": []
+  },
+  {
+   "lat": 37.488559078687594,
+   "lon": -119.7071864241152,
+   "guidance": []
+  },
+  {
+   "lat": 37.50769505440413,
+   "lon": -119.43245886769333,
+   "guidance": []
+  },
+  {
+   "lat": 37.989238189057886,
+   "lon": -119.22380033484549,
+   "guidance": []
+  },
+  {
+   "lat": 37.96816937840216,
+   "lon": -119.30191360373634,
+   "guidance": []
+  },
+  {
+   "lat": 37.961591619399115,
+   "lon": -119.2977724229912,
+   "guidance": []
+  },
+  {
+   "lat": 37.95501327117015,
+   "lon": -119.29574736121074,
+   "guidance": []
+  },
+  {
+   "lat": 38.10579017889726,
+   "lon": -119.36610924263405,
+   "guidance": []
+  },
+  {
+   "lat": 37.63800773210072,
+   "lon": -119.22686447621726,
+   "guidance": []
+  },
+  {
+   "lat": 37.630018926849125,
+   "lon": -119.22686447621726,
+   "guidance": []
+  },
+  {
+   "lat": 38.129003069902,
+   "lon": -119.80185677773792,
+   "guidance": []
+  },
+  {
+   "lat": 37.91387330417915,
+   "lon": -119.5414867681477,
+   "guidance": []
+  },
+  {
+   "lat": 37.648824302384604,
+   "lon": -119.50022684611639,
+   "guidance": []
+  },
+  {
+   "lat": 37.91715840388983,
+   "lon": -119.23104357045193,
+   "guidance": []
+  },
+  {
+   "lat": 37.50553500457306,
+   "lon": -119.63313846269804,
+   "guidance": [
+    {
+     "text": "Mariposa Grove Road Closed approx. December to April. Use mandatory shuttle approx. April to November. 25 ft vehicle limit and no trailers allowed.",
+     "reason": "nearby (0.6 km)"
+    }
+   ]
+  },
+  {
+   "lat": 37.50004128195489,
+   "lon": -119.62741972896733,
+   "guidance": [
+    {
+     "text": "Mariposa Grove Road Closed approx. December to April. Use mandatory shuttle approx. April to November. 25 ft vehicle limit and no trailers allowed.",
+     "reason": "nearby (1.1 km)"
+    }
+   ]
+  },
+  {
+   "lat": 37.68848556528409,
+   "lon": -119.73257950449803,
+   "guidance": []
+  },
+  {
+   "lat": 37.89456659955369,
+   "lon": -119.84086411654579,
+   "guidance": [
+    {
+     "text": "Hetch Hetchy Road vehicle length limit of 25 ft (7.6 m) width limit of 8 ft (2.4 m)",
+     "reason": "along Hetch Hetchy Road"
+    },
+    {
+     "text": "Hetch Hetchy Entrance (open sunrise to sunset)",
+     "reason": "nearby (2.2 km)"
+    }
+   ]
+  },
+  {
+   "lat": 37.81556348501197,
+   "lon": -119.83672295316029,
+   "guidance": [
+    {
+     "text": "Information Station (summer only)",
+     "reason": "nearby (0.9 km)"
+    }
+   ]
+  },
+  {
+   "lat": 37.729169443848434,
+   "lon": -119.69844143935597,
+   "guidance": []
+  },
+  {
+   "lat": 37.72222235152791,
+   "lon": -119.71411871355691,
+   "guidance": []
+  },
+  {
+   "lat": 37.71661263186872,
+   "lon": -119.67637039539997,
+   "guidance": []
+  },
+  {
+   "lat": 37.784524819843355,
+   "lon": -119.7923154129563,
+   "guidance": []
+  },
+  {
+   "lat": 37.9344491415334,
+   "lon": -119.85184654112153,
+   "guidance": []
+  },
+  {
+   "lat": 37.69169666887794,
+   "lon": -119.66299885390357,
+   "guidance": []
+  },
+  {
+   "lat": 37.90668624443027,
+   "lon": -119.23915904777903,
+   "guidance": [
+    {
+     "text": "Facilities along Tioga Road available summer only",
+     "reason": "along Tioga Road"
+    },
+    {
+     "text": "Restrooms are available at picnic areas, campgrounds, trailheads, and roadside pullouts along Tioga Road",
+     "reason": "along Tioga Road"
+    }
+   ]
+  },
+  {
+   "lat": 37.95748321391559,
+   "lon": -119.19316632791376,
+   "guidance": [
+    {
+     "text": "Facilities along Tioga Road available summer only",
+     "reason": "along Tioga Road"
+    },
+    {
+     "text": "Restrooms are available at picnic areas, campgrounds, trailheads, and roadside pullouts along Tioga Road",
+     "reason": "along Tioga Road"
+    },
+    {
+     "text": "Highway 120 closed in winter",
+     "reason": "nearby (0.3 km)"
+    }
+   ]
+  },
+  {
+   "lat": 37.5191140975059,
+   "lon": -119.66515286321153,
+   "guidance": []
+  },
+  {
+   "lat": 37.60693661974581,
+   "lon": -119.68249872443607,
+   "guidance": []
+  },
+  {
+   "lat": 37.68095837585721,
+   "lon": -119.75795740096807,
+   "guidance": []
+  },
+  {
+   "lat": 37.67204365346947,
+   "lon": -119.61222787705077,
+   "guidance": [
+    {
+     "text": "Glacier Point Road Closed approx. November to May east of this point, but may be open December to March to ski area.",
+     "reason": "on Glacier Point Road, east of the marked point"
+    }
+   ]
+  },
+  {
+   "lat": 37.86320785827868,
+   "lon": -119.87070173188212,
+   "guidance": [
+    {
+     "text": "Hetch Hetchy Road vehicle length limit of 25 ft (7.6 m) width limit of 8 ft (2.4 m)",
+     "reason": "along Hetch Hetchy Road"
+    }
+   ]
+  },
+  {
+   "lat": 37.72870150857102,
+   "lon": -119.74496507537843,
+   "guidance": []
+  },
+  {
+   "lat": 37.844462844823866,
+   "lon": -119.68685984045428,
+   "guidance": [
+    {
+     "text": "Tioga Road closed approx. November to May east of this point",
+     "reason": "on Tioga Road, east of the marked point"
+    },
+    {
+     "text": "Tioga Road closed approx. November to May west of this point",
+     "reason": "on Tioga Road, west of the marked point"
+    },
+    {
+     "text": "Facilities along Tioga Road available summer only",
+     "reason": "along Tioga Road"
+    },
+    {
+     "text": "Restrooms are available at picnic areas, campgrounds, trailheads, and roadside pullouts along Tioga Road",
+     "reason": "along Tioga Road"
+    }
+   ]
+  },
+  {
+   "lat": 37.84162973350831,
+   "lon": -119.45717693519812,
+   "guidance": [
+    {
+     "text": "Tioga Road closed approx. November to May east of this point",
+     "reason": "on Tioga Road, east of the marked point"
+    },
+    {
+     "text": "Tioga Road closed approx. November to May west of this point",
+     "reason": "on Tioga Road, west of the marked point"
+    },
+    {
+     "text": "Facilities along Tioga Road available summer only",
+     "reason": "along Tioga Road"
+    },
+    {
+     "text": "Restrooms are available at picnic areas, campgrounds, trailheads, and roadside pullouts along Tioga Road",
+     "reason": "along Tioga Road"
+    }
+   ]
+  },
+  {
+   "lat": 37.76559794890354,
+   "lon": -119.83434140504981,
+   "guidance": []
+  },
+  {
+   "lat": 37.91804995875874,
+   "lon": -119.81693486603976,
+   "guidance": [
+    {
+     "text": "Hetch Hetchy Road vehicle length limit of 25 ft (7.6 m) width limit of 8 ft (2.4 m)",
+     "reason": "along Hetch Hetchy Road"
+    }
+   ]
+  },
+  {
+   "lat": 37.71136249573875,
+   "lon": -119.54397449948958,
+   "guidance": []
+  },
+  {
+   "lat": 37.88928120080882,
+   "lon": -119.6260393353857,
+   "guidance": []
+  },
+  {
+   "lat": 37.75085240029103,
+   "lon": -119.59315271629782,
+   "guidance": []
+  },
+  {
+   "lat": 37.864950344569706,
+   "lon": -119.35116007871339,
+   "guidance": [
+    {
+     "text": "Tioga Road closed approx. November to May east of this point",
+     "reason": "on Tioga Road, east of the marked point"
+    },
+    {
+     "text": "Tioga Road closed approx. November to May west of this point",
+     "reason": "on Tioga Road, west of the marked point"
+    },
+    {
+     "text": "Facilities along Tioga Road available summer only",
+     "reason": "along Tioga Road"
+    },
+    {
+     "text": "Restrooms are available at picnic areas, campgrounds, trailheads, and roadside pullouts along Tioga Road",
+     "reason": "along Tioga Road"
+    },
+    {
+     "text": "Tuolumne Meadows Visitor Center (summer only)",
+     "reason": "nearby (1.3 km)"
+    }
+   ]
+  },
+  {
+   "lat": 37.9725342858851,
+   "lon": -119.09022879671366,
+   "guidance": []
+  },
+  {
+   "lat": 37.81032036833,
+   "lon": -119.83103454096268,
+   "guidance": [
+    {
+     "text": "Information Station (summer only)",
+     "reason": "nearby (0.2 km)"
+    }
+   ]
+  },
+  {
+   "lat": 37.54742561403613,
+   "lon": -119.59628513898467,
+   "guidance": [
+    {
+     "text": "Wawona Visitor Center (summer only)",
+     "reason": "nearby (0.2 km)"
+    }
+   ]
+  }
+ ]
+}

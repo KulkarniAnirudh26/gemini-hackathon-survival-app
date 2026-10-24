@@ -1,0 +1,12 @@
+__pycache__/
+*.egg-info/
+.venv/
+.pytest_cache/
+data/*.pdf
+out/
+# Android / Gradle
+android/.gradle/
+android/.kotlin/
+android/**/build/
+android/local.properties
+android/captures/
