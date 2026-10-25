@@ -382,8 +382,9 @@ class Assistant extends ChangeNotifier {
         }
       case Route.template:
         templateAnswers++;
-        _say(Templates.calm(decision) + Templates.answer(decision.intent, s), AnswerKind.quick, decision,
-            map: _mapFor(decision.intent, s), question: text);
+        final map = _mapFor(decision.intent, s);
+        _say(Templates.calm(decision) + Templates.answer(decision.intent, s) + _closureNote(map), AnswerKind.quick, decision,
+            map: map, question: text);
       case Route.guide:
         templateAnswers++;
         final topic = decision.topic ?? g.search(text, k: 1).firstOrNull?.section.id;
@@ -463,6 +464,27 @@ class Assistant extends ChangeNotifier {
     await ai.setVoice(voice, speed);
   }
 
+  /// Printed park-map warnings (closures, hazards) where the hiker is, for Gemma's context.
+  String _mapNotesLine(Situation s) {
+    final f = s.fix, pack = mapPack;
+    if (f == null || pack == null) return '';
+    final notes = pack.guidanceAt(f.lat, f.lon).take(2).toList();
+    if (notes.isEmpty) return '';
+    return '\n[MAP NOTES] ${notes.map((n) => '${n.note.text} (${n.reason})').join(' ')}';
+  }
+
+  /// A closure printed on the park map where a route ends ("Tioga Road closed ... November to May").
+  String _closureNote(RouteResult? r) {
+    final pack = mapPack;
+    if (r == null || pack == null) return '';
+    for (final n in pack.guidanceAt(r.target.lat, r.target.lon)) {
+      if (n.note.severity == Severity.warning && n.note.text.toLowerCase().contains('closed')) {
+        return ' The park map notes: ${n.note.text}.';
+      }
+    }
+    return '';
+  }
+
   Future<void> _llm(String question, RouteDecision d, Situation s) async {
     llmAnswers++;
     _llmStartTime = DateTime.now();
@@ -484,7 +506,8 @@ class Assistant extends ChangeNotifier {
         d.intent == Intent.survivalHowto ||
         d.intent == Intent.emergency ||
         d.urgency >= 1.5;
-    final context = relevant ? s.contextBlock(hits) : s.briefContext();
+    final notes = relevant ? _mapNotesLine(s) : '';
+    final context = relevant ? '${s.contextBlock(hits)}$notes' : s.briefContext();
     final prompt = 'CONTEXT:\n$context\n\nQUESTION: $question';
     final msg = ChatMessage(false, '',
         kind: AnswerKind.gemma,
