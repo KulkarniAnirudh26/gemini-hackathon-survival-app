@@ -120,6 +120,8 @@ class Assistant extends ChangeNotifier {
   bool llmLoaded = false;
   final List<ChatMessage> messages = [];
   ChatMessage? _streaming;
+  ChatMessage? get streaming => _streaming;
+  bool get isStreaming => _streaming != null;
   StreamSubscription<Map<String, dynamic>>? _eventsSub;
   int templateAnswers = 0, llmAnswers = 0;
 
@@ -485,10 +487,10 @@ class Assistant extends ChangeNotifier {
     phase = llmLoaded ? Phase.thinking : Phase.loadingLlm;
     status = llmLoaded ? 'Thinking…' : 'Waking up Gemma…';
     notifyListeners();
-    if (!llmLoaded) speak('Okay. Give me a moment to think about that.', source: 'chat');
+    if (!llmLoaded && settings.speakAnswers) speak('Okay. Give me a moment to think about that.', source: 'chat');
     speakingSource = 'chat';
     _pendingPrompt = (question, d, prompt, msg);
-    await ai.generate(systemPrompt, prompt);
+    await ai.generate(settings.systemPrompt, prompt, speak: settings.speakAnswers);
   }
 
   (String, RouteDecision, String, ChatMessage)? _pendingPrompt;

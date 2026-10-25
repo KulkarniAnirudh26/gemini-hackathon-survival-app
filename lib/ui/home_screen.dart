@@ -546,6 +546,8 @@ class _Bubble extends StatelessWidget {
   Widget _answer() {
     final gemma = m.kind == AnswerKind.gemma;
     final emergency = m.kind == AnswerKind.emergency;
+    final isStreamingThis = a.streaming == m;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Column(
@@ -555,17 +557,23 @@ class _Bubble extends StatelessWidget {
             padding: const EdgeInsets.only(left: 4, bottom: 6),
             child: Row(
               children: [
-                Icon(gemma ? Icons.auto_awesome : Icons.verified_outlined, size: 16, color: emergency ? kClay : kMoss),
+                Icon(
+                  gemma ? Icons.auto_awesome : Icons.verified_outlined,
+                  size: 16,
+                  color: emergency ? kClay : (isStreamingThis ? const Color(0xFFE87A3E) : kMoss),
+                ),
                 const SizedBox(width: 6),
                 Text(
-                  gemma
-                      ? 'GEMMA TACTICAL BRIEF'
-                      : emergency
-                          ? 'EMERGENCY SCRIPT'
-                          : m.kind == AnswerKind.quick
-                              ? 'OFFLINE MAP DATA'
-                              : 'OFFLINE GUIDE',
-                  style: label(emergency ? kClay : kMoss, size: 11),
+                  isStreamingThis
+                      ? 'STREAMING INFERENCE (${a.lastTokenCount} TOKENS)'
+                      : (gemma
+                          ? 'GEMMA TACTICAL BRIEF'
+                          : emergency
+                              ? 'EMERGENCY SCRIPT'
+                              : m.kind == AnswerKind.quick
+                                  ? 'OFFLINE MAP DATA'
+                                  : 'OFFLINE GUIDE'),
+                  style: label(emergency ? kClay : (isStreamingThis ? const Color(0xFFE87A3E) : kMoss), size: 11),
                 ),
               ],
             ),
@@ -576,7 +584,12 @@ class _Bubble extends StatelessWidget {
             decoration: BoxDecoration(
               color: kCard,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: emergency ? kClay : kLine, width: emergency ? 1.5 : 1),
+              border: Border.all(
+                color: emergency
+                    ? kClay
+                    : (isStreamingThis ? const Color(0xFFE87A3E).withValues(alpha: 0.8) : kLine),
+                width: (emergency || isStreamingThis) ? 1.5 : 1,
+              ),
             ),
             child: Container(
               padding: const EdgeInsets.all(12),
@@ -590,7 +603,23 @@ class _Bubble extends StatelessWidget {
                 children: [
                   // Gemma answers are generated; only the scripted ones are vetted text
                   if (!gemma) ...[Text('VERIFIED OFFLINE ACTION', style: label(kClay, size: 10)), const SizedBox(height: 4)],
-                  Text(m.text.isEmpty ? '…' : m.text, style: const TextStyle(fontSize: 15, height: 1.4)),
+                  RichText(
+                    text: TextSpan(
+                      style: const TextStyle(fontSize: 15, height: 1.4, color: Colors.black87),
+                      children: [
+                        TextSpan(text: m.text.isEmpty ? (isStreamingThis ? 'Generating…' : '…') : m.text),
+                        if (isStreamingThis)
+                          const TextSpan(
+                            text: ' ▊',
+                            style: TextStyle(
+                              color: Color(0xFFE87A3E),
+                              fontWeight: FontWeight.w900,
+                              fontSize: 15,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
                   if (m.map != null) RouteMiniMap(assistant: a, route: m.map!),
                   // quick answers come from Laya + templates; one tap re-asks Gemma instead
                   if (!gemma && m.question != null)
