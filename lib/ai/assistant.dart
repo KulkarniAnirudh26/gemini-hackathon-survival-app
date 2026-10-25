@@ -30,8 +30,9 @@ class ChatMessage {
   final RouteResult? map; // in-chat mini map (way out / water / help)
   final String? question; // what this answers (for "Ask Gemma" on quick answers)
   final String? prompt; // exact text sent to Gemma (debug sheet)
+  final String? imagePath; // attached user photo/camera capture
   final DateTime at = DateTime.now();
-  ChatMessage(this.user, this.text, {this.kind, this.debug, this.map, this.question, this.prompt});
+  ChatMessage(this.user, this.text, {this.kind, this.debug, this.map, this.question, this.prompt, this.imagePath});
 }
 
 const systemPrompt = '''You are Sherpa, a helpful assistant running offline on a phone, used by hikers in Yosemite National Park.
@@ -338,8 +339,8 @@ class Assistant extends ChangeNotifier {
     await ask(text, input: 'voice');
   }
 
-  /// [forceLlm]: the user tapped "Ask Gemma" on a quick answer.
-  Future<void> ask(String text, {String input = 'text', bool forceLlm = false}) async {
+  /// [forceLlm]: the user tapped "Ask Gemma" on a quick answer, or an image was attached.
+  Future<void> ask(String text, {String input = 'text', bool forceLlm = false, String? imagePath}) async {
     final turn = TurnMetrics(input, text)
       ..sttMs = input == 'voice' ? _pendingSttMs : null
       ..audioMs = input == 'voice' ? _pendingAudioMs : null;
@@ -349,12 +350,13 @@ class Assistant extends ChangeNotifier {
       turn.before = await ai.metrics();
     } catch (_) {}
 
-    messages.add(ChatMessage(true, text));
+    messages.add(ChatMessage(true, text, imagePath: imagePath));
     phase = Phase.routing;
     status = 'Understanding…';
     notifyListeners();
 
-    final decision = forceLlm ? RouteDecision.forced() : await questionRouter.decide(text);
+    final shouldUseLlm = forceLlm || imagePath != null || !settings.enableLaya;
+    final decision = shouldUseLlm ? RouteDecision.forced() : await questionRouter.decide(text);
     turn.layaMs = decision.ms.toDouble();
     turn.scores = decision.toString();
     final s = Situation.build(location, geo, router);
@@ -362,7 +364,12 @@ class Assistant extends ChangeNotifier {
     final critical = location.tier == PowerTier.critical;
     var route = decision.route;
     var why = decision.reason;
-    if (critical && route == Route.llm && !forceLlm) {
+    if (imagePath != null) {
+      why = 'visual query with attached image';
+    } else if (!settings.enableLaya) {
+      why = 'Laya routing disabled in settings';
+    }
+    if (critical && route == Route.llm && !shouldUseLlm) {
       route = Route.guide; // save battery: no Gemma when critical
       why = 'battery critical: no Gemma';
     }
@@ -379,7 +386,7 @@ class Assistant extends ChangeNotifier {
         // then let Gemma add situation-specific advice, unless the battery is critical
         if (!critical && models['gemmaPresent'] == true) {
           turn.route = 'emergency+llm';
-          await _llm(text, decision, s);
+          await _llm(text, decision, s, imagePath: imagePath);
         }
       case Route.template:
         templateAnswers++;
@@ -391,7 +398,7 @@ class Assistant extends ChangeNotifier {
         _say(Templates.calm(decision) + Templates.guideSummary(topic ?? 'lost_stop', g), AnswerKind.guide, decision,
             question: text);
       case Route.llm:
-        await _llm(text, decision, s);
+        await _llm(text, decision, s, imagePath: imagePath);
     }
   }
 
@@ -464,7 +471,7 @@ class Assistant extends ChangeNotifier {
     await ai.setVoice(voice, speed);
   }
 
-  Future<void> _llm(String question, RouteDecision d, Situation s) async {
+  Future<void> _llm(String question, RouteDecision d, Situation s, {String? imagePath}) async {
     llmAnswers++;
     _llmStartTime = DateTime.now();
     _currentQuery = question;
@@ -500,7 +507,7 @@ class Assistant extends ChangeNotifier {
     if (!llmLoaded && settings.speakAnswers) speak('Okay. Give me a moment to think about that.', source: 'chat');
     speakingSource = 'chat';
     _pendingPrompt = (question, d, prompt, msg);
-    await ai.generate(settings.systemPrompt, prompt, speak: settings.speakAnswers);
+    await ai.generate(settings.systemPrompt, prompt, speak: settings.speakAnswers, imagePath: imagePath);
   }
 
   (String, RouteDecision, String, ChatMessage)? _pendingPrompt;

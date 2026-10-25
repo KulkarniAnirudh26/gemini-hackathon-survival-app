@@ -42,6 +42,7 @@ dependencies:
   shared_preferences: ^2.5.6
   url_launcher: ^6.3.3
   flutter_compass: ^0.8.1
+  image_picker: ^1.2.4
 
 dev_dependencies:
   flutter_test:

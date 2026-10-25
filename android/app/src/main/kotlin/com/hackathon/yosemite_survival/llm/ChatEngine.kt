@@ -456,10 +456,17 @@ class ChatEngine private constructor(private val engine: Engine) : AutoCloseable
         Log.i(TAG, "Attempting to initialize LiteRT-LM engine on $name for ${modelFile.name}")
         val t0 = System.nanoTime()
         val engine = try {
+          val visionBackend = when (name) {
+            "NPU" -> if (!nativeLibraryDir.isNullOrEmpty()) Backend.NPU(nativeLibraryDir = nativeLibraryDir) else Backend.NPU()
+            "GPU" -> Backend.GPU()
+            else -> Backend.CPU()
+          }
           Engine(
             EngineConfig(
               modelPath = modelFile.absolutePath,
               backend = factory(),
+              visionBackend = visionBackend,
+              maxNumImages = 1,
               cacheDir = cacheDir.absolutePath,
             )
           )
