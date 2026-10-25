@@ -5,10 +5,10 @@ __pycache__/
 data/*.pdf
 out/
 # Android / Gradle
-android/.gradle/
-android/.kotlin/
-android/**/build/
-android/local.properties
-android/captures/
+android-native/.gradle/
+android-native/.kotlin/
+android-native/**/build/
+android-native/local.properties
+android-native/captures/
 *.mbtiles
 *.pmtiles

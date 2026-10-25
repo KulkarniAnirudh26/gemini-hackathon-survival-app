@@ -112,14 +112,14 @@ Downloads, for the map's footprint, open elevation tiles (Terrain Tiles on AWS, 
 USGS 3DEP, SRTM et al.; zooms 8–11 are 6.6 MB) and aerial imagery (USDA/USGS The National Map,
 public domain; zooms 9–13 are 14.8 MB) into MBTiles. The app drapes the imagery (or the park map)
 over the terrain in 3D; `tools/map-viewer/serve.py --tiles pdf=… --tiles terrain=… --tiles
-imagery=… --static android/app/src/main/assets/map3d` shows the same page in a desktop browser.
+imagery=… --static android-native/app/src/main/assets/map3d` shows the same page in a desktop browser.
 
 ### Mobile app (Android)
 
 The app doesn't parse the PDF: `python scripts/build_android_assets.py data/yosemite.pdf` exports
 a ~2 MB offline map pack (places, guidance, roads, georeference, map image) and a Kotlin library
 reads it. Parity tests keep the Kotlin results identical to this Python pipeline. See
-[android/README.md](android/README.md).
+[android-native/README.md](android-native/README.md).
 
 ### Development
 

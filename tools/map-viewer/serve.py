@@ -5,7 +5,7 @@
 
 Serves MBTiles at /tiles/<name>/{z}/{x}/{y}.<ext>, PMTiles files at /parktiles/<file> (with HTTP
 Range support, which the PMTiles client needs) and static pages from --static. The app's 3D
-page lives in android/app/src/main/assets/map3d and can be served with --static too.
+page lives in android-native/app/src/main/assets/map3d and can be served with --static too.
 """
 import argparse
 import http.server

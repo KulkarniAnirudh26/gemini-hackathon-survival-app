@@ -3,12 +3,12 @@
     python scripts/build_android_assets.py data/yosemite.pdf
 
 writes
-    android/app/src/main/assets/maps/yosemite/{mappack.json, map.jpg}
-    android/app/src/main/assets/maps/yosemite/yosemite.mbtiles          (--tiles; map tiles for 3D)
-    android/app/src/main/assets/maps/yosemite/yosemite-terrain.mbtiles  (--terrain; elevation)
-    android/app/src/main/assets/maps/yosemite/yosemite-imagery.mbtiles  (--imagery; aerial photos)
+    android-native/app/src/main/assets/maps/yosemite/{mappack.json, map.jpg}
+    android-native/app/src/main/assets/maps/yosemite/yosemite.mbtiles          (--tiles; map tiles for 3D)
+    android-native/app/src/main/assets/maps/yosemite/yosemite-terrain.mbtiles  (--terrain; elevation)
+    android-native/app/src/main/assets/maps/yosemite/yosemite-imagery.mbtiles  (--imagery; aerial photos)
                                     (--terrain and --imagery download; all .mbtiles are gitignored)
-    android/mappack/src/test/resources/parity.json   (what the Python side answers, which the
+    android-native/mappack/src/test/resources/parity.json   (what the Python side answers, which the
                                                       Kotlin tests must reproduce)
 """
 import argparse
@@ -22,8 +22,8 @@ from geopdf_locator.terrain import fetch_terrain
 from geopdf_locator.tiles import write_mbtiles
 
 ROOT = Path(__file__).resolve().parent.parent
-ASSETS = ROOT / "android" / "app" / "src" / "main" / "assets" / "maps"
-FIXTURE = ROOT / "android" / "mappack" / "src" / "test" / "resources" / "parity.json"
+ASSETS = ROOT / "android-native" / "app" / "src" / "main" / "assets" / "maps"
+FIXTURE = ROOT / "android-native" / "mappack" / "src" / "test" / "resources" / "parity.json"
 
 
 def parity_cases(m: GeoPdfMap, pack: dict, grid: int = 12) -> dict:
