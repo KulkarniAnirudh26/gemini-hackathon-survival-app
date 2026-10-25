@@ -259,8 +259,14 @@ class Assistant extends ChangeNotifier {
         if (_streaming == null && phase == Phase.speaking) phase = Phase.ready;
       case 'error':
         speaking = false;
+        speakingSource = null;
         status = 'Error: ${e['message']}';
-        _streaming = null;
+        if (_streaming != null) {
+          if (_streaming!.text.isEmpty) {
+            _streaming!.text = 'Sorry, an error occurred during generation: ${e['message']}';
+          }
+          _streaming = null;
+        }
         phase = Phase.ready;
         if (t != null) {
           t.route = '${t.route}:error';
