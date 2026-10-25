@@ -36,6 +36,20 @@ class LocationService extends ChangeNotifier {
   final List<Fix> breadcrumbs = [];
   final List<Fix> _unsaved = [];
   Fix? _simulated;
+  bool isRecording = true;
+
+  /// Starts or resumes recording user GPS trail.
+  void toggleRecording() {
+    isRecording = !isRecording;
+    notifyListeners();
+  }
+
+  /// Clears recorded breadcrumbs.
+  void clearBreadcrumbs() {
+    breadcrumbs.clear();
+    _unsaved.clear();
+    notifyListeners();
+  }
 
   /// The real GPS fix is outside Yosemite: the app shows a demo position instead (Mirror Lake trail),
   /// until the user taps "use real GPS".
@@ -202,6 +216,7 @@ class LocationService extends ChangeNotifier {
   }
 
   void _addCrumb(Fix f) {
+    if (!isRecording) return;
     final last = breadcrumbs.isEmpty ? null : breadcrumbs.last;
     if (last != null &&
         haversineM(last.lat, last.lon, f.lat, f.lon) < 25 &&
