@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'ai/assistant.dart';
 import 'ai/situation.dart';
 import 'location/location_service.dart';
-import 'ui/guide_screen.dart';
 import 'ui/here_card.dart';
 import 'ui/home_screen.dart';
 import 'ui/map_screen.dart';
@@ -67,7 +66,7 @@ class _ShellState extends State<Shell> with WidgetsBindingObserver {
       // the map is only built while visible (battery: no rendering in the background)
       if (_tab == 0) MapScreen(assistant: widget.assistant, location: widget.location) else const SizedBox(),
       HomeScreen(assistant: widget.assistant, location: widget.location),
-      GuideScreen(assistant: widget.assistant),
+      // SOS & Aid tab (GuideScreen) hidden for the demo; emergency answers in chat still open the takeover
     ];
     return Scaffold(
       body: SafeArea(
@@ -103,12 +102,7 @@ class _ShellState extends State<Shell> with WidgetsBindingObserver {
                 NavigationDestination(
                   icon: Icon(Icons.auto_awesome_outlined, color: kInkMuted),
                   selectedIcon: Icon(Icons.auto_awesome, color: kMoss),
-                  label: 'GEMMA AI',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.emergency_outlined, color: kClay),
-                  selectedIcon: Icon(Icons.emergency, color: kClay),
-                  label: 'SOS & AID',
+                  label: 'AI',
                 ),
               ],
             ),

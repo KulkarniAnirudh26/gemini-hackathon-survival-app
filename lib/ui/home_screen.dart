@@ -143,7 +143,7 @@ class _Welcome extends StatelessWidget {
         const Text('What do you need?', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
         const SizedBox(height: 2),
         Text(
-          loading ? a.status : 'Tap one or hold the mic. No signal needed.',
+          loading ? a.status : 'Tap one or hold the mic.',
           style: const TextStyle(color: kInkMuted, fontSize: 13),
         ),
         const SizedBox(height: 10),
@@ -351,7 +351,7 @@ class _VoiceBar extends StatelessWidget {
     final caption = switch (a.phase) {
       Phase.loading => 'GETTING READY…',
       Phase.listening => 'LISTENING… RELEASE TO ASK',
-      Phase.ready => 'HOLD TO TALK',
+      Phase.ready => '',
       _ => a.status.toUpperCase(),
     };
     return Padding(
@@ -378,7 +378,7 @@ class _VoiceBar extends StatelessWidget {
               : const SizedBox(width: 48),
         ]),
         const SizedBox(height: 6),
-        Text(caption, style: label(listening ? kClay : kInkMuted, size: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
+        if (caption.isNotEmpty) Text(caption, style: label(listening ? kClay : kInkMuted, size: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
       ]),
     );
   }

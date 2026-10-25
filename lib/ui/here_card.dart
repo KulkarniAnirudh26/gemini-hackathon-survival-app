@@ -170,7 +170,7 @@ class _RegionBadge extends StatelessWidget {
       children: [
         const Icon(Icons.offline_pin, size: 13, color: kSun),
         const SizedBox(width: 4),
-        Text('${(region ?? 'Region').toUpperCase()} · OFFLINE', style: label(kCard, size: 10)),
+        Text((region ?? 'Region').toUpperCase(), style: label(kCard, size: 10)),
       ],
     ),
   );
