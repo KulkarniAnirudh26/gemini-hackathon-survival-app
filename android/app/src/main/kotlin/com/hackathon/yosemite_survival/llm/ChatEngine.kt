@@ -379,22 +379,53 @@ class ChatEngine private constructor(private val engine: Engine) : AutoCloseable
     private val CHANNELS = listOf(Channel("thought", "<|channel>thought\n", "<channel|>"))
 
     /**
-     * Initializes LiteRT-LM on the GPU for [modelFile] (a `.litertlm` bundle), with the runtime's
-     * caches in [cacheDir] (created when missing). A failure is INITIALIZATION_FAILED; there is no
-     * fallback to the CPU.
+     * Initializes LiteRT-LM for [modelFile] (a `.litertlm` bundle) on [backendType] (NPU, GPU, CPU),
+     * with the runtime's caches in [cacheDir] (created when missing).
      */
-    suspend fun open(modelFile: File, cacheDir: File): ChatEngine {
-      // The native initialize is not interrupted: a caller cancelled meanwhile gets nothing, and
-      // the engine is closed instead of dropped.
-      return handOver(Dispatchers.IO, { initialize(modelFile, cacheDir) }) { it.closeAndJoin() }
+    suspend fun open(
+      modelFile: File,
+      cacheDir: File,
+      backendType: String = "AUTO",
+      nativeLibraryDir: String? = null,
+    ): ChatEngine {
+      return handOver(Dispatchers.IO, { initialize(modelFile, cacheDir, backendType, nativeLibraryDir) }) {
+        it.closeAndJoin()
+      }
     }
 
-    private fun initialize(modelFile: File, cacheDir: File): ChatEngine {
+    private fun initialize(
+      modelFile: File,
+      cacheDir: File,
+      backendType: String,
+      nativeLibraryDir: String?,
+    ): ChatEngine {
       check(cacheDir.isDirectory || cacheDir.mkdirs()) { "Cannot create $cacheDir" }
+
+      val effectiveBackend = when (backendType.uppercase()) {
+        "NPU" -> {
+          Log.i(TAG, "Configuring LiteRT-LM with Backend.NPU (nativeLibraryDir: $nativeLibraryDir)")
+          if (!nativeLibraryDir.isNullOrEmpty()) {
+            Backend.NPU(nativeLibraryDir = nativeLibraryDir)
+          } else {
+            Backend.NPU()
+          }
+        }
+        "CPU" -> Backend.CPU()
+        "GPU" -> Backend.GPU()
+        else -> {
+          if (modelFile.name.contains("Tensor", ignoreCase = true) || modelFile.name.contains("G5", ignoreCase = true)) {
+            Log.i(TAG, "Auto-detected Tensor NPU model, using Backend.NPU")
+            if (!nativeLibraryDir.isNullOrEmpty()) Backend.NPU(nativeLibraryDir = nativeLibraryDir) else Backend.NPU()
+          } else {
+            Backend.GPU()
+          }
+        }
+      }
+
       val config =
         EngineConfig(
           modelPath = modelFile.absolutePath,
-          backend = Backend.GPU(),
+          backend = effectiveBackend,
           cacheDir = cacheDir.absolutePath,
         )
       val engine = Engine(config)
@@ -405,11 +436,11 @@ class ChatEngine private constructor(private val engine: Engine) : AutoCloseable
         runCatching { engine.close() }
         throw VoiceAssistantException(
           "INITIALIZATION_FAILED",
-          "Engine.initialize() failed on the GPU: ${t.javaClass.simpleName}: ${t.message}",
+          "Engine.initialize() failed on $backendType: ${t.javaClass.simpleName}: ${t.message}",
           t,
         )
       }
-      Log.i(TAG, "litertlm initialize_ms=${(System.nanoTime() - t0) / 1_000_000} on gpu")
+      Log.i(TAG, "litertlm initialize_ms=${(System.nanoTime() - t0) / 1_000_000} on $backendType")
       return ChatEngine(engine)
     }
   }

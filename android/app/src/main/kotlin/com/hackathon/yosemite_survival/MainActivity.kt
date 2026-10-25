@@ -71,6 +71,29 @@ class MainActivity : FlutterActivity() {
             "metrics" -> result.success(ai.metrics())
             // adb shell am start -n com.hackathon.yosemite_survival/.MainActivity --ez calibrate true
             "launchFlags" -> result.success(mapOf("calibrate" to (intent?.getBooleanExtra("calibrate", false) ?: false)))
+            "listModels" -> result.success(ai.listAvailableModels())
+            "setModel" -> {
+              val model = call.argument<String>("model")!!
+              val backend = call.argument<String>("backend") ?: "AUTO"
+              ai.setModel(model, backend)
+              result.success(null)
+            }
+            "setTtsEngine" -> {
+              val engine = call.argument<String>("engine") ?: "kitten"
+              ai.setTtsEngine(engine)
+              result.success(null)
+            }
+            "setTtsVoice" -> {
+              val voice = call.argument<String>("voice")
+              ai.setTtsVoice(voice)
+              result.success(null)
+            }
+            "setTtsSpeed" -> {
+              val speed = (call.argument<Double>("speed") ?: 1.0).toFloat()
+              ai.setTtsSpeed(speed)
+              result.success(null)
+            }
+            "listTtsVoices" -> result.success(ai.listTtsVoices())
             else -> result.notImplemented()
           }
         } catch (e: Throwable) {

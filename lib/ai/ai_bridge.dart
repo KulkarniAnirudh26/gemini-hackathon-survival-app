@@ -44,4 +44,30 @@ class AiBridge {
   Future<void> setVoice(String? voice, double speed) =>
       _method.invokeMethod('setVoice', {'voice': voice, 'speed': speed});
   Future<void> unloadLlm() => _method.invokeMethod('unloadLlm');
+
+  Future<List<Map<String, dynamic>>> listModels() async {
+    final list = await _method.invokeMethod<List>('listModels');
+    return (list ?? []).map((e) => Map<String, dynamic>.from(e as Map)).toList();
+  }
+
+  Future<void> setModel(String model, String backend) =>
+      _method.invokeMethod('setModel', {'model': model, 'backend': backend});
+
+  Future<void> setTtsEngine(String engine) =>
+      _method.invokeMethod('setTtsEngine', {'engine': engine});
+
+  Future<void> setTtsVoice(String? voice) =>
+      _method.invokeMethod('setTtsVoice', {'voice': voice});
+
+  Future<void> setTtsSpeed(double speed) =>
+      _method.invokeMethod('setTtsSpeed', {'speed': speed});
+
+  Future<Map<String, List<String>>> listTtsVoices() async {
+    final res = await _method.invokeMethod<Map>('listTtsVoices');
+    if (res == null) return {'kitten': [], 'system': []};
+    return {
+      'kitten': List<String>.from(res['kitten'] as List? ?? []),
+      'system': List<String>.from(res['system'] as List? ?? []),
+    };
+  }
 }

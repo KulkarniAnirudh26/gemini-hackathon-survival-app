@@ -11,6 +11,7 @@ import '../geo/trail_router.dart';
 import '../location/location_service.dart';
 import '../metrics/metrics_log.dart';
 import '../rag/guide.dart';
+import '../services/settings_service.dart';
 import 'ai_bridge.dart';
 import 'router.dart';
 import 'situation.dart';
@@ -39,10 +40,74 @@ When the hiker's safety is involved: be calm and kind, give the single most impo
 If anything sounds life-threatening, tell them to call 911 or use Satellite SOS.
 Reply in two to four short spoken sentences. No markdown, no lists.''';
 
+class LogEntry {
+  final DateTime time;
+  final String tag;
+  final String message;
+  final bool isError;
+  LogEntry(this.tag, this.message, {this.isError = false}) : time = DateTime.now();
+}
+
+class LlmCallRecord {
+  final DateTime time;
+  final String query;
+  final String route;
+  final int ttftMs;
+  final double tokensPerSec;
+  final int tokenCount;
+  final int durationMs;
+  final bool isError;
+  final String? errorMessage;
+
+  LlmCallRecord({
+    required this.time,
+    required this.query,
+    required this.route,
+    required this.ttftMs,
+    required this.tokensPerSec,
+    required this.tokenCount,
+    required this.durationMs,
+    this.isError = false,
+    this.errorMessage,
+  });
+}
+
 /// Orchestrates: mic -> Zipformer -> Laya router -> template | guide | Gemma -> KittenTTS.
 class Assistant extends ChangeNotifier {
   final AiBridge ai = AiBridge();
   final LocationService location;
+  late final SettingsService settings = SettingsService(ai);
+  final List<LogEntry> logs = [];
+  final List<LlmCallRecord> recentCalls = [];
+  DateTime? _llmStartTime;
+  String _currentQuery = '';
+  String _currentRoute = 'llm';
+  int lastTtftMs = 0;
+  double lastTokensPerSec = 0.0;
+  int lastTokenCount = 0;
+
+  double get avgTtftMs {
+    final valid = recentCalls.where((c) => !c.isError && c.ttftMs > 0);
+    if (valid.isEmpty) return 0;
+    return valid.map((c) => c.ttftMs).reduce((a, b) => a + b) / valid.length;
+  }
+
+  double get avgTokensPerSec {
+    final valid = recentCalls.where((c) => !c.isError && c.tokensPerSec > 0);
+    if (valid.isEmpty) return 0;
+    return valid.map((c) => c.tokensPerSec).reduce((a, b) => a + b) / valid.length;
+  }
+
+  void log(String tag, String msg, {bool isError = false}) {
+    logs.add(LogEntry(tag, msg, isError: isError));
+    if (logs.length > 200) logs.removeAt(0);
+    notifyListeners();
+  }
+
+  void clearLogs() {
+    logs.clear();
+    notifyListeners();
+  }
   GeoData? geo;
   TrailRouter? router;
   NpsLayers? nps;
@@ -134,7 +199,12 @@ class Assistant extends ChangeNotifier {
       case 'llm_first_token':
         t?.ttftMs = (e['ttft_ms'] as num?)?.toDouble();
       case 'llm_chunk':
-        _streaming?.text += e['text'] as String;
+        final chunk = e['text'] as String;
+        if (lastTtftMs == 0 && _llmStartTime != null) {
+          lastTtftMs = DateTime.now().difference(_llmStartTime!).inMilliseconds;
+        }
+        lastTokenCount++;
+        _streaming?.text += chunk;
         phase = Phase.thinking;
       case 'llm_done':
         final pp = _pendingPrompt;
@@ -143,6 +213,27 @@ class Assistant extends ChangeNotifier {
           _logPrompt(pp.$1, pp.$2, pp.$3, pp.$4.text);
         }
         _streaming = null;
+        if (_llmStartTime != null) {
+          final now = DateTime.now();
+          final durMs = now.difference(_llmStartTime!).inMilliseconds;
+          final durSec = durMs / 1000.0;
+          if (durSec > 0) {
+            lastTokensPerSec = lastTokenCount / durSec;
+          }
+          recentCalls.insert(
+            0,
+            LlmCallRecord(
+              time: now,
+              query: _currentQuery,
+              route: _currentRoute,
+              ttftMs: lastTtftMs,
+              tokensPerSec: lastTokensPerSec,
+              tokenCount: lastTokenCount,
+              durationMs: durMs,
+            ),
+          );
+          if (recentCalls.length > 25) recentCalls.removeLast();
+        }
         if (phase == Phase.thinking) phase = Phase.ready;
         status = 'Ready.';
         if (t != null) {
@@ -363,6 +454,11 @@ class Assistant extends ChangeNotifier {
 
   Future<void> _llm(String question, RouteDecision d, Situation s) async {
     llmAnswers++;
+    _llmStartTime = DateTime.now();
+    _currentQuery = question;
+    _currentRoute = d.route.name;
+    lastTtftMs = 0;
+    lastTokenCount = 0;
     final g = guide!;
     final hits = <GuideHit>[];
     final topicSection = d.topic == null || d.topicConfidence < 0.35 ? null : g.byId(d.topic!);

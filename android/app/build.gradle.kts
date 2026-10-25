@@ -33,8 +33,9 @@ android {
     packaging {
         resources.excludes += setOf("META-INF/AL2.0", "META-INF/LGPL2.1")
         jniLibs.pickFirsts += "**/libc++_shared.so"
+        jniLibs.pickFirsts += "**/libLiteRtDispatch_GoogleTensor.so"
         // Keep native libs uncompressed so they mmap straight from the APK.
-        jniLibs.useLegacyPackaging = false
+        jniLibs.useLegacyPackaging = true
     }
 
     // JNI workaround for CompiledModel dynamic shapes (KittenTTS vocoder), from voice_assistant.
