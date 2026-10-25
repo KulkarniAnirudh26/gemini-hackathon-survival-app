@@ -1,0 +1,202 @@
+[
+ {
+  "q": "Where is the nearest water?",
+  "expect": "template"
+ },
+ {
+  "q": "I need water, where can I drink?",
+  "expect": "template"
+ },
+ {
+  "q": "How do I get out of here?",
+  "expect": "template"
+ },
+ {
+  "q": "Which way to the nearest trailhead?",
+  "expect": "template"
+ },
+ {
+  "q": "Where is the closest road?",
+  "expect": "template"
+ },
+ {
+  "q": "How long until sunset?",
+  "expect": "template"
+ },
+ {
+  "q": "What time is it?",
+  "expect": "template"
+ },
+ {
+  "q": "Which direction should I walk?",
+  "expect": "template"
+ },
+ {
+  "q": "Where is the nearest ranger station?",
+  "expect": "template"
+ },
+ {
+  "q": "Is there a visitor center near me?",
+  "expect": "template"
+ },
+ {
+  "q": "There is a bear near me.",
+  "expect": "guide"
+ },
+ {
+  "q": "I saw a mountain lion on the trail.",
+  "expect": "guide"
+ },
+ {
+  "q": "How do I purify water from a stream?",
+  "expect": "guide"
+ },
+ {
+  "q": "How do I build a shelter for the night?",
+  "expect": "guide"
+ },
+ {
+  "q": "How do I signal for rescue?",
+  "expect": "guide"
+ },
+ {
+  "q": "A thunderstorm is coming and I am on a ridge.",
+  "expect": "guide"
+ },
+ {
+  "q": "How do I cross this river safely?",
+  "expect": "guide"
+ },
+ {
+  "q": "How do I start a fire?",
+  "expect": "guide"
+ },
+ {
+  "q": "I think I am lost.",
+  "expect": "guide"
+ },
+ {
+  "q": "I have a headache at high altitude.",
+  "expect": "guide"
+ },
+ {
+  "q": "My friend fell and is not breathing.",
+  "expect": "emergency"
+ },
+ {
+  "q": "He is bleeding badly from his leg.",
+  "expect": "emergency"
+ },
+ {
+  "q": "Someone is unconscious and won't wake up.",
+  "expect": "emergency"
+ },
+ {
+  "q": "I broke my leg and can't move.",
+  "expect": "emergency"
+ },
+ {
+  "q": "Help, my child is missing.",
+  "expect": "emergency"
+ },
+ {
+  "q": "What is the capital of France?",
+  "expect": "llm"
+ },
+ {
+  "q": "Tell me about the history of Yosemite.",
+  "expect": "llm"
+ },
+ {
+  "q": "Should I go back the way I came or keep going?",
+  "expect": "llm"
+ },
+ {
+  "q": "Is Half Dome worth hiking tomorrow?",
+  "expect": "llm"
+ },
+ {
+  "q": "What animals live in Yosemite?",
+  "expect": "llm"
+ },
+ {
+  "q": "How was El Capitan formed?",
+  "expect": "llm"
+ },
+ {
+  "q": "Can you tell me a joke to calm me down?",
+  "expect": "llm"
+ },
+ {
+  "q": "What should I pack for a day hike?",
+  "expect": "llm"
+ },
+ {
+  "q": "I'm scared and alone, can you talk to me?",
+  "expect": "llm"
+ },
+ {
+  "q": "Explain why my phone battery drains in the cold.",
+  "expect": "llm"
+ },
+ {
+  "q": "Which is more dangerous here, heat or cold?",
+  "expect": "llm"
+ },
+ {
+  "q": "Who was John Muir?",
+  "expect": "llm"
+ },
+ {
+  "q": "What is the weather usually like in October?",
+  "expect": "llm"
+ },
+ {
+  "q": "Compare taking the trail versus following the river down.",
+  "expect": "llm"
+ },
+ {
+  "q": "Write a short message I can leave for searchers.",
+  "expect": "llm"
+ },
+ {
+  "q": "okay so I have been walking for a while and I am really thirsty is there any water close to me",
+  "expect": "template"
+ },
+ {
+  "q": "I think I took a wrong turn somewhere how do I get back to the trailhead from here",
+  "expect": "template"
+ },
+ {
+  "q": "how much daylight do I have left before it gets dark out here",
+  "expect": "template"
+ },
+ {
+  "q": "there is a big black bear about fifty meters away from me on the trail what should I do",
+  "expect": "guide"
+ },
+ {
+  "q": "my hands are freezing and I am shivering a lot what do I do",
+  "expect": "guide"
+ },
+ {
+  "q": "my friend slipped on the rocks and is bleeding a lot from his head",
+  "expect": "emergency"
+ },
+ {
+  "q": "can you explain how glaciers carved out yosemite valley",
+  "expect": "llm"
+ },
+ {
+  "q": "I have about two hours of light left should I try to reach the top of nevada fall or turn around now",
+  "expect": "llm"
+ },
+ {
+  "q": "what is the best way to keep my phone battery alive overnight in the cold",
+  "expect": "llm"
+ },
+ {
+  "q": "I am feeling really anxious and alone out here can you just talk to me for a minute",
+  "expect": "llm"
+ }
+]

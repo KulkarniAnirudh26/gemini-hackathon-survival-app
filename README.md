@@ -1,6 +1,49 @@
-# gemini-hackathon-survival-app
+# Yosemite Survival Assistant (offline, on-device)
 
-## geopdf_locator
+An offline voice survival assistant for Yosemite. You hold the mic and ask "where's water?", "how do I get out?" or "I'm cold and it's getting dark". The phone answers out loud, using its GPS position, offline trail maps with elevation, sunset times and a bundled survival guide.
+
+Everything runs on the phone: Zipformer for speech-to-text, Laya to route each question, Gemma 4 E2B for open questions, and KittenTTS for speech. Release builds have **no INTERNET permission**.
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for the design, memory and battery strategy.
+
+## Setup
+
+```sh
+# 1. models (once): Kitten TTS + G2P, Laya router -> ~/Personal/gemma-models/models
+sh tool/fetch_models.sh          # Gemma 4 E2B and Zipformer are expected there already
+
+# 2. geo assets (once, needs internet): OSM trails/POIs + AWS terrain tiles -> assets/geo/
+python tool/build_geo.py
+
+# 3. build + install
+flutter build apk --release --target-platform android-arm64
+adb install -r build/app/outputs/flutter-apk/app-release.apk
+
+# 4. push models to the phone (~3.4 GB)
+sh tool/push_models.sh
+```
+
+Open the app and grant the microphone and location permissions.
+
+## Demo tips
+- **Pin a position:** long-press the map to place yourself anywhere in the park. Tap the GPS button to go back to the real GPS fix.
+- **Battery modes:** tap the battery chip to force `saver` or `critical` mode. In `critical` mode Gemma stays unloaded and every answer comes from templates or the guide.
+- **Seeing which path answered:** each answer is labelled with the path the router chose (`template, no LLM` or `Gemma`), plus the router's scores and its latency.
+- **Logs:** `adb logcat -s SurvivalAi`
+
+## Data sources
+- **Trails and points of interest:** © OpenStreetMap contributors (ODbL).
+- **Elevation:** AWS Terrain Tiles.
+- **Models:** each one keeps its own license, listed in ARCHITECTURE.md:
+  - Gemma (Gemma terms)
+  - Zipformer, Kitten, Laya (Apache-2.0)
+  - G2P (MIT / BSD-3-Clause-Clear)
+
+## Offline map tools from the NPS park map (`geopdf_locator`)
+
+Python tools that turn the official NPS Yosemite park map (a GeoPDF) into offline data: place-name
+lookup, the map's own safety notes linked to places, MBTiles map tiles, and 3D terrain and imagery.
+
 
 Offline place-name → lat/lon lookup on georeferenced PDF maps (GeoPDF), such as the NPS park maps.
 
@@ -114,14 +157,15 @@ public domain; zooms 9–13 are 14.8 MB) into MBTiles. The app drapes the imager
 over the terrain in 3D; `tools/map-viewer/serve.py --tiles pdf=… --tiles terrain=… --tiles
 imagery=… --static android-native/app/src/main/assets/map3d` shows the same page in a desktop browser.
 
-### Mobile app (Android)
+### Native Android demo (`android-native/`)
 
-The app doesn't parse the PDF: `python scripts/build_android_assets.py data/yosemite.pdf` exports
+The survival app itself is the Flutter app in `android/` + `lib/`. Separately, a native Kotlin
+demo shows the PDF-derived map pack on a phone without parsing the PDF: `python scripts/build_android_assets.py data/yosemite.pdf` exports
 a ~2 MB offline map pack (places, guidance, roads, georeference, map image) and a Kotlin library
 reads it. Parity tests keep the Kotlin results identical to this Python pipeline. See
 [android-native/README.md](android-native/README.md).
 
-### Development
+### Development (map tools)
 
 ```bash
 python -m venv .venv && .venv/bin/pip install -e '.[dev]'
