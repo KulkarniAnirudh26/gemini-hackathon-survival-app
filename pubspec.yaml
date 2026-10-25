@@ -66,6 +66,7 @@ flutter:
     - assets/geo/
     - assets/guide/
     - assets/nps/
+    - assets/calibration/
 
   # Space Grotesk (OFL, assets/fonts/OFL.txt), bundled so it works offline.
   # Medium is the lightest weight: thinner strokes wash out in sunlight.

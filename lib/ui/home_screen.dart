@@ -3,9 +3,11 @@ import 'package:flutter/services.dart';
 
 import '../ai/assistant.dart';
 import '../ai/situation.dart';
+import '../geo/geo_data.dart';
 import '../geo/geo_math.dart';
 import '../location/location_service.dart';
 import 'guide_screen.dart';
+import 'route_mini_map.dart';
 import 'theme.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -25,11 +27,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   /// An emergency answer takes over the screen at once, before Gemma adds anything.
   void _checkEmergency(Assistant a) {
+    if (a.messages.length < _seen) _seen = 0; // chat was cleared
     if (a.messages.length <= _seen) return;
     final fresh = a.messages.sublist(_seen);
     _seen = a.messages.length;
     for (final m in fresh) {
-      if (!m.user && (m.meta ?? '').startsWith('emergency')) {
+      if (!m.user && m.kind == AnswerKind.emergency) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted) return;
           HapticFeedback.heavyImpact();
@@ -50,24 +53,27 @@ class _HomeScreenState extends State<HomeScreen> {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (_scroll.hasClients) _scroll.jumpTo(_scroll.position.maxScrollExtent);
         });
+        final chatting = a.messages.isNotEmpty;
         return Column(
           children: [
-            _StatusBar(s: s),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-              child: _Cards(s: s),
-            ),
-            _QuickPrompts(a: a),
-            Expanded(
-              child: a.messages.isEmpty
-                  ? _Hint(status: a.status)
-                  : ListView.builder(
-                      controller: _scroll,
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                      itemCount: a.messages.length,
-                      itemBuilder: (_, i) => _Bubble(m: a.messages[i]),
-                    ),
-            ),
+            _StatusBar(s: s, a: a, location: widget.location, onBack: chatting ? a.clearChat : null),
+            if (!chatting)
+              // dashboard: the essentials, big; asking anything switches to the chat view
+              Expanded(child: _Dashboard(s: s, a: a))
+            else ...[
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+                child: _Cards(s: s, a: a),
+              ),
+              Expanded(
+                child: ListView.builder(
+                  controller: _scroll,
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                  itemCount: a.messages.length,
+                  itemBuilder: (_, i) => _Bubble(m: a.messages[i], a: a),
+                ),
+              ),
+            ],
             if (_typing)
               _Composer(a: a, text: _text, onClose: () => setState(() => _typing = false))
             else
@@ -78,9 +84,13 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
+
 class _StatusBar extends StatelessWidget {
   final Situation s;
-  const _StatusBar({required this.s});
+  final Assistant a;
+  final LocationService location;
+  final VoidCallback? onBack; // chat view: back to the dashboard
+  const _StatusBar({required this.s, required this.a, required this.location, this.onBack});
 
   @override
   Widget build(BuildContext context) {
@@ -89,16 +99,24 @@ class _StatusBar extends StatelessWidget {
     final sunText = s.isNight
         ? 'DARK'
         : us == null
-        ? '--'
-        : us.isNegative
-        ? 'DUSK'
-        : 'SUNSET IN ${formatDuration(us).toUpperCase()}';
+            ? '--'
+            : us.isNegative
+                ? 'DUSK'
+                : 'SUNSET IN ${formatDuration(us).toUpperCase()}';
     final sunWarn = s.isNight || (us != null && us < const Duration(hours: 1));
     final f = s.fix;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
+      padding: const EdgeInsets.fromLTRB(16, 10, 8, 4),
       child: Row(
         children: [
+          if (onBack != null) ...[
+            InkWell(
+              onTap: onBack,
+              borderRadius: BorderRadius.circular(8),
+              child: const Padding(padding: EdgeInsets.all(4), child: Icon(Icons.dashboard_outlined, size: 20, color: kInk)),
+            ),
+            const SizedBox(width: 6),
+          ],
           Flexible(child: _Chip(icon: Icons.wb_twilight, text: sunText, warn: sunWarn)),
           const SizedBox(width: 8),
           Flexible(
@@ -108,11 +126,171 @@ class _StatusBar extends StatelessWidget {
               warn: f == null,
             ),
           ),
+          const Spacer(),
+          IconButton(
+            visualDensity: VisualDensity.compact,
+            tooltip: 'Voice and battery',
+            icon: const Icon(Icons.tune, size: 20, color: kInkMuted),
+            onPressed: () => showModalBottomSheet(
+              context: context,
+              showDragHandle: true,
+              builder: (_) => _SettingsSheet(a: a, location: location),
+            ),
+          ),
         ],
       ),
     );
   }
 }
+
+/// The home screen before any question: big, glanceable tiles. Tapping one asks about it.
+class _Dashboard extends StatelessWidget {
+  final Situation s;
+  final Assistant a;
+  const _Dashboard({required this.s, required this.a});
+
+  void _ask(String q) {
+    if (!a.busy && a.phase != Phase.loading) a.ask(q, input: 'card');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final r = s.routeOut;
+    final w = s.water;
+    final h = s.help;
+    final f = s.fix;
+    final us = s.untilSunset;
+    final sunset = s.sun.sunset;
+    final dark = s.isNight || (us != null && us.isNegative);
+    final lowLight = us != null && !us.isNegative && us < const Duration(hours: 1);
+    String dir((Poi, double)? p) => p == null || f == null ? '' : compassShort(bearingDeg(f.lat, f.lon, p.$1.lat, p.$1.lon));
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
+      children: [
+        Row(children: [
+          Expanded(
+            child: _BigTile(
+              icon: Icons.exit_to_app,
+              color: r != null && r.offTrail ? kClay : kMoss,
+              title: 'WAY OUT',
+              value: r == null ? '—' : formatDistance(r.distanceM),
+              unit: r == null ? '' : compassShort(r.initialBearing),
+              lines: [
+                r == null ? (f == null ? 'Waiting for GPS' : 'No route found') : r.target.name,
+                if (r != null) '~${formatDuration(r.walkTime)} walk · +${r.ascentM.round()} m${r.offTrail ? ' · off trail' : ''}',
+              ],
+              onTap: () => _ask('How do I get out of here?'),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: _BigTile(
+              icon: Icons.water_drop,
+              color: kWater,
+              title: 'WATER',
+              value: w == null ? '—' : formatDistance(w.$2),
+              unit: dir(w),
+              lines: [w?.$1.name ?? 'None mapped nearby', 'Treat before drinking'],
+              onTap: () => _ask('Where is the nearest water?'),
+            ),
+          ),
+        ]),
+        const SizedBox(height: 10),
+        Row(children: [
+          Expanded(
+            child: _BigTile(
+              icon: dark ? Icons.nights_stay : Icons.wb_twilight,
+              color: dark || lowLight ? kClay : kTrail,
+              title: 'DAYLIGHT',
+              value: dark ? 'Dark' : (us == null ? '—' : formatDuration(us)),
+              unit: dark ? '' : 'left',
+              lines: [
+                'Now ${_hhmm(s.now)}',
+                if (sunset != null) 'Sunset ${_hhmm(sunset)}',
+              ],
+              onTap: () => _ask('How long until sunset?'),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: _BigTile(
+              icon: Icons.local_hospital,
+              color: kClay,
+              title: 'HELP',
+              value: h == null ? '—' : formatDistance(h.$2),
+              unit: dir(h),
+              lines: [h?.$1.name ?? 'None mapped nearby', 'SOS: 911 / Satellite'],
+              onTap: () => _ask('Where is the nearest ranger station or help?'),
+            ),
+          ),
+        ]),
+        const SizedBox(height: 14),
+        _QuickPrompts(a: a),
+        const SizedBox(height: 8),
+        Text(a.status, style: label(kInkMuted, size: 10), textAlign: TextAlign.center),
+      ],
+    );
+  }
+}
+
+class _BigTile extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String title, value, unit;
+  final List<String> lines;
+  final VoidCallback onTap;
+  const _BigTile({
+    required this.icon,
+    required this.color,
+    required this.title,
+    required this.value,
+    required this.unit,
+    required this.lines,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) => Material(
+        color: kCard,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14), side: BorderSide(color: color, width: 2)),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: onTap,
+          child: SizedBox(
+            height: 168,
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Row(children: [
+                  Icon(icon, color: color, size: 26),
+                  const SizedBox(width: 6),
+                  Text(title, style: label(color, size: 13)),
+                ]),
+                const Spacer(),
+                Row(crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
+                  Flexible(
+                    child: Text(
+                      value,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w700, height: 1.0, fontFeatures: [FontFeature.tabularFigures()]),
+                    ),
+                  ),
+                  if (unit.isNotEmpty) ...[
+                    const SizedBox(width: 6),
+                    Text(unit, style: label(kInkMuted, size: 15)),
+                  ],
+                ]),
+                const SizedBox(height: 6),
+                for (final l in lines)
+                  Text(l, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: kInkMuted, fontSize: 12.5)),
+              ]),
+            ),
+          ),
+        ),
+      );
+}
+
 String _hhmm(DateTime t) => '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
 
 /// Pill status chip: inset fill, moss (nominal) or clay (warning) border, solid pip.
@@ -154,7 +332,12 @@ class _Chip extends StatelessWidget {
 
 class _Cards extends StatelessWidget {
   final Situation s;
-  const _Cards({required this.s});
+  final Assistant a;
+  const _Cards({required this.s, required this.a});
+
+  void _ask(String q) {
+    if (!a.busy && a.phase != Phase.loading) a.ask(q, input: 'card');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -168,6 +351,7 @@ class _Cards extends StatelessWidget {
           Expanded(
             flex: 3,
             child: _Card(
+              onTap: () => _ask('How do I get out of here?'),
               icon: Icons.directions_walk,
               color: r != null && r.offTrail ? kClay : kMoss,
               title: 'WAY OUT',
@@ -181,6 +365,7 @@ class _Cards extends StatelessWidget {
           Expanded(
             flex: 2,
             child: _Card(
+              onTap: () => _ask('Where is the nearest water?'),
               icon: Icons.water_drop,
               color: kWater,
               title: 'WATER',
@@ -194,6 +379,7 @@ class _Cards extends StatelessWidget {
           Expanded(
             flex: 2,
             child: _Card(
+              onTap: () => _ask('Where is the nearest ranger station or help?'),
               icon: Icons.local_hospital,
               color: kClay,
               title: 'HELP',
@@ -211,10 +397,13 @@ class _Card extends StatelessWidget {
   final IconData icon;
   final Color color;
   final String title, main, sub;
-  const _Card({required this.icon, required this.color, required this.title, required this.main, required this.sub});
+  final VoidCallback? onTap;
+  const _Card({required this.icon, required this.color, required this.title, required this.main, required this.sub, this.onTap});
 
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) => GestureDetector(onTap: onTap, child: _body());
+
+  Widget _body() => Container(
     padding: const EdgeInsets.all(10),
     decoration: BoxDecoration(
       color: kCard,
@@ -287,35 +476,10 @@ class _QuickPrompts extends StatelessWidget {
   }
 }
 
-class _Hint extends StatelessWidget {
-  final String status;
-  const _Hint({required this.status});
-
-  @override
-  Widget build(BuildContext context) => Center(
-    child: Padding(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.auto_awesome, size: 40, color: kMoss),
-          const SizedBox(height: 12),
-          const Text(
-            'Hold the mic and ask, type below, or tap a prompt above.',
-            style: TextStyle(color: kInkMuted),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          Text(status, style: label(kInkMuted, size: 10), textAlign: TextAlign.center),
-        ],
-      ),
-    ),
-  );
-}
-
 class _Bubble extends StatelessWidget {
   final ChatMessage m;
-  const _Bubble({required this.m});
+  final Assistant a;
+  const _Bubble({required this.m, required this.a});
 
   @override
   Widget build(BuildContext context) => m.user ? _user(context) : _answer();
@@ -358,9 +522,8 @@ class _Bubble extends StatelessWidget {
   );
 
   Widget _answer() {
-    final meta = m.meta ?? '';
-    final gemma = meta.startsWith('Gemma');
-    final emergency = meta.startsWith('emergency');
+    final gemma = m.kind == AnswerKind.gemma;
+    final emergency = m.kind == AnswerKind.emergency;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Column(
@@ -373,7 +536,13 @@ class _Bubble extends StatelessWidget {
                 Icon(gemma ? Icons.auto_awesome : Icons.verified_outlined, size: 16, color: emergency ? kClay : kMoss),
                 const SizedBox(width: 6),
                 Text(
-                  gemma ? 'GEMMA TACTICAL BRIEF' : (emergency ? 'EMERGENCY SCRIPT' : 'OFFLINE GUIDE'),
+                  gemma
+                      ? 'GEMMA TACTICAL BRIEF'
+                      : emergency
+                          ? 'EMERGENCY SCRIPT'
+                          : m.kind == AnswerKind.quick
+                              ? 'OFFLINE MAP DATA'
+                              : 'OFFLINE GUIDE',
                   style: label(emergency ? kClay : kMoss, size: 11),
                 ),
               ],
@@ -400,6 +569,7 @@ class _Bubble extends StatelessWidget {
                   // Gemma answers are generated; only the scripted ones are vetted text
                   if (!gemma) ...[Text('VERIFIED OFFLINE ACTION', style: label(kClay, size: 10)), const SizedBox(height: 4)],
                   Text(m.text.isEmpty ? '…' : m.text, style: const TextStyle(fontSize: 15, height: 1.4)),
+                  if (m.map != null) RouteMiniMap(assistant: a, route: m.map!),
                 ],
               ),
             ),
@@ -408,6 +578,78 @@ class _Bubble extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Voice, pace and battery mode (the battery mode can be forced for demos).
+class _SettingsSheet extends StatelessWidget {
+  final Assistant a;
+  final LocationService location;
+  const _SettingsSheet({required this.a, required this.location});
+
+  static String _label(String v) {
+    final m = RegExp(r'expr-voice-(\d)-(m|f)').firstMatch(v);
+    if (m == null) return v;
+    return '${m.group(2) == 'f' ? 'Female' : 'Male'} ${int.parse(m.group(1)!) - 1}';
+  }
+
+  @override
+  Widget build(BuildContext context) => ListenableBuilder(
+        listenable: Listenable.merge([a, location]),
+        builder: (context, _) => Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('VOICE', style: label(kInk, size: 16)),
+            const SizedBox(height: 4),
+            const Text('KittenTTS, on-device.', style: TextStyle(color: kInkMuted)),
+            const SizedBox(height: 12),
+            Wrap(spacing: 8, runSpacing: 8, children: [
+              for (final v in a.voices)
+                ChoiceChip(
+                  label: Text(_label(v)),
+                  selected: (a.voice ?? (a.voices.isEmpty ? null : a.voices.first)) == v,
+                  onSelected: (_) => a.setVoice(v, a.speed),
+                ),
+            ]),
+            const SizedBox(height: 12),
+            Row(children: [
+              const Text('Pace'),
+              Expanded(
+                child: Slider(
+                  value: a.speed.clamp(0.7, 1.2),
+                  min: 0.7,
+                  max: 1.2,
+                  divisions: 10,
+                  label: '${a.speed.toStringAsFixed(2)}x',
+                  onChanged: (v) => a.setVoice(a.voice, v),
+                ),
+              ),
+              Text('${a.speed.toStringAsFixed(2)}x'),
+            ]),
+            FilledButton.icon(
+              icon: Icon(a.speaking ? Icons.stop : Icons.play_arrow),
+              label: Text(a.speaking ? 'STOP' : 'TEST VOICE'),
+              onPressed: () async {
+                if (a.speaking) return a.stopSpeaking();
+                a.speak("Okay, I'm here with you. Take a slow breath. We'll find the way out together.", source: 'voice-test');
+              },
+            ),
+            const SizedBox(height: 20),
+            Text('BATTERY MODE · ${location.batteryLevel}%', style: label(kInk, size: 16)),
+            const SizedBox(height: 4),
+            const Text('Set automatically from the battery level; force one to demo it.', style: TextStyle(color: kInkMuted)),
+            const SizedBox(height: 8),
+            SegmentedButton<PowerTier>(
+              segments: const [
+                ButtonSegment(value: PowerTier.normal, label: Text('Normal')),
+                ButtonSegment(value: PowerTier.saver, label: Text('Saver')),
+                ButtonSegment(value: PowerTier.critical, label: Text('Critical')),
+              ],
+              selected: {location.tier},
+              onSelectionChanged: (s) => location.overrideTier(s.first),
+            ),
+          ]),
+        ),
+      );
 }
 
 /// The main input: one big hold-to-talk button. Typing is the secondary path.
@@ -419,11 +661,13 @@ class _VoiceBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final listening = a.phase == Phase.listening;
-    final working = a.busy && !listening && a.phase != Phase.loading;
-    final speaking = a.phase == Phase.speaking;
+    final loading = a.phase == Phase.loading;
+    final working = a.busy && !listening && !loading;
+    final stopMode = working || a.speaking;
     final caption = switch (a.phase) {
       Phase.loading => 'GETTING READY…',
       Phase.listening => 'LISTENING… RELEASE TO ASK',
+      _ when stopMode => 'TAP TO STOP',
       Phase.ready => 'HOLD TO TALK',
       _ => a.status.toUpperCase(),
     };
@@ -434,21 +678,24 @@ class _VoiceBar extends StatelessWidget {
           _RoundIcon(icon: Icons.keyboard_alt_outlined, tooltip: 'Type instead', onTap: onKeyboard),
           const Spacer(),
           GestureDetector(
-            onTapDown: (_) {
-              HapticFeedback.mediumImpact();
-              a.pressTalk();
-            },
-            onTapUp: (_) {
-              HapticFeedback.lightImpact();
-              a.releaseTalk();
-            },
-            onTapCancel: () => a.releaseTalk(),
-            child: _MicButton(listening: listening, enabled: a.phase != Phase.loading),
+            onTapDown: stopMode || loading
+                ? null
+                : (_) {
+                    HapticFeedback.mediumImpact();
+                    a.pressTalk();
+                  },
+            onTapUp: stopMode || loading
+                ? null
+                : (_) {
+                    HapticFeedback.lightImpact();
+                    a.releaseTalk();
+                  },
+            onTapCancel: stopMode || loading ? null : () => a.releaseTalk(),
+            onTap: stopMode ? a.stop : null,
+            child: _MicButton(listening: listening, enabled: !loading, stop: stopMode),
           ),
           const Spacer(),
-          working || speaking
-              ? _RoundIcon(icon: Icons.stop, tooltip: 'Stop', onTap: a.stop, color: kClay)
-              : const SizedBox(width: 48),
+          const SizedBox(width: 48),
         ]),
         const SizedBox(height: 6),
         Text(caption, style: label(listening ? kClay : kInkMuted, size: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
@@ -458,8 +705,8 @@ class _VoiceBar extends StatelessWidget {
 }
 
 class _MicButton extends StatefulWidget {
-  final bool listening, enabled;
-  const _MicButton({required this.listening, required this.enabled});
+  final bool listening, enabled, stop;
+  const _MicButton({required this.listening, required this.enabled, required this.stop});
 
   @override
   State<_MicButton> createState() => _MicButtonState();
@@ -483,33 +730,42 @@ class _MicButtonState extends State<_MicButton> with SingleTickerProviderStateMi
   }
 
   @override
-  Widget build(BuildContext context) => SizedBox(
-        width: 112,
-        height: 112,
-        child: AnimatedBuilder(
-          animation: _pulse,
-          builder: (_, child) => Stack(alignment: Alignment.center, children: [
-            if (widget.listening)
-              Container(
-                width: 84 + 28 * _pulse.value,
-                height: 84 + 28 * _pulse.value,
-                decoration: BoxDecoration(shape: BoxShape.circle, color: kClay.withValues(alpha: 0.35 * (1 - _pulse.value))),
-              ),
-            child!,
-          ]),
-          child: Container(
-            width: 84,
-            height: 84,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: widget.enabled ? (widget.listening ? kInk : kClay) : kOutline,
-              border: Border.all(color: kInk, width: 2),
-              boxShadow: const [BoxShadow(color: kInk, offset: Offset(0, 3))],
+  Widget build(BuildContext context) {
+    final color = !widget.enabled
+        ? kOutline
+        : widget.listening
+            ? kInk
+            : widget.stop
+                ? kInkMuted
+                : kClay;
+    return SizedBox(
+      width: 140,
+      height: 140,
+      child: AnimatedBuilder(
+        animation: _pulse,
+        builder: (_, child) => Stack(alignment: Alignment.center, children: [
+          if (widget.listening)
+            Container(
+              width: 110 + 30 * _pulse.value,
+              height: 110 + 30 * _pulse.value,
+              decoration: BoxDecoration(shape: BoxShape.circle, color: kClay.withValues(alpha: 0.35 * (1 - _pulse.value))),
             ),
-            child: Icon(widget.listening ? Icons.graphic_eq : Icons.mic, size: 40, color: kCard),
+          child!,
+        ]),
+        child: Container(
+          width: 110,
+          height: 110,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: color,
+            border: Border.all(color: kInk, width: 2),
+            boxShadow: const [BoxShadow(color: kInk, offset: Offset(0, 3))],
           ),
+          child: Icon(widget.listening ? Icons.graphic_eq : (widget.stop ? Icons.stop : Icons.mic), size: 52, color: kCard),
         ),
-      );
+      ),
+    );
+  }
 }
 
 class _RoundIcon extends StatelessWidget {
@@ -552,7 +808,7 @@ class _Composer extends StatelessWidget {
     final listening = a.phase == Phase.listening;
     final working = a.busy && !listening;
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 4, 16, 2),
+      margin: const EdgeInsets.fromLTRB(16, 4, 16, 8),
       padding: const EdgeInsets.all(6),
       decoration: BoxDecoration(
         color: kCard,
@@ -562,12 +818,12 @@ class _Composer extends StatelessWidget {
       child: Row(
         children: [
           _RoundIcon(icon: Icons.mic, tooltip: 'Talk instead', onTap: onClose, color: kClay),
-        const SizedBox(width: 6),
+          const SizedBox(width: 6),
           Expanded(
             child: TextField(
               controller: text,
               enabled: !working && a.phase != Phase.loading,
-            autofocus: true,
+              autofocus: true,
               textInputAction: TextInputAction.send,
               style: const TextStyle(fontSize: 15),
               decoration: const InputDecoration(
@@ -584,7 +840,7 @@ class _Composer extends StatelessWidget {
           SizedBox(
             width: 48,
             height: 48,
-            child: working || a.phase == Phase.speaking
+            child: working || a.speaking
                 ? IconButton.filled(
                     style: IconButton.styleFrom(
                       backgroundColor: kClay,
@@ -617,8 +873,8 @@ class _EmergencyTakeover extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final topic = RegExp(r'topic (\w+)').firstMatch(m.meta ?? '')?.group(1);
-    final section = topic == null ? null : a.guide?.byId(topic);
+    final topic = RegExp(r'topic (\w+)').firstMatch(m.debug ?? '')?.group(1);
+    final section = topic == null || topic == 'none' ? null : a.guide?.byId(topic);
     return Scaffold(
       backgroundColor: kClay,
       body: SafeArea(

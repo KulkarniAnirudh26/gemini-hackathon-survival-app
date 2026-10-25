@@ -1,14 +1,15 @@
 import 'ai_bridge.dart';
 
-enum Intent { findWater, wayOut, timeDaylight, whichDirection, findHelp, emergency, survivalHowto, other }
+enum Intent { findWater, wayOut, timeDaylight, whichDirection, findHelp, emergency, survivalHowto, general, other }
 
 enum Route { template, guide, llm, emergency }
 
 class RouteDecision {
   final Intent intent;
   final double intentConfidence;
-  final String? topic;
+  final String? topic; // null when Laya picked "none"
   final double topicConfidence;
+  final double onTopic; // 0..1: lookup or survival situation vs. anything else
   final double urgency; // 0..3
   final double needsReasoning; // 0..1
   final Route route;
@@ -20,6 +21,7 @@ class RouteDecision {
     required this.intentConfidence,
     required this.topic,
     required this.topicConfidence,
+    required this.onTopic,
     required this.urgency,
     required this.needsReasoning,
     required this.route,
@@ -27,18 +29,43 @@ class RouteDecision {
     required this.ms,
   });
 
+  Map<String, dynamic> toJson() => {
+        'route': route.name,
+        'intent': intent.name,
+        'intent_conf': intentConfidence,
+        'topic': topic,
+        'topic_conf': topicConfidence,
+        'on_topic': onTopic,
+        'urgency': urgency,
+        'needs_reasoning': needsReasoning,
+        'source': source,
+        'ms': ms,
+      };
+
   @override
   String toString() =>
-      '${route.name} · ${intent.name} ${(intentConfidence * 100).round()}% · topic ${topic ?? '-'} '
-      '· urgency ${urgency.toStringAsFixed(1)} · reasoning ${(needsReasoning * 100).round()}% · $source ${ms}ms';
+      'intent ${intent.name} ${(intentConfidence * 100).round()}% · topic ${topic ?? 'none'} ${(topicConfidence * 100).round()}% '
+      '· on-topic ${(onTopic * 100).round()}% · urgency ${urgency.toStringAsFixed(1)}/3 '
+      '· needs reasoning ${(needsReasoning * 100).round()}% · $source $ms ms';
 }
 
-/// Laya decides whether a question can be answered from data (template), from the guide, or
-/// needs Gemma. Falls back to keywords if Laya is not available.
+/// Laya (zero-shot classifier) answers a few questions about the user's text; [policy] then picks
+/// a template answer, a guide section, the emergency script, or Gemma. Anything uncertain or
+/// general goes to Gemma. Falls back to keywords if Laya is not available.
 class QuestionRouter {
   final AiBridge ai;
   bool layaReady;
   QuestionRouter(this.ai, {this.layaReady = false});
+
+  // Thresholds, tuned with assets/calibration/questions.json (adb ... --ez calibrate true).
+  static double emergencyConf = 0.5;
+  static double emergencyUrgency = 2.5;
+  static double templateConf = 0.6;
+  static double templateOnTopic = 0.5;
+  static double templateReasoning = 0.5;
+  static double guideTopicConf = 0.6;
+  static double guideOnTopic = 0.6;
+  static double guideReasoning = 0.35;
 
   static const topics = <String, String>{
     'lost_stop': 'being lost, not knowing where you are',
@@ -56,6 +83,7 @@ class QuestionRouter {
     'lightning': 'thunderstorm or lightning',
     'fire': 'making a fire or wildfire',
     'altitude': 'altitude sickness, headache at elevation',
+    'none': 'none of these: a general question, chit-chat, history, planning or something else',
   };
 
   static final Map<String, dynamic> _questions = {
@@ -68,15 +96,19 @@ class QuestionRouter {
         'time_daylight': 'what time it is or how long until sunset or dark',
         'which_direction': 'which direction to walk or which way they are facing',
         'find_help': 'the nearest ranger, visitor center or people',
-        'emergency': 'an emergency: someone is seriously hurt, bleeding, unconscious or in danger',
+        'emergency': 'an emergency: someone is seriously hurt, bleeding, unconscious, missing or in danger',
         'survival_howto': 'how to handle a survival situation such as cold, animals, injury or shelter',
-        'other': 'something else or a general question',
+        'general': 'a general question, an explanation, a decision, planning, history, conversation or anything else',
       },
     },
     'topic': {
       'type': 'choice',
-      'instructions': 'Which survival topic is this about?',
+      'instructions': 'Which survival topic is this about, if any?',
       'criteria': topics,
+    },
+    'on_topic': {
+      'type': 'noul',
+      'instructions': 'Is the hiker asking where something is nearby, or how to handle a survival or safety situation?',
     },
     'urgency': {
       'type': 'score',
@@ -85,7 +117,7 @@ class QuestionRouter {
     },
     'needs_reasoning': {
       'type': 'noul',
-      'instructions': 'Does answering need advice or explanation, not just a simple fact like a distance or a time?',
+      'instructions': 'Does answering need advice, an explanation or a judgement, not just a simple fact like a distance or a time?',
     },
   };
 
@@ -97,10 +129,10 @@ class QuestionRouter {
     'find_help': Intent.findHelp,
     'emergency': Intent.emergency,
     'survival_howto': Intent.survivalHowto,
-    'other': Intent.other,
+    'general': Intent.general,
   };
 
-  static const _lookup = {Intent.findWater, Intent.wayOut, Intent.timeDaylight, Intent.whichDirection, Intent.findHelp};
+  static const lookups = {Intent.findWater, Intent.wayOut, Intent.timeDaylight, Intent.whichDirection, Intent.findHelp};
 
   Future<RouteDecision> decide(String text) async {
     final sw = Stopwatch()..start();
@@ -109,22 +141,23 @@ class QuestionRouter {
         final a = await ai.classify(text, _questions);
         final intentA = a['intent'] as Map<String, dynamic>;
         final topicA = a['topic'] as Map<String, dynamic>;
-        final urgencyA = a['urgency'] as Map<String, dynamic>;
-        final reasonA = a['needs_reasoning'] as Map<String, dynamic>;
         final intent = _intentByLabel[intentA['choice']] ?? Intent.other;
         final intentConf = _topProb(intentA);
-        final topic = topicA['choice'] as String?;
+        final topicLabel = topicA['choice'] as String?;
+        final topic = topicLabel == 'none' ? null : topicLabel;
         final topicConf = _topProb(topicA);
-        final urgency = (urgencyA['score'] as num?)?.toDouble() ?? 0;
-        final reasoning = (reasonA['noul'] as num?)?.toDouble() ?? 0.5;
+        final onTopic = ((a['on_topic'] as Map?)?['noul'] as num?)?.toDouble() ?? 0.5;
+        final urgency = ((a['urgency'] as Map?)?['score'] as num?)?.toDouble() ?? 0;
+        final reasoning = ((a['needs_reasoning'] as Map?)?['noul'] as num?)?.toDouble() ?? 0.5;
         return RouteDecision(
           intent: intent,
           intentConfidence: intentConf,
           topic: topic,
           topicConfidence: topicConf,
+          onTopic: onTopic,
           urgency: urgency,
           needsReasoning: reasoning,
-          route: _policy(intent, intentConf, topicConf, urgency, reasoning),
+          route: policy(intent, intentConf, topic, topicConf, onTopic, urgency, reasoning),
           source: 'laya',
           ms: sw.elapsedMilliseconds,
         );
@@ -143,10 +176,20 @@ class QuestionRouter {
     return (a['confidence'] as num?)?.toDouble() ?? 0;
   }
 
-  static Route _policy(Intent intent, double conf, double topicConf, double urgency, double reasoning) {
-    if (intent == Intent.emergency || urgency >= 2.5) return Route.emergency;
-    if (_lookup.contains(intent) && conf >= 0.55 && reasoning < 0.5) return Route.template;
-    if (intent == Intent.survivalHowto && conf >= 0.6 && topicConf >= 0.5 && reasoning < 0.5) return Route.guide;
+  /// Quick paths only when Laya is sure; everything else (general, other, uncertain) is Gemma's.
+  static Route policy(
+      Intent intent, double conf, String? topic, double topicConf, double onTopic, double urgency, double reasoning) {
+    if ((intent == Intent.emergency && conf >= emergencyConf) || urgency >= emergencyUrgency) return Route.emergency;
+    if (lookups.contains(intent) && conf >= templateConf && onTopic >= templateOnTopic && reasoning < templateReasoning) {
+      return Route.template;
+    }
+    if (topic != null &&
+        topicConf >= guideTopicConf &&
+        onTopic >= guideOnTopic &&
+        reasoning < guideReasoning &&
+        (intent == Intent.survivalHowto || intent == Intent.other)) {
+      return Route.guide;
+    }
     return Route.llm;
   }
 
@@ -171,6 +214,7 @@ class QuestionRouter {
     }
     String? topic;
     for (final e in topics.entries) {
+      if (e.key == 'none') continue;
       if (e.value.split(RegExp(r'[ ,]+')).where((w) => w.length > 3).any(t.contains)) {
         topic = e.key;
         break;
@@ -186,6 +230,7 @@ class QuestionRouter {
       intentConfidence: intent == Intent.other ? 0 : 0.7,
       topic: topic,
       topicConfidence: topic == null ? 0 : 0.6,
+      onTopic: intent == Intent.other ? 0 : 1,
       urgency: intent == Intent.emergency ? 3 : 0,
       needsReasoning: route == Route.llm ? 1 : 0,
       route: route,

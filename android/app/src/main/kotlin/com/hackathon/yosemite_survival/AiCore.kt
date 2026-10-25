@@ -88,6 +88,7 @@ class AiCore(private val context: Context, private val emit: (Map<String, Any?>)
         .onFailure { Log.e(TAG, "kitten", it); status["kittenError"] = it.message }
         .isSuccess
     status["gemmaPresent"] = File(modelsDir, GEMMA_FILE).exists()
+    status["voices"] = voices()
     status
   }
 
@@ -110,13 +111,16 @@ class AiCore(private val context: Context, private val emit: (Map<String, Any?>)
       }
   }
 
-  suspend fun stopListening(): String {
+  /** Returns `{text, stt_ms, audio_ms}`. */
+  suspend fun stopListening(): Map<String, Any> {
     micJob?.cancelAndJoin()
     micJob = null
     val pcm = micSamples.copyOf(micCount)
-    if (pcm.size < MIN_SAMPLES) return ""
+    val audioMs = pcm.size * 1000 / SAMPLE_RATE
+    if (pcm.size < MIN_SAMPLES) return mapOf("text" to "", "stt_ms" to 0.0, "audio_ms" to audioMs)
     val engine = asr ?: error("speech recognition is not loaded")
-    return normalizeTranscript(engine.transcribe(pcm).text)
+    val t = engine.transcribe(pcm)
+    return mapOf("text" to normalizeTranscript(t.text), "stt_ms" to t.timing.totalMs, "audio_ms" to audioMs)
   }
 
   // ---- Laya router ----
@@ -142,9 +146,10 @@ class AiCore(private val context: Context, private val emit: (Map<String, Any?>)
     llmLock.withLock {
       chat?.let { return it }
       emit(mapOf("type" to "llm_loading"))
+      val t0 = System.nanoTime()
       val engine = ChatEngine.open(File(modelsDir, GEMMA_FILE), File(context.cacheDir, "litertlm"))
       chat = engine
-      emit(mapOf("type" to "llm_ready"))
+      emit(mapOf("type" to "llm_ready", "load_ms" to (System.nanoTime() - t0) / 1e6))
       engine
     }
 
@@ -157,13 +162,23 @@ class AiCore(private val context: Context, private val emit: (Map<String, Any?>)
     generateJob =
       scope.launch {
         val splitter = SentenceStream(LiteRtSpeaker.MAX_CHARS)
+        var chunks = 0
+        var chars = 0
+        var firstAt = 0L
         try {
           val engine = ensureChat()
           val conversation = engine.createConversation(system, emptyList())
+          val sentAt = System.nanoTime() // after any model load: TTFT = prefill + first decode step
           try {
             conversation.send(Message.user(prompt), thinking = false).collect { m ->
               val piece = m.contents.contents.filterIsInstance<Content.Text>().joinToString("") { it.text }
               if (piece.isNotEmpty()) {
+                if (chunks == 0) {
+                  firstAt = System.nanoTime()
+                  emit(mapOf("type" to "llm_first_token", "ttft_ms" to (firstAt - sentAt) / 1e6))
+                }
+                chunks++
+                chars += piece.length
                 emit(mapOf("type" to "llm_chunk", "text" to piece))
                 if (speak) splitter.add(piece).forEach { speechQueue.trySend(it) }
               }
@@ -172,7 +187,15 @@ class AiCore(private val context: Context, private val emit: (Map<String, Any?>)
             conversation.closeAndJoin()
           }
           if (speak) splitter.flush().forEach { speechQueue.trySend(it) }
-          emit(mapOf("type" to "llm_done"))
+          val now = System.nanoTime()
+          emit(
+            mapOf(
+              "type" to "llm_done",
+              "chunks" to chunks,
+              "chars" to chars,
+              "decode_ms" to if (firstAt == 0L) 0.0 else (now - firstAt) / 1e6,
+            )
+          )
         } catch (e: Exception) {
           Log.e(TAG, "generate", e)
           emit(mapOf("type" to "error", "message" to (e.message ?: e.javaClass.simpleName)))
@@ -207,13 +230,33 @@ class AiCore(private val context: Context, private val emit: (Map<String, Any?>)
 
   // ---- Text to speech ----
 
+  /** When the last [speak] was requested; the first audio after it reports the latency once. */
+  @Volatile private var speakRequestedAt = 0L
+
   fun speak(text: String) {
+    speakRequestedAt = System.nanoTime()
     SentenceSplitter.split(stripForSpeech(text)).forEach { speechQueue.trySend(it) }
   }
 
+  /** Bumped by [stopSpeaking]: a sentence synthesized under an older generation is dropped. */
+  @Volatile private var speechGen = 0
+
+  /** The voice and the publisher's own pace (1.0). */
+  @Volatile var voice: String? = null
+  @Volatile var speed: Float = 1.0f
+
+  fun voices(): List<String> = tts?.voices ?: emptyList()
+
+  fun setVoice(name: String?, newSpeed: Float) {
+    voice = name?.takeIf { it in voices() }
+    speed = newSpeed.coerceIn(0.6f, 1.3f)
+  }
+
   fun stopSpeaking() {
+    speechGen++
     while (speechQueue.tryReceive().isSuccess) {}
     player?.stop()
+    emit(mapOf("type" to "tts_done"))
   }
 
   private fun startSpeechWorker() {
@@ -225,11 +268,18 @@ class AiCore(private val context: Context, private val emit: (Map<String, Any?>)
           val p = player ?: continue
           val clean = stripForSpeech(sentence)
           if (clean.isBlank()) continue
+          val gen = speechGen
           try {
             emit(mapOf("type" to "tts_start", "text" to clean))
-            val audio = s.synthesize(clean.take(LiteRtSpeaker.MAX_CHARS), null, 1f)
+            val audio = s.synthesize(clean.take(LiteRtSpeaker.MAX_CHARS), voice, speed)
+            if (gen != speechGen) continue // stopped while synthesizing
+            val asked = speakRequestedAt
+            if (asked != 0L) {
+              speakRequestedAt = 0L
+              emit(mapOf("type" to "tts_first_audio", "ms" to (System.nanoTime() - asked) / 1e6))
+            }
             p.play(audio.samples)
-            if (speechQueue.isEmpty) {
+            if (speechQueue.isEmpty && gen == speechGen) {
               p.drain()
               emit(mapOf("type" to "tts_done"))
             }
@@ -239,6 +289,23 @@ class AiCore(private val context: Context, private val emit: (Map<String, Any?>)
           }
         }
       }
+  }
+
+  /** Battery, memory and CPU snapshot for the per-turn metrics log. */
+  fun metrics(): Map<String, Any?> {
+    val bm = context.getSystemService(Context.BATTERY_SERVICE) as android.os.BatteryManager
+    val intent = context.registerReceiver(null, android.content.IntentFilter(android.content.Intent.ACTION_BATTERY_CHANGED))
+    val mem = android.os.Debug.MemoryInfo().also { android.os.Debug.getMemoryInfo(it) }
+    return mapOf(
+      "battery_pct" to bm.getIntProperty(android.os.BatteryManager.BATTERY_PROPERTY_CAPACITY),
+      "current_ua" to bm.getIntProperty(android.os.BatteryManager.BATTERY_PROPERTY_CURRENT_NOW),
+      "voltage_mv" to intent?.getIntExtra(android.os.BatteryManager.EXTRA_VOLTAGE, -1),
+      "temp_c" to (intent?.getIntExtra(android.os.BatteryManager.EXTRA_TEMPERATURE, 0) ?: 0) / 10.0,
+      "charging" to bm.isCharging,
+      "pss_mb" to mem.totalPss / 1024.0,
+      "cpu_ms" to android.os.Process.getElapsedCpuTime(),
+      "llm_loaded" to (chat != null),
+    )
   }
 
   fun trimMemory() {

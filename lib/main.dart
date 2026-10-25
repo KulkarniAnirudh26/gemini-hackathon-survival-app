@@ -44,6 +44,12 @@ class _ShellState extends State<Shell> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    widget.assistant.mapFocus.addListener(_openMap);
+  }
+
+  /// A chat mini map was tapped: show the full map (MapScreen picks up the route).
+  void _openMap() {
+    if (widget.assistant.mapFocus.value != null && _tab != 0) setState(() => _tab = 0);
   }
 
   @override
@@ -54,6 +60,7 @@ class _ShellState extends State<Shell> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    widget.assistant.mapFocus.removeListener(_openMap);
     super.dispose();
   }
 
@@ -69,14 +76,35 @@ class _ShellState extends State<Shell> with WidgetsBindingObserver {
       body: SafeArea(
         child: Column(
           children: [
-            const _Header(),
+            if (_tab == 1) const _Header(), // brand only on Home
             Expanded(
               child: IndexedStack(index: _tab, children: pages),
             ),
           ],
         ),
       ),
-      bottomNavigationBar: DecoratedBox(
+      bottomNavigationBar: Column(mainAxisSize: MainAxisSize.min, children: [
+        // speech can be stopped from every tab
+        ListenableBuilder(
+          listenable: widget.assistant,
+          builder: (_, _) => widget.assistant.speaking
+              ? Material(
+                  color: kClay,
+                  child: InkWell(
+                    onTap: widget.assistant.stopSpeaking,
+                    child: SizedBox(
+                      height: 52,
+                      child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                        const Icon(Icons.stop_circle, color: kCard, size: 28),
+                        const SizedBox(width: 10),
+                        Text('STOP SPEAKING', style: label(kCard, size: 16)),
+                      ]),
+                    ),
+                  ),
+                )
+              : const SizedBox.shrink(),
+        ),
+        DecoratedBox(
         decoration: const BoxDecoration(
           border: Border(top: BorderSide(color: kLine)),
         ),
@@ -90,9 +118,9 @@ class _ShellState extends State<Shell> with WidgetsBindingObserver {
               label: 'TRAIL MAP',
             ),
             NavigationDestination(
-              icon: Icon(Icons.auto_awesome_outlined, color: kInkMuted),
-              selectedIcon: Icon(Icons.auto_awesome, color: kMoss),
-              label: 'GEMMA AI',
+              icon: Icon(Icons.home_outlined, color: kInkMuted),
+              selectedIcon: Icon(Icons.home, color: kInk),
+              label: 'HOME',
             ),
             NavigationDestination(
               icon: Icon(Icons.emergency_outlined, color: kClay),
@@ -102,6 +130,7 @@ class _ShellState extends State<Shell> with WidgetsBindingObserver {
           ],
         ),
       ),
+      ]),
     );
   }
 }

@@ -19,7 +19,15 @@ class AiBridge {
   Future<bool> requestMic() async => (await _method.invokeMethod<bool>('requestMic')) ?? false;
 
   Future<void> startListening() => _method.invokeMethod('startListening');
-  Future<String> stopListening() async => (await _method.invokeMethod<String>('stopListening')) ?? '';
+  /// `{text, stt_ms, audio_ms}`
+  Future<Map<String, dynamic>> stopListening() async =>
+      Map<String, dynamic>.from(await _method.invokeMethod('stopListening') as Map);
+
+  /// Battery / memory / CPU snapshot from the Kotlin side.
+  Future<Map<String, dynamic>> metrics() async => Map<String, dynamic>.from(await _method.invokeMethod('metrics') as Map);
+
+  Future<Map<String, dynamic>> launchFlags() async =>
+      Map<String, dynamic>.from(await _method.invokeMethod('launchFlags') as Map);
 
   /// Laya zero-shot: [questions] is `{id: {type, instructions, criteria}}`.
   Future<Map<String, dynamic>> classify(String text, Map<String, dynamic> questions) async {
@@ -32,5 +40,7 @@ class AiBridge {
   Future<void> cancelGenerate() => _method.invokeMethod('cancelGenerate');
   Future<void> speak(String text) => _method.invokeMethod('speak', {'text': text});
   Future<void> stopSpeaking() => _method.invokeMethod('stopSpeaking');
+  Future<void> setVoice(String? voice, double speed) =>
+      _method.invokeMethod('setVoice', {'voice': voice, 'speed': speed});
   Future<void> unloadLlm() => _method.invokeMethod('unloadLlm');
 }

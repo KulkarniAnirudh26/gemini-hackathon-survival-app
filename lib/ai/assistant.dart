@@ -1,11 +1,15 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../geo/geo_data.dart';
 import '../geo/nps_layers.dart';
 import '../geo/trail_router.dart';
 import '../location/location_service.dart';
+import '../metrics/metrics_log.dart';
 import '../rag/guide.dart';
 import 'ai_bridge.dart';
 import 'router.dart';
@@ -14,17 +18,24 @@ import 'templates.dart';
 
 enum Phase { loading, ready, listening, transcribing, routing, loadingLlm, thinking, speaking }
 
+/// Which path produced an answer (drives the bubble header).
+enum AnswerKind { quick, guide, gemma, emergency }
+
 class ChatMessage {
   final bool user;
   String text;
-  String? meta;
+  final AnswerKind? kind;
+  final String? debug; // router scores: logged to metrics, not shown
+  final RouteResult? map; // in-chat mini map (way out / water / help)
   final DateTime at = DateTime.now();
-  ChatMessage(this.user, this.text, {this.meta});
+  ChatMessage(this.user, this.text, {this.kind, this.debug, this.map});
 }
 
-const systemPrompt = '''You are a calm, practical wilderness survival guide inside an offline phone app in Yosemite National Park.
-The user may be lost, injured, cold, scared or low on battery. Speak to them directly.
-Rules: answer in one to three short spoken sentences, most important action first. No markdown, no lists.
+const systemPrompt = '''You are a calm, warm and practical wilderness survival guide inside an offline phone app in Yosemite National Park.
+The user may be lost, injured, cold, scared or low on battery. Speak to them gently and directly, like a steady friend beside them.
+If they sound worried, start with a few words of reassurance, then give the single most important action.
+If the question is general or not about survival, still answer it helpfully and briefly.
+Rules: answer in two to four short, simple spoken sentences. Use calm, plain words. No markdown, no lists.
 Use the SITUATION, ROUTE, NEAREST and GUIDE data given with the question; never invent trails, places or distances.
 If anything sounds life-threatening, tell them to call 911 or use Satellite SOS.''';
 
@@ -47,6 +58,23 @@ class Assistant extends ChangeNotifier {
   StreamSubscription<Map<String, dynamic>>? _eventsSub;
   int templateAnswers = 0, llmAnswers = 0;
 
+  /// True while KittenTTS is speaking anything (chat, guide, map), so every screen can offer Stop.
+  bool speaking = false;
+  String? speakingSource; // e.g. 'guide:bear', 'chat', 'map'
+  List<String> voices = const [];
+  String? voice;
+  double speed = 1.0;
+
+  /// A route the Map tab should open on (set by tapping an in-chat mini map).
+  final ValueNotifier<RouteResult?> mapFocus = ValueNotifier(null);
+
+  /// The route the map draws (last answer with a destination, or "Route here"); null = way out.
+  final ValueNotifier<RouteResult?> activeRoute = ValueNotifier(null);
+
+  MetricsLog? _metrics;
+  TurnMetrics? _turn;
+  double? _pendingSttMs, _pendingAudioMs;
+
   Assistant(this.location);
 
   Future<void> init() async {
@@ -62,13 +90,17 @@ class Assistant extends ChangeNotifier {
       status = 'Map data missing: $e';
     }
     await ai.requestMic();
+    location.addListener(_buildDemoTrack);
     unawaited(location.start());
     status = 'Loading speech, router and voice models…';
     notifyListeners();
     try {
       final dir = await ai.modelsDir();
-      models = await ai.init(dir!);
+      _metrics = MetricsLog.forModelsDir(dir!);
+      models = await ai.init(dir);
       questionRouter.layaReady = models['laya'] == true;
+      voices = [for (final v in (models['voices'] as List?) ?? const []) v as String];
+      await _loadVoicePrefs();
       final missing = [
         if (models['zipformer'] != true) 'speech',
         if (models['laya'] != true) 'router',
@@ -81,9 +113,13 @@ class Assistant extends ChangeNotifier {
     }
     phase = Phase.ready;
     notifyListeners();
+    try {
+      if ((await ai.launchFlags())['calibrate'] == true) unawaited(runCalibration());
+    } catch (_) {}
   }
 
   void _onEvent(Map<String, dynamic> e) {
+    final t = _turn;
     switch (e['type']) {
       case 'llm_loading':
         phase = Phase.loadingLlm;
@@ -92,8 +128,11 @@ class Assistant extends ChangeNotifier {
         llmLoaded = true;
         phase = Phase.thinking;
         status = 'Thinking…';
+        t?.llmLoadMs = (e['load_ms'] as num?)?.toDouble();
       case 'llm_unloaded':
         llmLoaded = false;
+      case 'llm_first_token':
+        t?.ttftMs = (e['ttft_ms'] as num?)?.toDouble();
       case 'llm_chunk':
         _streaming?.text += e['text'] as String;
         phase = Phase.thinking;
@@ -101,15 +140,55 @@ class Assistant extends ChangeNotifier {
         _streaming = null;
         if (phase == Phase.thinking) phase = Phase.ready;
         status = 'Ready.';
+        if (t != null) {
+          t.chunks = (e['chunks'] as num?)?.toInt();
+          t.chars = (e['chars'] as num?)?.toInt();
+          t.decodeMs = (e['decode_ms'] as num?)?.toDouble();
+          _finishTurn();
+        }
+      case 'tts_first_audio':
+        if (t != null && t.ttsFirstAudioMs == null) {
+          t.ttsFirstAudioMs = (e['ms'] as num?)?.toDouble();
+          if (!t.route.contains('llm')) _finishTurn(); // quick paths end at first audio
+        }
       case 'tts_start':
-        phase = Phase.speaking;
+        speaking = true;
+        if (phase == Phase.ready) phase = Phase.speaking;
       case 'tts_done':
-        if (_streaming == null) phase = Phase.ready;
+        speaking = false;
+        speakingSource = null;
+        if (status == 'Speaking…') status = 'Ready.';
+        if (_streaming == null && phase == Phase.speaking) phase = Phase.ready;
       case 'error':
+        speaking = false;
         status = 'Error: ${e['message']}';
         _streaming = null;
         phase = Phase.ready;
+        if (t != null) {
+          t.route = '${t.route}:error';
+          _finishTurn();
+        }
     }
+    notifyListeners();
+  }
+
+  /// Demo mode: put the hiker on the Mist Trail, walked up from Happy Isles along real trails.
+  void _buildDemoTrack() {
+    final r = router;
+    if (!location.demoMode || location.demoTrackReady || r == null) return;
+    final back = r.routeToPlace(LocationService.demoLat, LocationService.demoLon, LocationService.demoStartName,
+        LocationService.demoStartLat, LocationService.demoStartLon);
+    if (back == null || back.offTrail) return;
+    final walked = back.points.reversed.map((p) => (p.latitude, p.longitude)).toList();
+    location.setDemoTrack(walked);
+  }
+
+  /// Back to the dashboard.
+  Future<void> clearChat() async {
+    await stop();
+    messages.clear();
+    activeRoute.value = null;
+    status = 'Ready.';
     notifyListeners();
   }
 
@@ -131,7 +210,10 @@ class Assistant extends ChangeNotifier {
     notifyListeners();
     String text;
     try {
-      text = await ai.stopListening();
+      final r = await ai.stopListening();
+      text = (r['text'] as String?) ?? '';
+      _pendingSttMs = (r['stt_ms'] as num?)?.toDouble();
+      _pendingAudioMs = (r['audio_ms'] as num?)?.toDouble();
     } catch (e) {
       status = 'Speech recognition failed: $e';
       phase = Phase.ready;
@@ -144,46 +226,120 @@ class Assistant extends ChangeNotifier {
       notifyListeners();
       return;
     }
-    await ask(text);
+    await ask(text, input: 'voice');
   }
 
-  Future<void> ask(String text) async {
+  Future<void> ask(String text, {String input = 'text'}) async {
+    final turn = TurnMetrics(input, text)
+      ..sttMs = input == 'voice' ? _pendingSttMs : null
+      ..audioMs = input == 'voice' ? _pendingAudioMs : null;
+    _pendingSttMs = _pendingAudioMs = null;
+    _turn = turn;
+    try {
+      turn.before = await ai.metrics();
+    } catch (_) {}
+
     messages.add(ChatMessage(true, text));
     phase = Phase.routing;
     status = 'Understanding…';
     notifyListeners();
 
     final decision = await questionRouter.decide(text);
+    turn.layaMs = decision.ms.toDouble();
+    turn.scores = decision.toString();
     final s = Situation.build(location, geo, router);
     final g = guide!;
     final critical = location.tier == PowerTier.critical;
     var route = decision.route;
     if (critical && route == Route.llm) route = Route.guide; // save battery: no Gemma when critical
     if (route == Route.llm && models['gemmaPresent'] != true) route = Route.guide;
+    turn.route = route.name;
 
     switch (route) {
       case Route.emergency:
-        _say(Templates.emergency(decision, g), decision, 'emergency script');
+        _say(Templates.emergency(decision, g), AnswerKind.emergency, decision, map: _routeTo(s, s.help));
         // then let Gemma add situation-specific advice, unless the battery is critical
-        if (!critical && models['gemmaPresent'] == true) await _llm(text, decision, s);
+        if (!critical && models['gemmaPresent'] == true) {
+          turn.route = 'emergency+llm';
+          await _llm(text, decision, s);
+        }
       case Route.template:
         templateAnswers++;
-        _say(Templates.answer(decision.intent, s), decision, 'template, no LLM');
+        _say(Templates.calm(decision) + Templates.answer(decision.intent, s), AnswerKind.quick, decision,
+            map: _mapFor(decision.intent, s));
       case Route.guide:
         templateAnswers++;
-        final topic = decision.topicConfidence >= 0.5 ? decision.topic : g.search(text, k: 1).firstOrNull?.section.id;
-        _say(Templates.guideSummary(topic ?? 'lost_stop', g), decision, 'guide: ${topic ?? 'lost_stop'}');
+        final topic = decision.topic ?? g.search(text, k: 1).firstOrNull?.section.id;
+        _say(Templates.calm(decision) + Templates.guideSummary(topic ?? 'lost_stop', g), AnswerKind.guide, decision);
       case Route.llm:
         await _llm(text, decision, s);
     }
   }
 
-  void _say(String text, RouteDecision d, String how) {
-    messages.add(ChatMessage(false, text, meta: '$how · $d'));
+  /// The route shown under way-out / water / help answers.
+  RouteResult? _mapFor(Intent intent, Situation s) => switch (intent) {
+        Intent.wayOut || Intent.whichDirection => s.routeOut,
+        Intent.findWater => _routeTo(s, s.water),
+        Intent.findHelp => _routeTo(s, s.help),
+        _ => null,
+      };
+
+  RouteResult? _routeTo(Situation s, (Poi, double)? dest) {
+    final f = s.fix;
+    if (f == null || dest == null || router == null) return null;
+    final p = dest.$1;
+    return router!.routeToPlace(f.lat, f.lon, p.name, p.lat, p.lon);
+  }
+
+  void _say(String text, AnswerKind kind, RouteDecision d, {RouteResult? map}) {
+    messages.add(ChatMessage(false, text, kind: kind, debug: d.toString(), map: map));
+    if (map != null) activeRoute.value = map; // the map tab shows where the answer points
     phase = Phase.speaking;
     status = 'Speaking…';
     notifyListeners();
+    speak(text, source: 'chat');
+  }
+
+  /// Speak from any screen; [source] lets a screen show its own stop toggle.
+  void speak(String text, {required String source}) {
+    speakingSource = source;
+    speaking = true;
+    notifyListeners();
     ai.speak(text);
+  }
+
+  Future<void> stopSpeaking() async {
+    speaking = false;
+    speakingSource = null;
+    if (status == 'Speaking…') status = 'Ready.';
+    if (phase == Phase.speaking) phase = Phase.ready;
+    notifyListeners();
+    await ai.stopSpeaking();
+  }
+
+  Future<void> setVoice(String? v, double s) async {
+    voice = v;
+    speed = s;
+    notifyListeners();
+    await ai.setVoice(v, s);
+    try {
+      final p = await SharedPreferences.getInstance();
+      if (v == null) {
+        await p.remove('voice');
+      } else {
+        await p.setString('voice', v);
+      }
+      await p.setDouble('speed_v2', s);
+    } catch (_) {}
+  }
+
+  Future<void> _loadVoicePrefs() async {
+    try {
+      final p = await SharedPreferences.getInstance();
+      voice = p.getString('voice') ?? (voices.contains('expr-voice-2-f') ? 'expr-voice-2-f' : null);
+      speed = p.getDouble('speed_v2') ?? 1.0; // v2: the publisher's own pace by default
+    } catch (_) {}
+    await ai.setVoice(voice, speed);
   }
 
   Future<void> _llm(String question, RouteDecision d, Situation s) async {
@@ -196,28 +352,81 @@ class Assistant extends ChangeNotifier {
       if (hits.length < 2 && hits.every((x) => x.section.id != h.section.id)) hits.add(h);
     }
     final prompt = '${s.contextBlock(hits)}\n\nQuestion: $question';
-    final msg = ChatMessage(false, '', meta: 'Gemma 4 E2B · $d · guide: ${hits.map((h) => h.section.id).join(', ')}');
+    final msg = ChatMessage(false, '', kind: AnswerKind.gemma, debug: '$d · guide: ${hits.map((h) => h.section.id).join(', ')}');
     messages.add(msg);
     _streaming = msg;
     phase = llmLoaded ? Phase.thinking : Phase.loadingLlm;
     status = llmLoaded ? 'Thinking…' : 'Waking up Gemma…';
     notifyListeners();
-    if (!llmLoaded) ai.speak('Let me think about that.');
+    if (!llmLoaded) speak('Okay. Give me a moment to think about that.', source: 'chat');
+    speakingSource = 'chat';
     await ai.generate(systemPrompt, prompt);
   }
 
   Future<void> stop() async {
     await ai.cancelGenerate();
-    await ai.stopSpeaking();
+    await stopSpeaking();
     _streaming = null;
     phase = Phase.ready;
     status = 'Stopped.';
     notifyListeners();
   }
 
+  void _finishTurn() {
+    final t = _turn;
+    if (t == null) return;
+    _turn = null;
+    final log = _metrics;
+    if (log == null) return;
+    () async {
+      Map<String, dynamic> after = const {};
+      try {
+        after = await ai.metrics();
+      } catch (_) {}
+      await log.append('turns.jsonl', t.toJson(after));
+    }();
+  }
+
+  /// Routes every labelled question in assets/calibration/questions.json through Laya (no TTS, no
+  /// Gemma) and writes `metrics/calibration-<ts>.jsonl` with expected vs. actual routes.
+  Future<void> runCalibration() async {
+    final log = _metrics;
+    if (log == null) return;
+    final items = jsonDecode(await rootBundle.loadString('assets/calibration/questions.json')) as List;
+    final file = 'calibration-${DateTime.now().toIso8601String().replaceAll(':', '-').split('.').first}.jsonl';
+    var ok = 0;
+    final byExpect = <String, List<int>>{};
+    for (var i = 0; i < items.length; i++) {
+      final q = items[i]['q'] as String;
+      final expect = items[i]['expect'] as String;
+      status = 'Calibrating ${i + 1}/${items.length}…';
+      notifyListeners();
+      final d = await questionRouter.decide(q);
+      final hit = d.route.name == expect;
+      if (hit) ok++;
+      (byExpect[expect] ??= [0, 0])
+        ..[0] += hit ? 1 : 0
+        ..[1] += 1;
+      await log.append(file, {'q': q, 'expect': expect, 'ok': hit, ...d.toJson()});
+    }
+    final summary = {
+      'summary': true,
+      'accuracy': ok / items.length,
+      'correct': ok,
+      'total': items.length,
+      for (final e in byExpect.entries) e.key: '${e.value[0]}/${e.value[1]}',
+    };
+    await log.append(file, summary);
+    status = 'Calibration: $ok/${items.length} routed as expected (metrics/$file)';
+    notifyListeners();
+  }
+
   @override
   void dispose() {
     _eventsSub?.cancel();
+    mapFocus.dispose();
+    activeRoute.dispose();
+    location.removeListener(_buildDemoTrack);
     super.dispose();
   }
 }
