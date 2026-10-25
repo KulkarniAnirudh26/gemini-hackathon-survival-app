@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -73,6 +74,8 @@ fun MapScreen(
     var query by remember { mutableStateOf("") }
     var focus by remember { mutableStateOf<Focus?>(null) }
     var showResults by remember { mutableStateOf(false) }
+    var threeD by remember { mutableStateOf(false) }
+    var status3d by remember { mutableStateOf<String?>(null) }
     val focusManager = LocalFocusManager.current
 
     LaunchedEffect(myLocation) { myLocation?.let { focus = Focus.AtMe(it) } }
@@ -94,13 +97,34 @@ fun MapScreen(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp).testTag("search"),
         )
         Box(Modifier.weight(1f).fillMaxWidth()) {
-            ZoomableMap(
-                map = map,
-                marker = markerPx?.let { Offset(it.first, it.second) },
-                me = mePx?.let { Offset(it.first, it.second) },
-                focusPoint = (markerPx ?: mePx)?.let { Offset(it.first, it.second) },
-                modifier = Modifier.fillMaxSize(),
-            )
+            val tiles = map.tiles
+            if (threeD && tiles != null) {
+                val place = (focus as? Focus.AtPlace)?.place?.let { it.location to it.text }
+                Map3D(tiles, place, myLocation?.takeIf { pack.isOnMap(it) }, Modifier.fillMaxSize().testTag("map3d"),
+                      onStatus = { status3d = it })
+            } else {
+                ZoomableMap(
+                    map = map,
+                    marker = markerPx?.let { Offset(it.first, it.second) },
+                    me = mePx?.let { Offset(it.first, it.second) },
+                    focusPoint = (markerPx ?: mePx)?.let { Offset(it.first, it.second) },
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+            if (tiles != null) {
+                // top-left: the 3D view's attribution bar runs along the bottom
+                Row(Modifier.align(Alignment.TopStart).padding(12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FilterChip(selected = !threeD, onClick = { threeD = false }, label = { Text("2D") },
+                               modifier = Modifier.testTag("mode-2d"))
+                    FilterChip(selected = threeD, onClick = { threeD = true }, label = { Text("3D") },
+                               modifier = Modifier.testTag("mode-3d"))
+                }
+            }
+            if (threeD && status3d == "unsupported") {
+                Text("3D needs WebGL, which this device doesn't provide.", color = WarningRed,
+                     modifier = Modifier.align(Alignment.Center).padding(24.dp))
+            }
             if (showResults && results.isNotEmpty()) {
                 Surface(
                     shape = RoundedCornerShape(8.dp),

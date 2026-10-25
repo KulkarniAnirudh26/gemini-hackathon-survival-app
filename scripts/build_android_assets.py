@@ -4,8 +4,9 @@
 
 writes
     android/app/src/main/assets/maps/yosemite/{mappack.json, map.jpg}
-    android/app/src/main/assets/maps/yosemite/yosemite.mbtiles   (with --tiles; ~2 min, ~24 MB
-                                                                  for zooms 9-14, gitignored)
+    android/app/src/main/assets/maps/yosemite/yosemite.mbtiles          (--tiles; map tiles for 3D)
+    android/app/src/main/assets/maps/yosemite/yosemite-terrain.mbtiles  (--terrain; elevation, needs
+                                                                         internet; both gitignored)
     android/mappack/src/test/resources/parity.json   (what the Python side answers, which the
                                                       Kotlin tests must reproduce)
 """
@@ -15,6 +16,7 @@ from pathlib import Path
 
 from geopdf_locator import GeoPdfMap, Guidance
 from geopdf_locator.export import export
+from geopdf_locator.terrain import fetch_terrain
 from geopdf_locator.tiles import write_mbtiles
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -49,7 +51,9 @@ def main() -> int:
     parser.add_argument("--name", default="yosemite", help="asset folder name (default: yosemite)")
     parser.add_argument("--dpi", type=int, default=150)
     parser.add_argument("--tiles", action="store_true", help="also render an MBTiles tileset")
-    parser.add_argument("--max-zoom", type=int, default=14, help="highest tile zoom (default 14)")
+    parser.add_argument("--max-zoom", type=int, default=13, help="highest map tile zoom (default 13, ~8 MB)")
+    parser.add_argument("--terrain", action="store_true", help="also download elevation tiles for 3D")
+    parser.add_argument("--terrain-max-zoom", type=int, default=11, help="default 11, ~6.5 MB")
     args = parser.parse_args()
 
     pack_path, image_path = export(args.pdf, str(ASSETS / args.name), dpi=args.dpi)
@@ -61,6 +65,10 @@ def main() -> int:
         tiles = ASSETS / args.name / f"{args.name}.mbtiles"
         write_mbtiles(args.pdf, str(tiles), max_zoom=args.max_zoom)
         written.append(tiles)
+    if args.terrain:
+        terrain = ASSETS / args.name / f"{args.name}-terrain.mbtiles"
+        fetch_terrain(args.pdf, str(terrain), max_zoom=args.terrain_max_zoom)
+        written.append(terrain)
     for p in written:
         print(f"wrote {p.relative_to(ROOT)} ({p.stat().st_size / 1e6:.2f} MB)")
     return 0

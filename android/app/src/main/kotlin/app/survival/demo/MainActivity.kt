@@ -62,15 +62,16 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-/** The map pack and its image, loaded once off the main thread. */
-class LoadedMap(val pack: MapPack, val image: ImageBitmap)
+/** The map pack, its image and (when bundled) the 3D tilesets, loaded once off the main thread. */
+class LoadedMap(val pack: MapPack, val image: ImageBitmap, val tiles: TileStore?)
 
 private suspend fun loadMap(context: Context): LoadedMap = withContext(Dispatchers.IO) {
     val pack = context.assets.open("$MAP_DIR/mappack.json").bufferedReader().use { MapPack.parse(it.readText()) }
     val options = BitmapFactory.Options().apply { inPreferredConfig = android.graphics.Bitmap.Config.RGB_565 }
     val bitmap = context.assets.open("$MAP_DIR/${pack.pack.image.file}").use { BitmapFactory.decodeStream(it, null, options) }
         ?: error("cannot decode map image")
-    LoadedMap(pack, bitmap.asImageBitmap())
+    val tiles = TileStore.open(context, MAP_DIR, mapOf("pdf" to "yosemite.mbtiles", "terrain" to "yosemite-terrain.mbtiles"))
+    LoadedMap(pack, bitmap.asImageBitmap(), tiles)
 }
 
 @OptIn(ExperimentalComposeUiApi::class)

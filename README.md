@@ -91,12 +91,23 @@ the printed ones.
 Try both together (PDF tiles as base, Park Tiles on top, layer toggles):
 
 ```bash
-python tools/map-viewer/serve.py out/yosemite.mbtiles out/parktiles tools/map-viewer/index.html 8766
+python tools/map-viewer/serve.py 8766 --tiles pdf=out/yosemite.mbtiles --pmtiles out/parktiles
 # open http://127.0.0.1:8766/
 ```
 
 The viewer loads MapLibre and its label fonts from the web; an offline app must bundle the
 renderer's glyph files too.
+
+### 3D terrain
+
+```bash
+python -m geopdf_locator.terrain data/yosemite.pdf out/yosemite-terrain.mbtiles --max-zoom 11
+```
+
+Downloads open elevation tiles (Terrain Tiles on AWS, Terrarium encoding; USGS 3DEP, SRTM et al.)
+for the map's footprint into MBTiles: zooms 8–11 are 6.6 MB (zoom 12: 24 MB). The app drapes the
+map tiles over it in 3D; `tools/map-viewer/serve.py --tiles pdf=… --tiles terrain=… --static
+android/app/src/main/assets/map3d` shows the same page in a desktop browser.
 
 ### Mobile app (Android)
 
