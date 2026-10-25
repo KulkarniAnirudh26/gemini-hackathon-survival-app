@@ -7,7 +7,7 @@ Outputs (assets/geo/):
   trails.json     {nodes: [[lat,lon,elev]], edges: [[a,b,len_m,up_m,down_m,way]], ways: [{name,kind,sac}],
                    geom: {edge_index: [lat,lon,lat,lon,...]}}
   dem.bin         int16 little-endian elevation (m), Web Mercator grid at zoom DEM_Z
-  dem.json        {z, px0, py0, width, height}  global pixel origin of the grid
+  dem.json        {region, z, px0, py0, width, height}  region name and global pixel origin of the grid
   hillshade.png   shaded relief of the same grid (downsampled), with its lat/lon bounds in dem.json
 
 Sources: OpenStreetMap via the Overpass API (ODbL), AWS Terrain Tiles (Terrarium, public).
@@ -25,6 +25,7 @@ import urllib.request
 import numpy as np
 from PIL import Image
 
+REGION = "Yosemite"  # shown in the app as the offline region pack
 SOUTH, WEST, NORTH, EAST = 37.49, -119.89, 38.19, -119.20
 DEM_Z = 12
 SIMPLIFY_M = 8.0
@@ -364,7 +365,7 @@ def main():
     grid.round().astype("<i2").tofile(os.path.join(OUT, "dem.bin"))
     h, w = grid.shape
     with open(os.path.join(OUT, "dem.json"), "w") as f:
-        json.dump({"z": DEM_Z, "px0": px0, "py0": py0, "width": w, "height": h, "hillshade": bounds}, f)
+        json.dump({"region": REGION, "z": DEM_Z, "px0": px0, "py0": py0, "width": w, "height": h, "hillshade": bounds}, f)
     print(f"dem {w}x{h}, {grid.min():.0f}..{grid.max():.0f} m")
 
     graph = build_graph(overpass(Q_WAYS, "ways"), dem)

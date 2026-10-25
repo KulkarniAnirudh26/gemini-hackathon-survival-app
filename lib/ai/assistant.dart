@@ -61,7 +61,11 @@ class Assistant extends ChangeNotifier {
     } catch (e) {
       status = 'Map data missing: $e';
     }
-    await ai.requestMic();
+    try {
+      await ai.requestMic();
+    } catch (_) {
+      // no native AI core on this platform (iOS): keep going so GPS and the map still start
+    }
     unawaited(location.start());
     status = 'Loading speech, router and voice models…';
     notifyListeners();

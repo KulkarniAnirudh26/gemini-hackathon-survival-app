@@ -16,6 +16,10 @@ const kMoss = Color(0xFF1D5C2F); // nominal: GPS fixed, AI label, routes
 const kClay = Color(0xFFD94819); // hazard: SOS, sunset warnings, off route
 const kWater = Color(0xFF1F6FA8);
 const kTrail = Color(0xFF8A5A2B);
+const kSky = Color(0xFFFBF3E2); // warm sky behind the terrain silhouette
+const kSun = Color(0xFFF2A93B);
+const kRidgeFar = Color(0xFF8FB39A);
+const kRidgeNear = Color(0xFF1D5C2F);
 
 const kFont = 'SpaceGrotesk';
 
@@ -60,7 +64,7 @@ ThemeData survivalTheme() {
       backgroundColor: kGround,
       surfaceTintColor: Colors.transparent,
       indicatorColor: Colors.transparent,
-      height: 68,
+      height: 60,
       labelTextStyle: WidgetStateProperty.resolveWith((s) => label(s.contains(WidgetState.selected) ? kInk : kInkMuted, size: 10)),
     ),
     filledButtonTheme: FilledButtonThemeData(

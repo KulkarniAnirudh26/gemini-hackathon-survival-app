@@ -1,8 +1,12 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import 'ai/assistant.dart';
+import 'ai/situation.dart';
 import 'location/location_service.dart';
 import 'ui/guide_screen.dart';
+import 'ui/here_card.dart';
 import 'ui/home_screen.dart';
 import 'ui/map_screen.dart';
 import 'ui/theme.dart';
@@ -69,7 +73,8 @@ class _ShellState extends State<Shell> with WidgetsBindingObserver {
       body: SafeArea(
         child: Column(
           children: [
-            const _Header(),
+            // the map gets the full height
+            if (_tab != 0) _Header(assistant: widget.assistant, location: widget.location),
             Expanded(
               child: IndexedStack(index: _tab, children: pages),
             ),
@@ -80,26 +85,34 @@ class _ShellState extends State<Shell> with WidgetsBindingObserver {
         decoration: const BoxDecoration(
           border: Border(top: BorderSide(color: kLine)),
         ),
-        child: NavigationBar(
-          selectedIndex: _tab,
-          onDestinationSelected: (i) => setState(() => _tab = i),
-          destinations: const [
-            NavigationDestination(
-              icon: Icon(Icons.explore_outlined, color: kInkMuted),
-              selectedIcon: Icon(Icons.explore, color: kInk),
-              label: 'TRAIL MAP',
+        // keep only part of the home-indicator inset: the full inset left a tall empty band under the labels
+        child: MediaQuery.removePadding(
+          context: context,
+          removeBottom: true,
+          child: Padding(
+            padding: EdgeInsets.only(bottom: math.max(0, MediaQuery.paddingOf(context).bottom - 20)),
+            child: NavigationBar(
+              selectedIndex: _tab,
+              onDestinationSelected: (i) => setState(() => _tab = i),
+              destinations: const [
+                NavigationDestination(
+                  icon: Icon(Icons.explore_outlined, color: kInkMuted),
+                  selectedIcon: Icon(Icons.explore, color: kInk),
+                  label: 'TRAIL MAP',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.auto_awesome_outlined, color: kInkMuted),
+                  selectedIcon: Icon(Icons.auto_awesome, color: kMoss),
+                  label: 'GEMMA AI',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.emergency_outlined, color: kClay),
+                  selectedIcon: Icon(Icons.emergency, color: kClay),
+                  label: 'SOS & AID',
+                ),
+              ],
             ),
-            NavigationDestination(
-              icon: Icon(Icons.auto_awesome_outlined, color: kInkMuted),
-              selectedIcon: Icon(Icons.auto_awesome, color: kMoss),
-              label: 'GEMMA AI',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.emergency_outlined, color: kClay),
-              selectedIcon: Icon(Icons.emergency, color: kClay),
-              label: 'SOS & AID',
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -107,25 +120,41 @@ class _ShellState extends State<Shell> with WidgetsBindingObserver {
 }
 
 class _Header extends StatelessWidget {
-  const _Header();
+  final Assistant assistant;
+  final LocationService location;
+  const _Header({required this.assistant, required this.location});
 
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
-    decoration: const BoxDecoration(
-      border: Border(bottom: BorderSide(color: kLine)),
-    ),
-    child: Row(
-      children: [
-        Container(
-          width: 32,
-          height: 32,
-          decoration: BoxDecoration(color: kInk, borderRadius: BorderRadius.circular(8)),
-          child: const Icon(Icons.landscape, color: kClay, size: 22),
-        ),
-        const SizedBox(width: 8),
-        Text('SHERPA', style: label(kInk, size: 20).copyWith(letterSpacing: 0.4)),
-      ],
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: Listenable.merge([assistant, location]),
+    builder: (context, _) => Container(
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: kLine)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(color: kInk, borderRadius: BorderRadius.circular(8)),
+            child: const Icon(Icons.landscape, color: kClay, size: 22),
+          ),
+          const SizedBox(width: 8),
+          Text('SHERPA', style: label(kInk, size: 20).copyWith(letterSpacing: 0.4)),
+          const SizedBox(width: 10),
+          // way out / water / help, shrunk to fit if the screen is narrow
+          Expanded(
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: NearbyRow(s: Situation.build(location, assistant.geo, assistant.router)),
+              ),
+            ),
+          ),
+        ],
+      ),
     ),
   );
 }
