@@ -9,6 +9,7 @@ import '../geo/geo_math.dart';
 import '../geo/map_pack.dart';
 import '../geo/nps_layers.dart';
 import '../location/location_service.dart';
+import 'map3d_view.dart';
 import 'map_layers.dart';
 import 'map_search.dart';
 import 'theme.dart';
@@ -89,6 +90,24 @@ class _MapScreenState extends State<MapScreen> {
   int _zoomBucket = 14;
   bool _parkMap = false; // official NPS park map image under our layers
   bool _notesOpen = false; // "Map notes here" card expanded
+  bool _threeD = false; // real 3D terrain (MapLibre WebView) instead of the 2D map
+  String _status3d = '';
+  final _map3d = Map3DController();
+
+  void _setThreeD(bool on) => setState(() {
+        _threeD = on;
+        _status3d = '';
+        _mapReady = false; // the 2D map is rebuilt (and re-centred on the hiker) when coming back
+      });
+
+  /// Move the visible map (2D or 3D) to a place.
+  void _moveTo(LatLng p, String name) {
+    if (_threeD) {
+      _map3d.showPlace(p, name);
+    } else if (_mapReady) {
+      _map.move(p, 15);
+    }
+  }
   bool _loaded = false;
   final Map<int, List<Marker>> _markerCache = {};
   List<LatLng>? _pendingFit;
@@ -373,7 +392,7 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   void _onSearchPick(MapSearchResult r) {
-    _map.move(r.location, 15);
+    _moveTo(r.location, r.name);
     final place = r.parkPlace;
     _details(r.name, r.kind, Icons.place, kMoss, r.location.latitude, r.location.longitude, null,
         notes: place == null ? null : a.mapPack!.guidanceFor(place));
@@ -394,6 +413,18 @@ class _MapScreenState extends State<MapScreen> {
     final live = Listenable.merge([loc, a.activeRoute]);
 
     return Stack(children: [
+      if (_threeD)
+        Map3DView(
+          assistant: a,
+          location: loc,
+          controller: _map3d,
+          onStatus: (st) {
+            if (!mounted) return;
+            setState(() => _status3d = st);
+            if (st == 'unsupported') _setThreeD(false);
+          },
+        )
+      else
       RepaintBoundary(
         child: FlutterMap(
           mapController: _map,
@@ -530,6 +561,7 @@ class _MapScreenState extends State<MapScreen> {
             final since = crumbs.length > 1 ? DateTime.now().difference(crumbs.first.time) : null;
             final here = _notesHere(loc.fix);
             return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              if (_threeD && _status3d != 'loaded') Map3DStatus(_status3d),
               if (loc.demoMode)
                 Card(
                   color: const Color(0xFFFFDBCF),
@@ -634,7 +666,16 @@ class _MapScreenState extends State<MapScreen> {
         right: 12,
         bottom: 28,
         child: Column(children: [
-          if (a.mapPack != null) ...[
+          FloatingActionButton.small(
+            heroTag: 'threeD',
+            tooltip: _threeD ? 'Back to the 2D map' : '3D terrain',
+            backgroundColor: _threeD ? kInk : null,
+            foregroundColor: _threeD ? kCard : null,
+            onPressed: () => _setThreeD(!_threeD),
+            child: Text(_threeD ? '2D' : '3D', style: const TextStyle(fontWeight: FontWeight.w800)),
+          ),
+          const SizedBox(height: 8),
+          if (a.mapPack != null && !_threeD) ...[
             FloatingActionButton.small(
               heroTag: 'parkmap',
               tooltip: _parkMap ? 'Hide the park map' : 'Show the official park map',
@@ -651,7 +692,7 @@ class _MapScreenState extends State<MapScreen> {
             onPressed: () async {
               loc.clearSimulation();
               final fix = await loc.fixNow();
-              if (fix != null) _map.move(LatLng(fix.lat, fix.lon), 15);
+              if (fix != null) _moveTo(LatLng(fix.lat, fix.lon), 'You');
             },
             child: const Icon(Icons.my_location),
           ),
@@ -661,7 +702,12 @@ class _MapScreenState extends State<MapScreen> {
             tooltip: 'Center on me',
             onPressed: () {
               final f = loc.fix;
-              if (f != null) _map.move(LatLng(f.lat, f.lon), 15);
+              if (f == null) return;
+              if (_threeD) {
+                _map3d.centreOnMe();
+              } else {
+                _map.move(LatLng(f.lat, f.lon), 15);
+              }
             },
             child: const Icon(Icons.center_focus_strong),
           ),

@@ -1,0 +1,126 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>3D map</title>
+<!-- Adapted from PR #5 (Chengjiang Long). Fully offline: MapLibre is bundled next to this page,
+     the official NPS park map is draped as raster tiles cut from the map pack image
+     (tool/build_park_tiles3d.py) and the terrain tiles are app assets (tool/build_terrain3d.py). -->
+<link rel="stylesheet" href="maplibre-gl.css">
+<script src="maplibre-gl.js"></script>
+<style>
+  html, body, #map { height: 100%; margin: 0; background: #dfe6ea; }
+  .me { width: 16px; height: 16px; border-radius: 50%; background: #1e88e5; border: 3px solid #fff;
+        box-shadow: 0 0 0 10px rgba(30, 136, 229, .25); }
+  .me.pinned { background: #d94819; box-shadow: 0 0 0 10px rgba(217, 72, 25, .25); }
+  #err { position: absolute; inset: 0; display: none; align-items: center; justify-content: center;
+         font: 16px system-ui; color: #333; padding: 24px; text-align: center; }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div id="err"></div>
+<script>
+// The host passes the park map's corners (west,south,east,north).
+const q = new URLSearchParams(location.search);
+const b = (q.get("bounds") || "-119.9206,37.4655,-119.0368,38.2043").split(",").map(Number);
+const [W, S, E, N] = b;
+const report = msg => (window.Host && Host.onEvent) ? Host.onEvent(msg) : console.log(msg);
+
+// Probe for WebGL, then release the probe context at once: some WebViews allow very few live
+// contexts, and holding this one leaves the map's canvas blank.
+const probe = document.createElement("canvas");
+const probeGl = probe.getContext("webgl2") || probe.getContext("webgl");
+report(probeGl ? "webgl: " + (probeGl instanceof WebGL2RenderingContext ? "2" : "1") : "unsupported");
+probeGl?.getExtension("WEBGL_lose_context")?.loseContext();
+if (!probeGl) {
+  err.style.display = "flex"; err.textContent = "3D needs WebGL, which this device doesn't provide.";
+}
+
+const emptyLine = { type: "Feature", geometry: { type: "LineString", coordinates: [] } };
+const map = new maplibregl.Map({
+  container: "map",
+  center: [-119.533, 37.746], zoom: 12.3, pitch: 62, bearing: -20, maxPitch: 80,
+  maxBounds: [[W - 0.15, S - 0.15], [E + 0.15, N + 0.15]],
+  attributionControl: { compact: true },
+  style: {
+    version: 8,
+    sources: {
+      // tiles cut from the park map image (tool/build_park_tiles3d.py); a single "image" source
+      // left most of the terrain blank on the Pixel
+      park: { type: "raster", tiles: ["/assets/map3d/park/{z}/{x}/{y}.jpg"], tileSize: 256, minzoom: 9, maxzoom: 12,
+              bounds: b, attribution: "National Park Service" },
+      dem: { type: "raster-dem", tiles: ["/assets/map3d/terrain/{z}/{x}/{y}.png"], tileSize: 256,
+             encoding: "terrarium", minzoom: 8, maxzoom: 11, bounds: b,
+             attribution: "Park map: National Park Service · Terrain: USGS 3DEP, SRTM et al. (Terrain Tiles)" },
+      track: { type: "geojson", data: emptyLine },
+      route: { type: "geojson", data: emptyLine },
+    },
+    terrain: { source: "dem", exaggeration: 1.2 },
+    layers: [
+      { id: "sky", type: "background", paint: { "background-color": "#dfe6ea" } },
+      { id: "park", type: "raster", source: "park" },
+      // the walked track and the route, drawn on the terrain like the 2D map does
+      { id: "track-casing", type: "line", source: "track", paint: { "line-color": "#ffffff", "line-width": 7 },
+        layout: { "line-cap": "round", "line-join": "round" } },
+      { id: "track", type: "line", source: "track", paint: { "line-color": "#1f6fa8", "line-width": 4 },
+        layout: { "line-cap": "round", "line-join": "round" } },
+      { id: "route-casing", type: "line", source: "route", paint: { "line-color": "#ffffff", "line-width": 9 },
+        layout: { "line-cap": "round", "line-join": "round" } },
+      { id: "route", type: "line", source: "route", paint: { "line-color": "#1d5c2f", "line-width": 5 },
+        layout: { "line-cap": "round", "line-join": "round" } },
+    ],
+  },
+});
+map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), "bottom-left");
+map.on("load", () => {
+  // start with the attribution folded into its (i) button so it doesn't cover the app's controls
+  document.querySelector(".maplibregl-ctrl-attrib")?.classList.remove("maplibregl-compact-show");
+  report("loaded");
+});
+map.on("error", e => report("error: " + (e.error && e.error.message)));
+
+let placeMarker = null, meMarker = null, targetMarker = null, centred = false;
+const line = coords => ({ type: "Feature", geometry: { type: "LineString", coordinates: coords } });
+const whenLoaded = fn => map.loaded() ? fn() : map.once("load", fn);
+
+// Called by the app ------------------------------------------------------------------------
+window.showPlace = (lat, lon, name) => {
+  if (placeMarker) placeMarker.remove();
+  placeMarker = new maplibregl.Marker({ color: "#c62828" }).setLngLat([lon, lat])
+    .setPopup(new maplibregl.Popup({ offset: 28 }).setText(name)).addTo(map);
+  map.flyTo({ center: [lon, lat], zoom: 13.2, pitch: 62, duration: 1500, essential: true });
+};
+// the hiker: flies there once, then just moves (no camera jumps on every GPS fix)
+window.showMe = (lat, lon, pinned) => {
+  if (!meMarker) {
+    const el = document.createElement("div"); el.className = "me";
+    meMarker = new maplibregl.Marker({ element: el });
+  }
+  meMarker.getElement().classList.toggle("pinned", !!pinned);
+  meMarker.setLngLat([lon, lat]).addTo(map);
+  if (!centred) {
+    centred = true;
+    map.flyTo({ center: [lon, lat], zoom: 13.6, pitch: 62, duration: 1500, essential: true });
+  }
+};
+window.centreOnMe = () => {
+  if (meMarker) map.flyTo({ center: meMarker.getLngLat(), zoom: 13.6, pitch: 62, duration: 1200, essential: true });
+};
+// [[lon, lat], ...]
+window.showTrack = coords => whenLoaded(() => map.getSource("track").setData(line(coords)));
+window.showRoute = (coords, name) => whenLoaded(() => {
+  map.getSource("route").setData(line(coords));
+  if (targetMarker) { targetMarker.remove(); targetMarker = null; }
+  if (coords.length > 1) {
+    const end = coords[coords.length - 1];
+    targetMarker = new maplibregl.Marker({ color: "#d94819" }).setLngLat(end)
+      .setPopup(new maplibregl.Popup({ offset: 28 }).setText(name || "")).addTo(map);
+  }
+});
+window.setExaggeration = x => map.setTerrain({ source: "dem", exaggeration: x });
+window.map = map;
+</script>
+</body>
+</html>

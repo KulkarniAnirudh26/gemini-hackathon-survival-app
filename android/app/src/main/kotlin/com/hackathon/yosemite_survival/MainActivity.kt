@@ -9,6 +9,7 @@ import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
+import com.hackathon.yosemite_survival.map3d.Map3DViewFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -23,6 +24,8 @@ class MainActivity : FlutterActivity() {
   override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
     super.configureFlutterEngine(flutterEngine)
     val messenger = flutterEngine.dartExecutor.binaryMessenger
+    // 3D terrain map (MapLibre in a WebView), shown by lib/ui/map3d_view.dart
+    flutterEngine.platformViewsController.registry.registerViewFactory("sherpa/map3d", Map3DViewFactory(messenger))
     ai = AiCore(applicationContext) { event -> main.post { sink?.success(event) } }
 
     EventChannel(messenger, "survival/ai/events")

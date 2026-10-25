@@ -68,4 +68,6 @@ dependencies {
     implementation("com.google.ai.edge.litertlm:litertlm-android:0.16.1")
     // litertlm-android 0.16.1 needs coroutines 1.11.0 (google-ai-edge/LiteRT-LM#3334).
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0")
+    // 3D map: serves the bundled MapLibre page and tiles to the WebView (no network)
+    implementation("androidx.webkit:webkit:1.12.1")
 }
