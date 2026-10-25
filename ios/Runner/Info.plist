@@ -10,6 +10,8 @@
 	<string>Sherpa can use a photo from your library to ask about what you see.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Sherpa listens while you hold the talk button.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Sherpa turns what you say into text on the phone, without sending it anywhere.</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>

@@ -6,12 +6,13 @@ Pod::Spec.new do |s|
   s.license          = { :type => 'Proprietary' }
   s.author           = { 'Sherpa' => 'noreply@example.com' }
   s.source           = { :path => '.' }
-  # MapPack/ is plain Swift, parity-tested on the Mac by ../swift-tests
-  s.source_files     = 'Classes/**/*.swift', 'MapPack/**/*.swift'
+  # Swift Package Manager builds (the app's default) use sherpa_ios/Package.swift, which adds
+  # LiteRT-LM for Gemma. CocoaPods has no LiteRT-LM pod, so a CocoaPods build runs without Gemma.
+  s.source_files     = 'sherpa_ios/Sources/sherpa_ios/**/*.swift'
   s.dependency 'Flutter'
   s.platform         = :ios, '15.0'
   s.libraries        = 'sqlite3'
-  s.frameworks       = 'WebKit', 'AVFoundation'
+  s.frameworks       = 'WebKit', 'AVFoundation', 'Speech'
   s.swift_version    = '5.9'
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES' }
 end

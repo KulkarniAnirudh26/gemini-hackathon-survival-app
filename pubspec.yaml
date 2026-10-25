@@ -63,6 +63,9 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
+  config:
+    # The iOS plugin (packages/sherpa_ios) pulls LiteRT-LM, which ships only as a Swift package.
+    enable-swift-package-manager: true
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

@@ -2,26 +2,20 @@ PODS:
   - Flutter (1.0.0)
   - flutter_compass (0.0.1):
     - Flutter
-  - sherpa_ios (0.1.0):
-    - Flutter
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
   - flutter_compass (from `.symlinks/plugins/flutter_compass/ios`)
-  - sherpa_ios (from `.symlinks/plugins/sherpa_ios/ios`)
 
 EXTERNAL SOURCES:
   Flutter:
     :path: Flutter
   flutter_compass:
     :path: ".symlinks/plugins/flutter_compass/ios"
-  sherpa_ios:
-    :path: ".symlinks/plugins/sherpa_ios/ios"
 
 SPEC CHECKSUMS:
   Flutter: 71a624a5bc0c04062bf19101d501e466baf2fb47
   flutter_compass: b236ab69b61545cce89fd58527f401a7587d5cc1
-  sherpa_ios: ab342049ce58390f2dc2d8aa37778c39f49f6331
 
 PODFILE CHECKSUM: 3ba3a73b1b12adcf321a227a745625fe0888cc82
 
