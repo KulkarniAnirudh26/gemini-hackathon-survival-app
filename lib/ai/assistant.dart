@@ -27,17 +27,17 @@ class ChatMessage {
   final AnswerKind? kind;
   final String? debug; // router scores: logged to metrics, not shown
   final RouteResult? map; // in-chat mini map (way out / water / help)
+  final String? question; // what this answers (for "Ask Gemma" on quick answers)
+  final String? prompt; // exact text sent to Gemma (debug sheet)
   final DateTime at = DateTime.now();
-  ChatMessage(this.user, this.text, {this.kind, this.debug, this.map});
+  ChatMessage(this.user, this.text, {this.kind, this.debug, this.map, this.question, this.prompt});
 }
 
-const systemPrompt = '''You are a calm, warm and practical wilderness survival guide inside an offline phone app in Yosemite National Park.
-The user may be lost, injured, cold, scared or low on battery. Speak to them gently and directly, like a steady friend beside them.
-If they sound worried, start with a few words of reassurance, then give the single most important action.
-If the question is general or not about survival, still answer it helpfully and briefly.
-Rules: answer in two to four short, simple spoken sentences. Use calm, plain words. No markdown, no lists.
-Use the SITUATION, ROUTE, NEAREST and GUIDE data given with the question; never invent trails, places or distances.
-If anything sounds life-threatening, tell them to call 911 or use Satellite SOS.''';
+const systemPrompt = '''You are Sherpa, a helpful assistant running offline on a phone, used by hikers in Yosemite National Park.
+Answer any question helpfully and accurately, including general questions.
+When the hiker's safety is involved: be calm and kind, give the single most important action first, and use only the facts in the CONTEXT given with the question; never invent trails, places or distances.
+If anything sounds life-threatening, tell them to call 911 or use Satellite SOS.
+Reply in two to four short spoken sentences. No markdown, no lists.''';
 
 /// Orchestrates: mic -> Zipformer -> Laya router -> template | guide | Gemma -> KittenTTS.
 class Assistant extends ChangeNotifier {
@@ -137,6 +137,11 @@ class Assistant extends ChangeNotifier {
         _streaming?.text += e['text'] as String;
         phase = Phase.thinking;
       case 'llm_done':
+        final pp = _pendingPrompt;
+        if (pp != null) {
+          _pendingPrompt = null;
+          _logPrompt(pp.$1, pp.$2, pp.$3, pp.$4.text);
+        }
         _streaming = null;
         if (phase == Phase.thinking) phase = Phase.ready;
         status = 'Ready.';
@@ -188,6 +193,7 @@ class Assistant extends ChangeNotifier {
     await stop();
     messages.clear();
     activeRoute.value = null;
+    unawaited(ai.resetConversation()); // the next question starts a fresh Gemma conversation
     status = 'Ready.';
     notifyListeners();
   }
@@ -229,7 +235,8 @@ class Assistant extends ChangeNotifier {
     await ask(text, input: 'voice');
   }
 
-  Future<void> ask(String text, {String input = 'text'}) async {
+  /// [forceLlm]: the user tapped "Ask Gemma" on a quick answer.
+  Future<void> ask(String text, {String input = 'text', bool forceLlm = false}) async {
     final turn = TurnMetrics(input, text)
       ..sttMs = input == 'voice' ? _pendingSttMs : null
       ..audioMs = input == 'voice' ? _pendingAudioMs : null;
@@ -244,20 +251,28 @@ class Assistant extends ChangeNotifier {
     status = 'Understanding…';
     notifyListeners();
 
-    final decision = await questionRouter.decide(text);
+    final decision = forceLlm ? RouteDecision.forced() : await questionRouter.decide(text);
     turn.layaMs = decision.ms.toDouble();
     turn.scores = decision.toString();
     final s = Situation.build(location, geo, router);
     final g = guide!;
     final critical = location.tier == PowerTier.critical;
     var route = decision.route;
-    if (critical && route == Route.llm) route = Route.guide; // save battery: no Gemma when critical
-    if (route == Route.llm && models['gemmaPresent'] != true) route = Route.guide;
+    var why = decision.reason;
+    if (critical && route == Route.llm && !forceLlm) {
+      route = Route.guide; // save battery: no Gemma when critical
+      why = 'battery critical: no Gemma';
+    }
+    if (route == Route.llm && models['gemmaPresent'] != true) {
+      route = Route.guide;
+      why = 'Gemma model file missing';
+    }
+    _lastReason = why;
     turn.route = route.name;
 
     switch (route) {
       case Route.emergency:
-        _say(Templates.emergency(decision, g), AnswerKind.emergency, decision, map: _routeTo(s, s.help));
+        _say(Templates.emergency(decision, g), AnswerKind.emergency, decision, map: _routeTo(s, s.help), question: text);
         // then let Gemma add situation-specific advice, unless the battery is critical
         if (!critical && models['gemmaPresent'] == true) {
           turn.route = 'emergency+llm';
@@ -266,11 +281,12 @@ class Assistant extends ChangeNotifier {
       case Route.template:
         templateAnswers++;
         _say(Templates.calm(decision) + Templates.answer(decision.intent, s), AnswerKind.quick, decision,
-            map: _mapFor(decision.intent, s));
+            map: _mapFor(decision.intent, s), question: text);
       case Route.guide:
         templateAnswers++;
         final topic = decision.topic ?? g.search(text, k: 1).firstOrNull?.section.id;
-        _say(Templates.calm(decision) + Templates.guideSummary(topic ?? 'lost_stop', g), AnswerKind.guide, decision);
+        _say(Templates.calm(decision) + Templates.guideSummary(topic ?? 'lost_stop', g), AnswerKind.guide, decision,
+            question: text);
       case Route.llm:
         await _llm(text, decision, s);
     }
@@ -291,8 +307,11 @@ class Assistant extends ChangeNotifier {
     return router!.routeToPlace(f.lat, f.lon, p.name, p.lat, p.lon);
   }
 
-  void _say(String text, AnswerKind kind, RouteDecision d, {RouteResult? map}) {
-    messages.add(ChatMessage(false, text, kind: kind, debug: d.toString(), map: map));
+  String _lastReason = '';
+
+  void _say(String text, AnswerKind kind, RouteDecision d, {RouteResult? map, String? question}) {
+    messages.add(ChatMessage(false, text, kind: kind, debug: '$_lastReason\n$d', map: map, question: question));
+    _logPrompt(question ?? '', d, null, text);
     if (map != null) activeRoute.value = map; // the map tab shows where the answer points
     phase = Phase.speaking;
     status = 'Speaking…';
@@ -351,8 +370,20 @@ class Assistant extends ChangeNotifier {
     for (final h in g.search(question, k: 2)) {
       if (hits.length < 2 && hits.every((x) => x.section.id != h.section.id)) hits.add(h);
     }
-    final prompt = '${s.contextBlock(hits)}\n\nQuestion: $question';
-    final msg = ChatMessage(false, '', kind: AnswerKind.gemma, debug: '$d · guide: ${hits.map((h) => h.section.id).join(', ')}');
+    // survival / lookup questions get the full situation; general ones just a line of it, so
+    // Gemma answers them as asked instead of steering back to survival
+    final relevant = d.topic != null ||
+        QuestionRouter.lookups.contains(d.intent) ||
+        d.intent == Intent.survivalHowto ||
+        d.intent == Intent.emergency ||
+        d.urgency >= 1.5;
+    final context = relevant ? s.contextBlock(hits) : s.briefContext();
+    final prompt = 'CONTEXT:\n$context\n\nQUESTION: $question';
+    final msg = ChatMessage(false, '',
+        kind: AnswerKind.gemma,
+        debug: '$_lastReason\n$d · context ${relevant ? 'full' : 'brief'} · guide: ${hits.map((h) => h.section.id).join(', ')}',
+        question: question,
+        prompt: '$systemPrompt\n\n$prompt');
     messages.add(msg);
     _streaming = msg;
     phase = llmLoaded ? Phase.thinking : Phase.loadingLlm;
@@ -360,7 +391,22 @@ class Assistant extends ChangeNotifier {
     notifyListeners();
     if (!llmLoaded) speak('Okay. Give me a moment to think about that.', source: 'chat');
     speakingSource = 'chat';
+    _pendingPrompt = (question, d, prompt, msg);
     await ai.generate(systemPrompt, prompt);
+  }
+
+  (String, RouteDecision, String, ChatMessage)? _pendingPrompt;
+
+  /// One line per answer in metrics/prompts.jsonl: what was asked, how it was routed, what Gemma saw.
+  void _logPrompt(String question, RouteDecision d, String? prompt, String answer) {
+    _metrics?.append('prompts.jsonl', {
+      'ts': DateTime.now().toIso8601String(),
+      'question': question,
+      'final_reason': _lastReason,
+      ...d.toJson(),
+      'prompt': prompt,
+      'answer': answer,
+    });
   }
 
   Future<void> stop() async {

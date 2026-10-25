@@ -35,8 +35,9 @@ class AiBridge {
     return jsonDecode(raw!) as Map<String, dynamic>;
   }
 
-  Future<void> generate(String system, String prompt, {bool speak = true}) =>
-      _method.invokeMethod('generate', {'system': system, 'prompt': prompt, 'speak': speak});
+  Future<void> generate(String system, String prompt, {bool speak = true, bool newConversation = false}) =>
+      _method.invokeMethod('generate', {'system': system, 'prompt': prompt, 'speak': speak, 'newConversation': newConversation});
+  Future<void> resetConversation() => _method.invokeMethod('resetConversation');
   Future<void> cancelGenerate() => _method.invokeMethod('cancelGenerate');
   Future<void> speak(String text) => _method.invokeMethod('speak', {'text': text});
   Future<void> stopSpeaking() => _method.invokeMethod('stopSpeaking');

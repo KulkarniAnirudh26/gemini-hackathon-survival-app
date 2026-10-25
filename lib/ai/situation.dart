@@ -73,6 +73,13 @@ class Situation {
     return compassWord(bearingDeg(f.lat, f.lon, p.lat, p.lon));
   }
 
+  /// One line for general questions: enough to ground "today" and "here" without steering Gemma.
+  String briefContext() {
+    final us = untilSunset;
+    return 'Hiker in Yosemite National Park. Local time ${_hm(now)}, sunset ${_hm(sun.sunset)}'
+        '${us != null && !us.isNegative ? ' (in ${formatDuration(us)})' : ''}.';
+  }
+
   /// Compact block prepended to Gemma's prompt.
   String contextBlock(List<GuideHit> guide) {
     final b = StringBuffer();

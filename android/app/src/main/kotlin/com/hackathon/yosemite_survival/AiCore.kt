@@ -130,10 +130,13 @@ class AiCore(private val context: Context, private val emit: (Map<String, Any?>)
     val engine = laya ?: error("router is not loaded")
     val questions = LayaJson.asObject(LayaJson.parse(questionsJson))
     val answers = linkedMapOf<String, Any?>()
+    val textTokens = engine.countTokens(text)
     for ((id, q) in questions) {
       answers[id] =
         runCatching {
-            engine.answer(text, LayaJson.asObject(q), LayaEngine.Backend.GPU, questionId = id).answer
+            val r = engine.answer(text, LayaJson.asObject(q), LayaEngine.Backend.GPU, questionId = id)
+            // seq_tokens = whole prompt; when it hits the 256 window the question was cut
+            r.answer + mapOf("seq_tokens" to r.sequence.ids.size, "text_tokens" to textTokens)
           }
           .getOrElse { mapOf("error" to (it.message ?: it.javaClass.simpleName)) }
     }
@@ -153,7 +156,22 @@ class AiCore(private val context: Context, private val emit: (Map<String, Any?>)
       engine
     }
 
-  fun generate(system: String, prompt: String, speak: Boolean) {
+  /** One Gemma conversation per chat session (follow-ups keep context), capped to keep the KV cache small. */
+  private var convo: ChatEngine.ChatConversation? = null
+  private var convoTurns = 0
+
+  private suspend fun dropConversation() {
+    convo?.let { runCatching { it.closeAndJoin() } }
+    convo = null
+    convoTurns = 0
+  }
+
+  /** Called when the chat is cleared: the next question starts a fresh conversation. */
+  fun resetConversation() {
+    scope.launch { if (generateJob?.isActive != true) dropConversation() }
+  }
+
+  fun generate(system: String, prompt: String, speak: Boolean, newConversation: Boolean = false) {
     if (generateJob?.isActive == true) {
       emit(mapOf("type" to "error", "message" to "busy"))
       return
@@ -167,7 +185,9 @@ class AiCore(private val context: Context, private val emit: (Map<String, Any?>)
         var firstAt = 0L
         try {
           val engine = ensureChat()
-          val conversation = engine.createConversation(system, emptyList())
+          if (newConversation || convo == null || convoTurns >= MAX_CONVO_TURNS) dropConversation()
+          val conversation = convo ?: engine.createConversation(system, emptyList()).also { convo = it }
+          convoTurns++
           val sentAt = System.nanoTime() // after any model load: TTFT = prefill + first decode step
           try {
             conversation.send(Message.user(prompt), thinking = false).collect { m ->
@@ -183,8 +203,9 @@ class AiCore(private val context: Context, private val emit: (Map<String, Any?>)
                 if (speak) splitter.add(piece).forEach { speechQueue.trySend(it) }
               }
             }
-          } finally {
-            conversation.closeAndJoin()
+          } catch (e: Exception) {
+            dropConversation() // a cancelled or failed generation invalidates the conversation
+            throw e
           }
           if (speak) splitter.flush().forEach { speechQueue.trySend(it) }
           val now = System.nanoTime()
@@ -219,6 +240,7 @@ class AiCore(private val context: Context, private val emit: (Map<String, Any?>)
   }
 
   suspend fun unloadLlm() {
+    dropConversation()
     llmLock.withLock {
       chat?.closeAndJoin()
       chat = null
@@ -319,6 +341,7 @@ class AiCore(private val context: Context, private val emit: (Map<String, Any?>)
     private const val MAX_SAMPLES = SAMPLE_RATE * 16 // Zipformer's 16 s window
     private const val MIN_SAMPLES = SAMPLE_RATE / 4
     private const val LLM_IDLE_MS = 5 * 60 * 1000L
+    private const val MAX_CONVO_TURNS = 6
 
     fun normalizeTranscript(text: String): String {
       val t = text.trim().lowercase()

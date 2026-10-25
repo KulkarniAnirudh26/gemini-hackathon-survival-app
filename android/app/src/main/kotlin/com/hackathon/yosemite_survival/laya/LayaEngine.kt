@@ -172,6 +172,9 @@ class LayaEngine(modelDir: java.io.File, val storage: Storage = Storage.WFP16) :
       Unit
     }
 
+  /** Tokens of [text] alone, to check how much of it survived the prompt builder's budget. */
+  fun countTokens(text: String): Int = tokenizer.encode(text, addSpecialTokens = false).size
+
   /** The gate and interactive app use exactly the same tokenizer and prompt builder. */
   fun prepare(
     state: Any?,
