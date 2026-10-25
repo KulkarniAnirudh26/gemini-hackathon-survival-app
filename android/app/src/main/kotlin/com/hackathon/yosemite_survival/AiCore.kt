@@ -70,8 +70,14 @@ class AiCore(private val context: Context, private val emit: (Map<String, Any?>)
   private fun initSystemTts() {
     systemTts = TextToSpeech(context) { status ->
       if (status == TextToSpeech.SUCCESS) {
-        systemTts?.language = Locale.US
         systemTtsReady = true
+        if (!ttsVoice.isNullOrBlank()) {
+          val match = systemTts?.voices?.firstOrNull { it.name == ttsVoice }
+          if (match != null) systemTts?.voice = match else systemTts?.language = Locale.US
+        } else {
+          systemTts?.language = Locale.US
+        }
+        systemTts?.setSpeechRate(ttsSpeed)
         systemTts?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
           override fun onStart(utteranceId: String?) {
             emit(mapOf("type" to "tts_start"))
@@ -86,7 +92,7 @@ class AiCore(private val context: Context, private val emit: (Map<String, Any?>)
             emit(mapOf("type" to "error", "message" to "System TTS error"))
           }
         })
-        Log.i(TAG, "System TextToSpeech initialized successfully")
+        Log.i(TAG, "System TextToSpeech initialized successfully (voice: ${systemTts?.voice?.name}, rate: $ttsSpeed)")
       } else {
         Log.w(TAG, "System TextToSpeech initialization failed with code $status")
       }
@@ -320,6 +326,15 @@ class AiCore(private val context: Context, private val emit: (Map<String, Any?>)
 
   fun setTtsVoice(voice: String?) {
     ttsVoice = voice
+    if (systemTtsReady && !voice.isNullOrBlank()) {
+      val match = systemTts?.voices?.firstOrNull { it.name == voice }
+      if (match != null) {
+        systemTts?.voice = match
+        Log.i(TAG, "Applied system TTS voice: ${match.name} (${match.locale})")
+      } else {
+        Log.w(TAG, "Could not find system voice matching '$voice'")
+      }
+    }
   }
 
   fun setTtsSpeed(speed: Float) {

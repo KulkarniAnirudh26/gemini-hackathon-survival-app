@@ -126,10 +126,16 @@ class SettingsService extends ChangeNotifier {
 
   Future<void> setTtsEngine(String engine) async {
     _ttsEngine = engine;
+    final voices = _availableVoices[_ttsEngine] ?? [];
+    if (voices.isNotEmpty && !voices.contains(_ttsVoice)) {
+      _ttsVoice = voices.first;
+    }
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_keyTtsEngine, _ttsEngine);
+    await prefs.setString(_keyTtsVoice, _ttsVoice);
     await _bridge?.setTtsEngine(_ttsEngine);
+    await _bridge?.setTtsVoice(_ttsVoice);
   }
 
   Future<void> setTtsVoice(String voice) async {
