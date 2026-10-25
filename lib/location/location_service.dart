@@ -36,6 +36,20 @@ class LocationService extends ChangeNotifier {
   final List<Fix> breadcrumbs = [];
   final List<Fix> _unsaved = [];
   Fix? _simulated;
+  bool isRecording = true;
+
+  /// Starts or resumes recording user GPS trail.
+  void toggleRecording() {
+    isRecording = !isRecording;
+    notifyListeners();
+  }
+
+  /// Clears recorded breadcrumbs.
+  void clearBreadcrumbs() {
+    breadcrumbs.clear();
+    _unsaved.clear();
+    notifyListeners();
+  }
 
   /// The real GPS fix is outside Yosemite: the app shows a demo position instead (Mirror Lake trail),
   /// until the user taps "use real GPS".
@@ -43,7 +57,42 @@ class LocationService extends ChangeNotifier {
   bool _demoDismissed = false;
   Fix? realFix;
 
-  static const demoLat = 37.7445, demoLon = -119.5510;
+  /// Demo hiker: on the Mist Trail at Clark Point, having walked up from Happy Isles.
+  static const demoLat = 37.7258, demoLon = -119.5413;
+  static const demoStartLat = 37.7323, demoStartLon = -119.5577;
+  static const demoStartName = 'Happy Isles Trailhead';
+
+  /// Name of the place the current track started at (demo: the trailhead), shown as "walked from".
+  String? trackStartName;
+  bool demoTrackReady = false;
+
+  /// Demo: replace the breadcrumbs with [points] (start → current position), walked over the last
+  /// [duration]. Not saved to disk.
+  void setDemoTrack(List<(double, double)> points, {Duration duration = const Duration(minutes: 75)}) {
+    if (points.length < 2) return;
+    final now = DateTime.now();
+    breadcrumbs
+      ..clear()
+      ..addAll([
+        for (var i = 0; i < points.length; i++)
+          Fix(points[i].$1, points[i].$2, 5, null,
+              now.subtract(duration * (1 - i / (points.length - 1))), simulated: true),
+      ]);
+    trackStartName = demoStartName;
+    demoTrackReady = true;
+    _simulated = Fix(points.last.$1, points.last.$2, 5, null, now, simulated: true);
+    fix = _simulated;
+    notifyListeners();
+  }
+
+  /// Distance walked along the breadcrumbs since [since] (default: the whole track).
+  double trackDistance() {
+    var d = 0.0;
+    for (var i = 1; i < breadcrumbs.length; i++) {
+      d += haversineM(breadcrumbs[i - 1].lat, breadcrumbs[i - 1].lon, breadcrumbs[i].lat, breadcrumbs[i].lon);
+    }
+    return d;
+  }
   static bool inPark(double lat, double lon) => lat > 37.49 && lat < 38.19 && lon > -119.89 && lon < -119.20;
 
   Future<void> start() async {
@@ -118,6 +167,8 @@ class LocationService extends ChangeNotifier {
   /// Demo / testing: pin a position (long-press on the map).
   void simulate(double lat, double lon) {
     demoMode = false;
+    demoTrackReady = false;
+    trackStartName = null;
     _simulated = Fix(lat, lon, 5, null, DateTime.now(), simulated: true);
     fix = _simulated;
     _addCrumb(fix!);
@@ -128,6 +179,8 @@ class LocationService extends ChangeNotifier {
   void clearSimulation() {
     _simulated = null;
     demoMode = false;
+    demoTrackReady = false;
+    trackStartName = null;
     _demoDismissed = true;
     fix = realFix;
     notifyListeners();
@@ -148,6 +201,8 @@ class LocationService extends ChangeNotifier {
     if (demoMode && inPark(p.latitude, p.longitude)) {
       // a real fix inside the park ends the demo automatically
       demoMode = false;
+      demoTrackReady = false;
+      trackStartName = null;
       _simulated = null;
     }
     _maybeDemo();
@@ -161,6 +216,7 @@ class LocationService extends ChangeNotifier {
   }
 
   void _addCrumb(Fix f) {
+    if (!isRecording) return;
     final last = breadcrumbs.isEmpty ? null : breadcrumbs.last;
     if (last != null &&
         haversineM(last.lat, last.lon, f.lat, f.lon) < 25 &&

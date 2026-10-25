@@ -54,14 +54,46 @@ class MainActivity : FlutterActivity() {
                 call.argument<String>("system")!!,
                 call.argument<String>("prompt")!!,
                 call.argument<Boolean>("speak") ?: true,
+                call.argument<Boolean>("newConversation") ?: false,
               )
               result.success(null)
             }
+            "resetConversation" -> { ai.resetConversation(); result.success(null) }
             "cancelGenerate" -> { ai.cancelGenerate(); result.success(null) }
             "speak" -> { ai.speak(call.argument<String>("text")!!); result.success(null) }
             "stopSpeaking" -> { ai.stopSpeaking(); result.success(null) }
+            "setVoice" -> {
+              ai.setVoice(call.argument<String>("voice"), (call.argument<Double>("speed") ?: 0.85).toFloat())
+              result.success(null)
+            }
             "unloadLlm" -> { ai.unloadLlm(); result.success(null) }
             "status" -> result.success(mapOf("llmLoaded" to ai.llmLoaded()))
+            "metrics" -> result.success(ai.metrics())
+            // adb shell am start -n com.hackathon.yosemite_survival/.MainActivity --ez calibrate true
+            "launchFlags" -> result.success(mapOf("calibrate" to (intent?.getBooleanExtra("calibrate", false) ?: false)))
+            "listModels" -> result.success(ai.listAvailableModels())
+            "setModel" -> {
+              val model = call.argument<String>("model")!!
+              val backend = call.argument<String>("backend") ?: "AUTO"
+              ai.setModel(model, backend)
+              result.success(null)
+            }
+            "setTtsEngine" -> {
+              val engine = call.argument<String>("engine") ?: "kitten"
+              ai.setTtsEngine(engine)
+              result.success(null)
+            }
+            "setTtsVoice" -> {
+              val voice = call.argument<String>("voice")
+              ai.setTtsVoice(voice)
+              result.success(null)
+            }
+            "setTtsSpeed" -> {
+              val speed = (call.argument<Double>("speed") ?: 1.0).toFloat()
+              ai.setTtsSpeed(speed)
+              result.success(null)
+            }
+            "listTtsVoices" -> result.success(ai.listTtsVoices())
             else -> result.notImplemented()
           }
         } catch (e: Throwable) {

@@ -94,7 +94,7 @@ class ChatEngine private constructor(private val engine: Engine) : AutoCloseable
       ConversationConfig(
         systemInstruction = Contents.of(systemInstruction),
         tools = tools,
-        samplerConfig = GREEDY,
+        samplerConfig = SAMPLED,
         automaticToolCalling = false,
         channels = CHANNELS,
       )
@@ -368,7 +368,8 @@ class ChatEngine private constructor(private val engine: Engine) : AutoCloseable
     const val MAX_OUTPUT_TOKENS = 256
 
     /** Greedy decoding: the same prompt on the same model state gives the same answer. */
-    private val GREEDY = SamplerConfig(topK = 1, topP = 1.0, temperature = 0.0, seed = 0)
+    // Greedy decoding made the 2B model flat and repetitive; light sampling reads more naturally.
+    private val SAMPLED = SamplerConfig(topK = 40, topP = 0.95, temperature = 0.6, seed = 0)
 
     /**
      * Gemma 4's thought channel, as the bundle declares it in its own header: reasoning streams
@@ -378,38 +379,112 @@ class ChatEngine private constructor(private val engine: Engine) : AutoCloseable
     private val CHANNELS = listOf(Channel("thought", "<|channel>thought\n", "<channel|>"))
 
     /**
-     * Initializes LiteRT-LM on the GPU for [modelFile] (a `.litertlm` bundle), with the runtime's
-     * caches in [cacheDir] (created when missing). A failure is INITIALIZATION_FAILED; there is no
-     * fallback to the CPU.
+     * Initializes LiteRT-LM for [modelFile] (a `.litertlm` bundle) on [backendType] (NPU, GPU, CPU),
+     * with the runtime's caches in [cacheDir] (created when missing).
      */
-    suspend fun open(modelFile: File, cacheDir: File): ChatEngine {
-      // The native initialize is not interrupted: a caller cancelled meanwhile gets nothing, and
-      // the engine is closed instead of dropped.
-      return handOver(Dispatchers.IO, { initialize(modelFile, cacheDir) }) { it.closeAndJoin() }
+    suspend fun open(
+      modelFile: File,
+      cacheDir: File,
+      backendType: String = "AUTO",
+      nativeLibraryDir: String? = null,
+    ): ChatEngine {
+      return handOver(Dispatchers.IO, { initializeWithFallback(modelFile, cacheDir, backendType, nativeLibraryDir) }) {
+        it.closeAndJoin()
+      }
     }
 
-    private fun initialize(modelFile: File, cacheDir: File): ChatEngine {
-      check(cacheDir.isDirectory || cacheDir.mkdirs()) { "Cannot create $cacheDir" }
-      val config =
-        EngineConfig(
-          modelPath = modelFile.absolutePath,
-          backend = Backend.GPU(),
-          cacheDir = cacheDir.absolutePath,
-        )
-      val engine = Engine(config)
-      val t0 = System.nanoTime()
+    private fun configureNativeRuntime(nativeLibraryDir: String?) {
+      if (nativeLibraryDir.isNullOrEmpty()) return
       try {
-        engine.initialize()
-      } catch (t: Throwable) {
-        runCatching { engine.close() }
-        throw VoiceAssistantException(
-          "INITIALIZATION_FAILED",
-          "Engine.initialize() failed on the GPU: ${t.javaClass.simpleName}: ${t.message}",
-          t,
-        )
+        System.loadLibrary("LiteRtDispatch_GoogleTensor")
+        Log.i(TAG, "Successfully loaded libLiteRtDispatch_GoogleTensor.so")
+      } catch (e: Throwable) {
+        Log.w(TAG, "libLiteRtDispatch_GoogleTensor.so not loaded via System.loadLibrary: ${e.message}")
       }
-      Log.i(TAG, "litertlm initialize_ms=${(System.nanoTime() - t0) / 1_000_000} on gpu")
-      return ChatEngine(engine)
+      try {
+        val ldPath = android.system.Os.getenv("LD_LIBRARY_PATH") ?: ""
+        val newLdPath = if (ldPath.isEmpty()) nativeLibraryDir else "$nativeLibraryDir:$ldPath"
+        android.system.Os.setenv("LD_LIBRARY_PATH", newLdPath, true)
+        Log.i(TAG, "Set LD_LIBRARY_PATH to $newLdPath")
+      } catch (e: Throwable) {
+        Log.w(TAG, "Failed to set LD_LIBRARY_PATH: ${e.message}")
+      }
+    }
+
+    private fun initializeWithFallback(
+      modelFile: File,
+      cacheDir: File,
+      backendType: String,
+      nativeLibraryDir: String?,
+    ): ChatEngine {
+      check(cacheDir.isDirectory || cacheDir.mkdirs()) { "Cannot create $cacheDir" }
+
+      configureNativeRuntime(nativeLibraryDir)
+
+      val backendsToTry = mutableListOf<Pair<String, () -> Backend>>()
+      when (backendType.uppercase()) {
+        "NPU" -> {
+          backendsToTry.add("NPU" to {
+            if (!nativeLibraryDir.isNullOrEmpty()) Backend.NPU(nativeLibraryDir = nativeLibraryDir) else Backend.NPU()
+          })
+          backendsToTry.add("GPU" to { Backend.GPU() })
+          backendsToTry.add("CPU" to { Backend.CPU() })
+        }
+        "GPU" -> {
+          backendsToTry.add("GPU" to { Backend.GPU() })
+          backendsToTry.add("CPU" to { Backend.CPU() })
+        }
+        "CPU" -> {
+          backendsToTry.add("CPU" to { Backend.CPU() })
+        }
+        else -> {
+          if (modelFile.name.contains("Tensor", ignoreCase = true) || modelFile.name.contains("G5", ignoreCase = true)) {
+            backendsToTry.add("NPU" to {
+              if (!nativeLibraryDir.isNullOrEmpty()) Backend.NPU(nativeLibraryDir = nativeLibraryDir) else Backend.NPU()
+            })
+            backendsToTry.add("GPU" to { Backend.GPU() })
+            backendsToTry.add("CPU" to { Backend.CPU() })
+          } else {
+            backendsToTry.add("GPU" to { Backend.GPU() })
+            backendsToTry.add("CPU" to { Backend.CPU() })
+          }
+        }
+      }
+
+      var lastException: Throwable? = null
+      for ((name, factory) in backendsToTry) {
+        Log.i(TAG, "Attempting to initialize LiteRT-LM engine on $name for ${modelFile.name}")
+        val t0 = System.nanoTime()
+        val engine = try {
+          Engine(
+            EngineConfig(
+              modelPath = modelFile.absolutePath,
+              backend = factory(),
+              cacheDir = cacheDir.absolutePath,
+            )
+          )
+        } catch (e: Throwable) {
+          Log.w(TAG, "Failed creating Engine config on $name: ${e.message}")
+          lastException = e
+          continue
+        }
+
+        try {
+          engine.initialize()
+          Log.i(TAG, "litertlm initialize_ms=${(System.nanoTime() - t0) / 1_000_000} on $name")
+          return ChatEngine(engine)
+        } catch (t: Throwable) {
+          Log.w(TAG, "Engine.initialize() failed on $name: ${t.message}")
+          runCatching { engine.close() }
+          lastException = t
+        }
+      }
+
+      throw VoiceAssistantException(
+        "INITIALIZATION_FAILED",
+        "Engine.initialize() failed on all attempted backends: ${lastException?.message}",
+        lastException,
+      )
     }
   }
 }

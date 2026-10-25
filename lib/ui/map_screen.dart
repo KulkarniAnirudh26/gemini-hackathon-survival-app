@@ -4,10 +4,11 @@ import 'package:latlong2/latlong.dart';
 
 import '../ai/assistant.dart';
 import '../ai/situation.dart';
+import '../geo/geo_data.dart';
 import '../geo/geo_math.dart';
 import '../geo/nps_layers.dart';
-import '../geo/trail_router.dart';
 import '../location/location_service.dart';
+import 'map_layers.dart';
 import 'theme.dart';
 
 /// Offline NPS basemap (Park Tiles: trails, roads, water, buildings, park boundary, points of
@@ -28,12 +29,7 @@ class _Style {
   const _Style(this.icon, this.color, this.minZoom);
 }
 
-const _roadColor = Color(0xFF9E958A);
-const _waterFill = Color(0xFFA9CCE3);
-const _streamColor = Color(0xFF3E86BF);
-const _parkFill = Color(0x1A66BB6A);
-const _buildingFill = Color(0xFFB9A89E);
-const _parkingFill = Color(0xFFD5DAD5);
+const _streamColor = kStreamColor;
 
 _Style _styleFor(NpsPoint p) {
   switch (p.kind) {
@@ -85,73 +81,208 @@ _Style _styleFor(NpsPoint p) {
   }
 }
 
+
 class _MapScreenState extends State<MapScreen> {
   final _map = MapController();
-  int _zoomBucket = 13;
-  RouteResult? _custom; // route to a tapped place (overrides the route out)
-  NpsLayers? _builtFor;
-  late List<Polyline> _trails, _roads, _streams;
-  late List<Polygon> _park, _water, _parking, _buildings;
+  int _zoomBucket = 14;
+  bool _loaded = false;
+  final Map<int, List<Marker>> _markerCache = {};
+  List<LatLng>? _pendingFit;
+  bool _mapReady = false;
 
   static const _valley = LatLng(37.7456, -119.5936);
 
-  void _build(NpsLayers nps) {
-    if (identical(_builtFor, nps)) return;
-    _builtFor = nps;
-    List<Polyline> lines(String k, Color c, double w) =>
-        [for (final pts in nps.lines[k] ?? const <List<LatLng>>[]) Polyline(points: pts, color: c, strokeWidth: w)];
-    List<Polygon> polys(String k, Color c) =>
-        [for (final pts in nps.polygons[k] ?? const <List<LatLng>>[]) Polygon(points: pts, color: c, borderStrokeWidth: 0)];
-    _trails = lines('trail', kTrail, 1.8);
-    _roads = lines('road', _roadColor, 2.6);
-    _streams = lines('stream', _streamColor.withValues(alpha: 0.6), 1.0);
-    _park = polys('park', _parkFill);
-    _water = polys('water', _waterFill);
-    _parking = polys('parking', _parkingFill);
-    _buildings = polys('building', _buildingFill);
+  Assistant get a => widget.assistant;
+
+  @override
+  void initState() {
+    super.initState();
+    _loaded = a.geo != null && a.nps != null;
+    a.addListener(_onAssistant);
+    a.mapFocus.addListener(_onFocus);
+    // opened from a chat mini map: show that route once the map is laid out
+    WidgetsBinding.instance.addPostFrameCallback((_) => _onFocus());
   }
 
-  List<Marker> _markers(NpsLayers nps, int zoom) {
-    final out = <Marker>[];
-    for (final p in nps.points) {
-      final s = _styleFor(p);
-      if (zoom < s.minZoom) continue;
-      final showName = p.isLabel || zoom >= s.minZoom + 1 || s.minZoom <= 11 && zoom >= 12;
-      out.add(Marker(
-        point: p.latLng,
-        width: showName ? 130 : 30,
-        height: showName ? 46 : 30,
-        alignment: showName ? const Alignment(0, 0.35) : Alignment.center,
-        child: GestureDetector(
-          onTap: () => _details(p),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            if (!p.isLabel || zoom >= 14) Icon(s.icon, color: s.color, size: p.isLabel ? 14 : 20),
-            if (showName)
-              Text(
-                p.name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: p.isLabel ? 11 : 10,
-                  color: p.isLabel ? s.color : kInk,
-                  fontStyle: p.isLabel && p.kind.contains('lake') ? FontStyle.italic : FontStyle.normal,
-                  fontWeight: p.isLabel ? FontWeight.w600 : FontWeight.w500,
-                  shadows: const [Shadow(blurRadius: 3, color: kCard), Shadow(blurRadius: 6, color: kCard)],
-                ),
-              ),
-          ]),
-        ),
-      ));
+  @override
+  void dispose() {
+    a.removeListener(_onAssistant);
+    a.mapFocus.removeListener(_onFocus);
+    super.dispose();
+  }
+
+  /// The map only rebuilds once, when its data arrives: assistant chatter (streamed tokens,
+  /// speaking state) must not rebuild 20k polylines.
+  void _onAssistant() {
+    if (!_loaded && a.geo != null && a.nps != null) setState(() => _loaded = true);
+  }
+
+  void _onFocus() {
+    final r = a.mapFocus.value;
+    if (r == null || !mounted) return;
+    a.mapFocus.value = null;
+    a.activeRoute.value = r;
+    _pendingFit = r.points;
+    _fitPending();
+  }
+
+  void _fitPending() {
+    final pts = _pendingFit;
+    if (pts == null || !_mapReady) return;
+    _pendingFit = null;
+    _map.fitCamera(CameraFit.coordinates(coordinates: pts, padding: const EdgeInsets.fromLTRB(48, 160, 48, 48)));
+  }
+
+  // ---------- markers ----------
+
+  List<Marker> _markersFor(NpsLayers nps, int zoom) => _markerCache.putIfAbsent(zoom, () {
+        final out = <Marker>[];
+        for (final p in nps.points) {
+          final s = _styleFor(p);
+          if (zoom < s.minZoom) continue;
+          final showName = p.isLabel || zoom >= s.minZoom + 1 || s.minZoom <= 11 && zoom >= 12;
+          out.add(Marker(
+            point: p.latLng,
+            width: showName ? 130 : 30,
+            height: showName ? 46 : 30,
+            alignment: showName ? const Alignment(0, 0.35) : Alignment.center,
+            child: GestureDetector(
+              onTap: () => _details(p.name, p.kind, s.icon, s.color, p.lat, p.lon, p.description),
+              child: Column(mainAxisSize: MainAxisSize.min, children: [
+                if (!p.isLabel || zoom >= 14) Icon(s.icon, color: s.color, size: p.isLabel ? 14 : 20),
+                if (showName)
+                  Text(
+                    p.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: p.isLabel ? 11 : 10,
+                      color: p.isLabel ? s.color : kInk,
+                      fontStyle: p.isLabel && p.kind.contains('lake') ? FontStyle.italic : FontStyle.normal,
+                      fontWeight: p.isLabel ? FontWeight.w600 : FontWeight.w500,
+                      shadows: const [Shadow(blurRadius: 3, color: kCard), Shadow(blurRadius: 6, color: kCard)],
+                    ),
+                  ),
+              ]),
+            ),
+          ));
+        }
+        return out;
+      });
+
+  (double, double)? _nearbyFor;
+  List<Marker> _nearbyCache = const [];
+
+  /// The nearest water, ways out and help around the hiker, always visible and labelled.
+  List<Marker> _nearby(Fix? f) {
+    final geo = a.geo;
+    if (f == null || geo == null) return const [];
+    final key = (f.lat, f.lon);
+    if (_nearbyFor == key) return _nearbyCache;
+    _nearbyFor = key;
+    final picks = <(Poi, double)>[];
+    void take(PoiType? t, int n, {bool Function(Poi)? where}) {
+      final seen = <String>{};
+      for (final hit in geo.nearest(t, f.lat, f.lon, limit: 40, where: where)) {
+        if (hit.$2 > 6000 || picks.length > 12) break;
+        if (!seen.add(hit.$1.name)) continue; // river samples share a name
+        picks.add(hit);
+        if (seen.length >= n) break;
+      }
     }
-    return out;
+
+    take(PoiType.water, 3);
+    take(null, 3, where: (p) => p.isWayOut);
+    take(PoiType.help, 2);
+    take(PoiType.shelter, 1);
+    _nearbyCache = [
+      for (final (p, d) in picks)
+        Marker(
+          point: p.latLng,
+          width: 150,
+          height: 58,
+          alignment: const Alignment(0, -0.6),
+          child: GestureDetector(
+            onTap: () => _details(p.name, _poiKind(p.type), _poiIcon(p.type), _poiColor(p.type), p.lat, p.lon, null),
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: kCard,
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(color: _poiColor(p.type), width: 2),
+                ),
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  Icon(_poiIcon(p.type), size: 14, color: _poiColor(p.type)),
+                  const SizedBox(width: 4),
+                  Flexible(
+                    child: Text('${p.name} · ${formatDistance(d)}',
+                        maxLines: 1, overflow: TextOverflow.ellipsis, style: label(kInk, size: 10)),
+                  ),
+                ]),
+              ),
+              Container(width: 2, height: 10, color: _poiColor(p.type)),
+              Container(
+                width: 12,
+                height: 12,
+                decoration: BoxDecoration(shape: BoxShape.circle, color: _poiColor(p.type), border: Border.all(color: kCard, width: 2)),
+              ),
+            ]),
+          ),
+        ),
+    ];
+    return _nearbyCache;
   }
 
-  void _details(NpsPoint p) {
-    final a = widget.assistant;
+  static IconData _poiIcon(PoiType t) => switch (t) {
+        PoiType.water => Icons.water_drop,
+        PoiType.trailhead => Icons.hiking,
+        PoiType.exit => Icons.exit_to_app,
+        PoiType.help => Icons.local_hospital,
+        PoiType.shelter => Icons.cabin,
+      };
+
+  static Color _poiColor(PoiType t) => switch (t) {
+        PoiType.water => kWater,
+        PoiType.trailhead || PoiType.exit => kMoss,
+        PoiType.help => kClay,
+        PoiType.shelter => kTrail,
+      };
+
+  static String _poiKind(PoiType t) => switch (t) {
+        PoiType.water => 'water',
+        PoiType.trailhead => 'trailhead (way out)',
+        PoiType.exit => 'road access (way out)',
+        PoiType.help => 'help',
+        PoiType.shelter => 'shelter',
+      };
+
+  // ---------- walked so far ----------
+
+  int _walkedFor = -1;
+  (double, double) _walked = (0, 0); // metres, ascent
+
+  (double, double) _walkedStats() {
+    final crumbs = widget.location.breadcrumbs;
+    if (crumbs.length == _walkedFor) return _walked;
+    _walkedFor = crumbs.length;
+    var d = 0.0, up = 0.0;
+    double? prev;
+    for (var i = 0; i < crumbs.length; i++) {
+      if (i > 0) d += haversineM(crumbs[i - 1].lat, crumbs[i - 1].lon, crumbs[i].lat, crumbs[i].lon);
+      final e = a.geo?.dem.elevation(crumbs[i].lat, crumbs[i].lon);
+      if (e != null && prev != null && e > prev) up += e - prev;
+      if (e != null) prev = e;
+    }
+    return _walked = (d, up);
+  }
+
+  // ---------- details sheet ----------
+
+  void _details(String name, String kind, IconData icon, Color color, double lat, double lon, String? description) {
     final f = widget.location.fix;
-    final elev = a.geo?.dem.elevation(p.lat, p.lon);
-    final s = _styleFor(p);
+    final elev = a.geo?.dem.elevation(lat, lon);
     showModalBottomSheet(
       context: context,
       backgroundColor: kCard,
@@ -160,36 +291,37 @@ class _MapScreenState extends State<MapScreen> {
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
-            Icon(s.icon, color: s.color),
+            Icon(icon, color: color),
             const SizedBox(width: 8),
-            Expanded(child: Text(p.name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700))),
+            Expanded(child: Text(name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700))),
           ]),
           const SizedBox(height: 4),
           Text(
             [
-              p.kind[0].toUpperCase() + p.kind.substring(1),
+              kind[0].toUpperCase() + kind.substring(1),
               if (elev != null) '${elev.round()} m elevation',
               if (f != null)
-                '${formatDistance(haversineM(f.lat, f.lon, p.lat, p.lon))} ${compassWord(bearingDeg(f.lat, f.lon, p.lat, p.lon))} of you',
+                '${formatDistance(haversineM(f.lat, f.lon, lat, lon))} ${compassWord(bearingDeg(f.lat, f.lon, lat, lon))} of you',
             ].join(' · '),
             style: const TextStyle(color: kInkMuted),
           ),
-          if (p.description != null) ...[
+          if (description != null) ...[
             const SizedBox(height: 10),
-            Text(p.description!.replaceAll(RegExp(r'<[^>]+>'), ''), style: const TextStyle(height: 1.4)),
+            Text(description.replaceAll(RegExp(r'<[^>]+>'), ''), style: const TextStyle(height: 1.4)),
           ],
           const SizedBox(height: 16),
           Row(children: [
             if (f != null)
               FilledButton.icon(
-                icon: const Icon(Icons.alt_route),
+                icon: const Icon(Icons.directions_walk),
                 label: const Text('Route here'),
                 onPressed: () {
                   Navigator.pop(ctx);
-                  final r = a.router?.routeToPlace(f.lat, f.lon, p.name, p.lat, p.lon);
-                  setState(() => _custom = r);
+                  final r = a.router?.routeToPlace(f.lat, f.lon, name, lat, lon);
+                  a.activeRoute.value = r;
                   if (r != null) {
-                    _map.fitCamera(CameraFit.coordinates(coordinates: r.points, padding: const EdgeInsets.all(56)));
+                    _pendingFit = r.points;
+                    _fitPending();
                   }
                 },
               ),
@@ -200,8 +332,9 @@ class _MapScreenState extends State<MapScreen> {
               onPressed: () {
                 final dist = f == null
                     ? ''
-                    : ' It is ${spokenDistance(haversineM(f.lat, f.lon, p.lat, p.lon))} to the ${compassWord(bearingDeg(f.lat, f.lon, p.lat, p.lon))}.';
-                a.ai.speak('${p.name}, ${p.kind}.$dist ${p.description?.replaceAll(RegExp(r'<[^>]+>'), '') ?? ''}');
+                    : ' It is ${spokenDistance(haversineM(f.lat, f.lon, lat, lon))} to the ${compassWord(bearingDeg(f.lat, f.lon, lat, lon))}.';
+                Navigator.pop(ctx); // the global "Stop speaking" bar is then visible
+                a.speak('$name, $kind.$dist ${description?.replaceAll(RegExp(r'<[^>]+>'), '') ?? ''}', source: 'map');
               },
             ),
           ]),
@@ -210,174 +343,241 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
+  // ---------- build ----------
+
   @override
   Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: Listenable.merge([widget.assistant, widget.location]),
-      builder: (context, _) {
-        final geo = widget.assistant.geo;
-        final nps = widget.assistant.nps;
-        if (geo == null || nps == null) return const Center(child: Text('Loading map…'));
-        _build(nps);
-        final s = Situation.build(widget.location, geo, widget.assistant.router);
-        final f = s.fix;
-        final me = f == null ? null : LatLng(f.lat, f.lon);
-        final crumbs = [for (final c in widget.location.breadcrumbs) LatLng(c.lat, c.lon)];
-        final route = _custom ?? s.routeOut;
-        final z = _zoomBucket;
-        final bounds = LatLngBounds(geo.dem.hillshadeNorthWest, geo.dem.hillshadeSouthEast);
-        return Stack(children: [
-          FlutterMap(
-            mapController: _map,
-            options: MapOptions(
-              initialCenter: me ?? _valley,
-              initialZoom: 14,
-              minZoom: 9,
-              maxZoom: 17,
-              backgroundColor: kGround,
-              cameraConstraint: CameraConstraint.contain(bounds: bounds),
-              interactionOptions: const InteractionOptions(flags: InteractiveFlag.all & ~InteractiveFlag.rotate),
-              onPositionChanged: (camera, _) {
-                final b = camera.zoom.floor();
-                if (b != _zoomBucket) setState(() => _zoomBucket = b);
-              },
-              onLongPress: (_, p) {
-                widget.location.simulate(p.latitude, p.longitude);
-                setState(() => _custom = null);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Position pinned here. Tap the GPS button to use real GPS.')),
-                );
+    final geo = a.geo;
+    final nps = a.nps;
+    if (!_loaded || geo == null || nps == null) return const Center(child: Text('Loading map…'));
+    final c = MapLayerCache.of(nps);
+    final z = _zoomBucket;
+    final bounds = LatLngBounds(geo.dem.hillshadeNorthWest, geo.dem.hillshadeSouthEast);
+    final loc = widget.location;
+    final start = loc.fix;
+    final live = Listenable.merge([loc, a.activeRoute]);
+
+    return Stack(children: [
+      RepaintBoundary(
+        child: FlutterMap(
+          mapController: _map,
+          options: MapOptions(
+            initialCenter: start == null ? _valley : LatLng(start.lat, start.lon),
+            initialZoom: 15,
+            minZoom: 9,
+            maxZoom: 18,
+            backgroundColor: kGround,
+            cameraConstraint: CameraConstraint.contain(bounds: bounds),
+            onMapReady: () {
+              _mapReady = true;
+              _fitPending();
+            },
+            interactionOptions: const InteractionOptions(
+              flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+              enableMultiFingerGestureRace: true,
+            ),
+            onPositionChanged: (camera, _) {
+              final b = camera.zoom.floor();
+              if (b != _zoomBucket) setState(() => _zoomBucket = b);
+            },
+            onLongPress: (_, p) {
+              loc.simulate(p.latitude, p.longitude);
+              a.activeRoute.value = null;
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Position pinned here. Tap the GPS button to use real GPS.')),
+              );
+            },
+          ),
+          children: [
+            OverlayImageLayer(overlayImages: [
+              // the hillshade is rendered dark; fade it over the light canvas
+              OverlayImage(bounds: bounds, opacity: 0.35, imageProvider: const AssetImage('assets/geo/hillshade.png')),
+            ]),
+            PolygonLayer(polygons: c.park),
+            if (z >= 11) PolygonLayer(polygons: c.water),
+            if (z >= 13) PolylineLayer(polylines: c.streams),
+            if (z >= 14) PolygonLayer(polygons: c.parking),
+            if (z >= 15) PolygonLayer(polygons: c.buildings),
+            PolylineLayer(polylines: c.roads),
+            if (z >= 11) PolylineLayer(polylines: c.trails),
+            // ---- live layers: only these rebuild when the position or route changes ----
+            ListenableBuilder(
+              listenable: loc,
+              builder: (_, _) {
+                final crumbs = [for (final b in loc.breadcrumbs) LatLng(b.lat, b.lon)];
+                return crumbs.length < 2
+                    ? const SizedBox.shrink()
+                    : PolylineLayer(polylines: [
+                        Polyline(points: crumbs, color: kCard, strokeWidth: 7),
+                        Polyline(points: crumbs, color: kWater, strokeWidth: 4),
+                      ]);
               },
             ),
-            children: [
-              OverlayImageLayer(overlayImages: [
-                // the hillshade is rendered dark; fade it over the light canvas
-                OverlayImage(bounds: bounds, opacity: 0.35, imageProvider: const AssetImage('assets/geo/hillshade.png')),
-              ]),
-              PolygonLayer(polygons: _park),
-              PolygonLayer(polygons: _water),
-              if (z >= 12) PolylineLayer(polylines: _streams),
-              if (z >= 14) PolygonLayer(polygons: _parking),
-              if (z >= 15) PolygonLayer(polygons: _buildings),
-              PolylineLayer(polylines: _roads),
-              if (z >= 11) PolylineLayer(polylines: _trails),
-              if (crumbs.length > 1)
-                PolylineLayer(polylines: [
-                  Polyline(points: crumbs, color: kWater, strokeWidth: 2.5, pattern: StrokePattern.dotted()),
-                ]),
-              if (route != null)
-                PolylineLayer(polylines: [
-                  Polyline(points: route.points, color: kCard, strokeWidth: 8),
-                  Polyline(
-                    points: route.points,
-                    color: kMoss,
-                    strokeWidth: 5,
-                    pattern: route.offTrail ? StrokePattern.dashed(segments: const [10, 8]) : const StrokePattern.solid(),
-                  ),
-                ]),
-              MarkerLayer(markers: _markers(nps, z)),
-              if (route != null)
-                MarkerLayer(markers: [
-                  Marker(point: route.target.latLng, width: 36, height: 36, child: const Icon(Icons.flag_circle, color: kMoss, size: 34)),
-                ]),
-              if (me != null)
-                MarkerLayer(markers: [
-                  Marker(
-                    point: me,
-                    width: 26,
-                    height: 26,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: f!.simulated ? kClay : kWater,
-                        border: Border.all(color: Colors.white, width: 3),
+            ListenableBuilder(
+              listenable: live,
+              builder: (_, _) {
+                final route = a.activeRoute.value ?? Situation.build(loc, geo, a.router).routeOut;
+                return route == null
+                    ? const SizedBox.shrink()
+                    : PolylineLayer(polylines: [
+                        Polyline(points: route.points, color: kCard, strokeWidth: 9),
+                        Polyline(
+                          points: route.points,
+                          color: kMoss,
+                          strokeWidth: 5,
+                          pattern: route.offTrail ? StrokePattern.dashed(segments: const [10, 8]) : const StrokePattern.solid(),
+                        ),
+                      ]);
+              },
+            ),
+            MarkerLayer(markers: _markersFor(nps, z)),
+            ListenableBuilder(
+              listenable: live,
+              builder: (_, _) {
+                final f = loc.fix;
+                final route = a.activeRoute.value ?? Situation.build(loc, geo, a.router).routeOut;
+                final crumbs = loc.breadcrumbs;
+                return MarkerLayer(markers: [
+                  ..._nearby(f),
+                  if (crumbs.length > 1)
+                    Marker(
+                      point: LatLng(crumbs.first.lat, crumbs.first.lon),
+                      width: 30,
+                      height: 30,
+                      child: const Icon(Icons.trip_origin, color: kWater, size: 24),
+                    ),
+                  if (route != null)
+                    Marker(point: route.target.latLng, width: 40, height: 40, child: const Icon(Icons.flag_circle, color: kClay, size: 38)),
+                  if (f != null)
+                    Marker(
+                      point: LatLng(f.lat, f.lon),
+                      width: 28,
+                      height: 28,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: f.simulated ? kClay : kWater,
+                          border: Border.all(color: Colors.white, width: 3),
+                          boxShadow: const [BoxShadow(color: Color(0x55000000), blurRadius: 6)],
+                        ),
                       ),
                     ),
-                  ),
-                ]),
-              const SimpleAttributionWidget(source: Text('NPS Park Tiles · USGS · OpenStreetMap')),
-            ],
-          ),
-          Positioned(
-            left: 12,
-            right: 12,
-            top: 12,
-            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              if (widget.location.demoMode)
+                ]);
+              },
+            ),
+            const SimpleAttributionWidget(source: Text('NPS Park Tiles · USGS · OpenStreetMap')),
+          ],
+        ),
+      ),
+      // ---- overlays ----
+      Positioned(
+        left: 12,
+        right: 12,
+        top: 12,
+        child: ListenableBuilder(
+          listenable: live,
+          builder: (_, _) {
+            final s = Situation.build(loc, geo, a.router);
+            final custom = a.activeRoute.value;
+            final route = custom ?? s.routeOut;
+            final (walked, climbed) = _walkedStats();
+            final crumbs = loc.breadcrumbs;
+            final since = crumbs.length > 1 ? DateTime.now().difference(crumbs.first.time) : null;
+            return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              if (loc.demoMode)
                 Card(
                   color: const Color(0xFFFFDBCF),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     child: Row(children: [
                       const Icon(Icons.science, color: kClay, size: 18),
                       const SizedBox(width: 8),
                       const Expanded(
-                        child: Text('Demo position: you are outside Yosemite. Long-press the map to move.',
-                            style: TextStyle(fontSize: 12)),
+                        child: Text('Demo hiker on the Mist Trail. Long-press the map to move.', style: TextStyle(fontSize: 12)),
                       ),
-                      TextButton(onPressed: widget.location.clearSimulation, child: const Text('Use GPS')),
+                      TextButton(onPressed: loc.clearSimulation, child: const Text('Use GPS')),
+                    ]),
+                  ),
+                ),
+              if (walked > 50)
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    child: Row(children: [
+                      const Icon(Icons.timeline, color: kWater, size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text.rich(TextSpan(children: [
+                          TextSpan(text: 'Walked ${formatDistance(walked)}', style: const TextStyle(fontWeight: FontWeight.w700)),
+                          TextSpan(
+                            text: '${loc.trackStartName != null ? ' from ${loc.trackStartName}' : ''}'
+                                ' · +${climbed.round()} m${since != null ? ' · ${formatDuration(since)}' : ''}',
+                            style: const TextStyle(color: kInkMuted),
+                          ),
+                        ])),
+                      ),
                     ]),
                   ),
                 ),
               if (route != null)
                 Card(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 10, 4, 10),
+                    padding: const EdgeInsets.fromLTRB(12, 8, 4, 8),
                     child: Row(children: [
+                      Icon(custom == null ? Icons.exit_to_app : Icons.flag_circle, color: custom == null ? kMoss : kClay),
+                      const SizedBox(width: 8),
                       Expanded(
                         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                          Text('${_custom != null ? 'To' : 'Way out:'} ${route.target.name}',
-                              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                          Text('${custom != null ? 'To' : 'Way out:'} ${route.target.name}',
+                              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
                           Text(
                             '${formatDistance(route.distanceM)} · +${route.ascentM.round()} m / -${route.descentM.round()} m · ~${formatDuration(route.walkTime)}'
                             ' · head ${compassShort(route.initialBearing)}${route.offTrail ? ' · off trail' : ''}',
-                            style: const TextStyle(color: kInkMuted),
+                            style: const TextStyle(color: kInkMuted, fontSize: 12),
                           ),
                           if (s.untilSunset != null && !s.untilSunset!.isNegative && route.walkTime > s.untilSunset!)
                             const Text('Longer than the daylight left: plan for the night.', style: TextStyle(color: kClay)),
                         ]),
                       ),
-                      if (_custom != null)
-                        IconButton(onPressed: () => setState(() => _custom = null), icon: const Icon(Icons.close)),
+                      if (custom != null)
+                        IconButton(
+                          tooltip: 'Back to way out',
+                          onPressed: () => a.activeRoute.value = null,
+                          icon: const Icon(Icons.close),
+                        ),
                     ]),
                   ),
                 ),
-            ]),
+            ]);
+          },
+        ),
+      ),
+      Positioned(
+        right: 12,
+        bottom: 28,
+        child: Column(children: [
+          FloatingActionButton.small(
+            heroTag: 'gps',
+            tooltip: 'Use real GPS',
+            onPressed: () async {
+              loc.clearSimulation();
+              final fix = await loc.fixNow();
+              if (fix != null) _map.move(LatLng(fix.lat, fix.lon), 15);
+            },
+            child: const Icon(Icons.my_location),
           ),
-          Positioned(
-            right: 12,
-            bottom: 28,
-            child: Column(children: [
-              FloatingActionButton.small(
-                heroTag: 'gps',
-                tooltip: 'Use real GPS',
-                onPressed: () async {
-                  widget.location.clearSimulation();
-                  final fix = await widget.location.fixNow();
-                  if (fix != null) _map.move(LatLng(fix.lat, fix.lon), 14);
-                },
-                child: const Icon(Icons.my_location),
-              ),
-              const SizedBox(height: 8),
-              FloatingActionButton.small(
-                heroTag: 'me',
-                tooltip: 'Center on me',
-                onPressed: me == null ? null : () => _map.move(me, 15),
-                child: const Icon(Icons.center_focus_strong),
-              ),
-              const SizedBox(height: 8),
-              FloatingActionButton.small(
-                heroTag: 'route',
-                tooltip: 'Show route',
-                onPressed: route == null
-                    ? null
-                    : () => _map.fitCamera(CameraFit.coordinates(coordinates: route.points, padding: const EdgeInsets.all(56))),
-                child: const Icon(Icons.alt_route),
-              ),
-            ]),
+          const SizedBox(height: 8),
+          FloatingActionButton.small(
+            heroTag: 'me',
+            tooltip: 'Center on me',
+            onPressed: () {
+              final f = loc.fix;
+              if (f != null) _map.move(LatLng(f.lat, f.lon), 15);
+            },
+            child: const Icon(Icons.center_focus_strong),
           ),
-        ]);
-      },
-    );
+        ]),
+      ),
+    ]);
   }
 }

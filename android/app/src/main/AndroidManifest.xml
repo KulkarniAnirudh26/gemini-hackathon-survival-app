@@ -8,14 +8,20 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" tools:node="remove" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" tools:node="remove" />
     <application
-        android:label="Yosemite Survival"
+        android:label="Sherpa"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
-        android:allowBackup="false">
-        <!-- LiteRT / LiteRT-LM GPU backend. -->
+        android:allowBackup="false"
+        android:largeHeap="true"
+        android:extractNativeLibs="true">
+        <!-- Google Tensor TPU and LiteRT system libraries -->
+        <uses-native-library android:name="libedgetpu_client.google.so" android:required="false" />
+        <uses-native-library android:name="libedgetpu_litert.so" android:required="false" />
+        <uses-native-library android:name="libedgetpu_util.so" android:required="false" />
+        <uses-native-library android:name="libvndksupport.so" android:required="false" />
         <uses-native-library android:name="libOpenCL.so" android:required="false" />
         <uses-native-library android:name="libOpenCL-pixel.so" android:required="false" />
-        <uses-native-library android:name="libvndksupport.so" android:required="false" />
+        <uses-native-library android:name="libcdsprpc.so" android:required="false" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

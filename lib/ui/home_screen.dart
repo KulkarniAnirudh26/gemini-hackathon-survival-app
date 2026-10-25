@@ -8,6 +8,7 @@ import '../ai/situation.dart';
 import '../location/location_service.dart';
 import 'guide_screen.dart';
 import 'here_card.dart';
+import 'route_mini_map.dart';
 import 'theme.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -27,11 +28,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   /// An emergency answer takes over the screen at once, before Gemma adds anything.
   void _checkEmergency(Assistant a) {
+    if (a.messages.length < _seen) _seen = 0; // chat was cleared
     if (a.messages.length <= _seen) return;
     final fresh = a.messages.sublist(_seen);
     _seen = a.messages.length;
     for (final m in fresh) {
-      if (!m.user && (m.meta ?? '').startsWith('emergency')) {
+      if (!m.user && m.kind == AnswerKind.emergency) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted) return;
           HapticFeedback.heavyImpact();
@@ -66,7 +68,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       controller: _scroll,
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                       itemCount: a.messages.length,
-                      itemBuilder: (_, i) => _Bubble(key: ObjectKey(a.messages[i]), m: a.messages[i]),
+                      itemBuilder: (_, i) => _Bubble(key: ObjectKey(a.messages[i]), m: a.messages[i], a: a),
                     ),
             ),
             if (_typing)
@@ -235,7 +237,8 @@ class _DotsState extends State<_Dots> with SingleTickerProviderStateMixin {
 
 class _Bubble extends StatelessWidget {
   final ChatMessage m;
-  const _Bubble({super.key, required this.m});
+  final Assistant a;
+  const _Bubble({super.key, required this.m, required this.a});
 
   // one-shot fade and rise as each message arrives
   @override
@@ -244,7 +247,7 @@ class _Bubble extends StatelessWidget {
         duration: const Duration(milliseconds: 280),
         curve: Curves.easeOut,
         builder: (_, t, child) => Opacity(opacity: t, child: Transform.translate(offset: Offset(0, 12 * (1 - t)), child: child)),
-        child: m.user ? _user(context) : _answer(),
+        child: m.user ? _user(context) : GestureDetector(onLongPress: () => _debug(context), child: _answer()),
       );
 
   Widget _user(BuildContext context) => Align(
@@ -284,10 +287,33 @@ class _Bubble extends StatelessWidget {
     ),
   );
 
+  /// Long-press: how this answer was routed and, for Gemma, the exact prompt.
+  void _debug(BuildContext context) => showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        showDragHandle: true,
+        builder: (_) => DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.6,
+          builder: (_, sc) => ListView(controller: sc, padding: const EdgeInsets.fromLTRB(20, 0, 20, 24), children: [
+            Text('WHY THIS ANSWER', style: label(kInk, size: 14)),
+            const SizedBox(height: 8),
+            SelectableText(m.debug ?? '—', style: const TextStyle(fontSize: 13, height: 1.4)),
+            if (m.prompt != null) ...[
+              const SizedBox(height: 16),
+              Text('PROMPT SENT TO GEMMA', style: label(kInk, size: 14)),
+              const SizedBox(height: 8),
+              SelectableText(m.prompt!, style: const TextStyle(fontSize: 12, fontFamily: 'monospace', height: 1.35)),
+            ],
+          ]),
+        ),
+      );
+
   Widget _answer() {
-    final meta = m.meta ?? '';
-    final gemma = meta.startsWith('Gemma');
-    final emergency = meta.startsWith('emergency');
+    final gemma = m.kind == AnswerKind.gemma;
+    final emergency = m.kind == AnswerKind.emergency;
+    final isStreamingThis = a.streaming == m;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Column(
@@ -297,11 +323,23 @@ class _Bubble extends StatelessWidget {
             padding: const EdgeInsets.only(left: 4, bottom: 6),
             child: Row(
               children: [
-                Icon(gemma ? Icons.auto_awesome : Icons.verified_outlined, size: 16, color: emergency ? kClay : kMoss),
+                Icon(
+                  gemma ? Icons.auto_awesome : Icons.verified_outlined,
+                  size: 16,
+                  color: emergency ? kClay : (isStreamingThis ? const Color(0xFFE87A3E) : kMoss),
+                ),
                 const SizedBox(width: 6),
                 Text(
-                  gemma ? 'GEMMA TACTICAL BRIEF' : (emergency ? 'EMERGENCY SCRIPT' : 'OFFLINE GUIDE'),
-                  style: label(emergency ? kClay : kMoss, size: 11),
+                  isStreamingThis
+                      ? 'STREAMING INFERENCE (${a.lastTokenCount} TOKENS)'
+                      : (gemma
+                          ? 'GEMMA TACTICAL BRIEF'
+                          : emergency
+                              ? 'EMERGENCY SCRIPT'
+                              : m.kind == AnswerKind.quick
+                                  ? 'OFFLINE MAP DATA'
+                                  : 'OFFLINE GUIDE'),
+                  style: label(emergency ? kClay : (isStreamingThis ? const Color(0xFFE87A3E) : kMoss), size: 11),
                 ),
               ],
             ),
@@ -312,7 +350,12 @@ class _Bubble extends StatelessWidget {
             decoration: BoxDecoration(
               color: kCard,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: emergency ? kClay : kLine, width: emergency ? 1.5 : 1),
+              border: Border.all(
+                color: emergency
+                    ? kClay
+                    : (isStreamingThis ? const Color(0xFFE87A3E).withValues(alpha: 0.8) : kLine),
+                width: (emergency || isStreamingThis) ? 1.5 : 1,
+              ),
             ),
             child: Container(
               padding: const EdgeInsets.all(12),
@@ -326,7 +369,38 @@ class _Bubble extends StatelessWidget {
                 children: [
                   // Gemma answers are generated; only the scripted ones are vetted text
                   if (!gemma) ...[Text('VERIFIED OFFLINE ACTION', style: label(kClay, size: 10)), const SizedBox(height: 4)],
-                  if (m.text.isEmpty) const _Dots() else Text(m.text, style: const TextStyle(fontSize: 15, height: 1.4)),
+                  if (m.text.isEmpty)
+                    const _Dots()
+                  else
+                  RichText(
+                    text: TextSpan(
+                      style: const TextStyle(fontSize: 15, height: 1.4, color: Colors.black87),
+                      children: [
+                        TextSpan(text: m.text),
+                        if (isStreamingThis)
+                          const TextSpan(
+                            text: ' ▊',
+                            style: TextStyle(
+                              color: Color(0xFFE87A3E),
+                              fontWeight: FontWeight.w900,
+                              fontSize: 15,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  if (m.map != null) RouteMiniMap(assistant: a, route: m.map!),
+                  // quick answers come from Laya + templates; one tap re-asks Gemma instead
+                  if (!gemma && m.question != null)
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton.icon(
+                        style: TextButton.styleFrom(foregroundColor: kMoss, visualDensity: VisualDensity.compact),
+                        onPressed: a.busy ? null : () => a.ask(m.question!, forceLlm: true),
+                        icon: const Icon(Icons.auto_awesome, size: 16),
+                        label: Text('ASK GEMMA', style: label(kMoss, size: 11)),
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -346,11 +420,13 @@ class _VoiceBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final listening = a.phase == Phase.listening;
-    final working = a.busy && !listening && a.phase != Phase.loading;
-    final speaking = a.phase == Phase.speaking;
+    final loading = a.phase == Phase.loading;
+    final working = a.busy && !listening && !loading;
+    final stopMode = working || a.speaking;
     final caption = switch (a.phase) {
       Phase.loading => 'GETTING READY…',
       Phase.listening => 'LISTENING… RELEASE TO ASK',
+      _ when stopMode => 'TAP TO STOP',
       Phase.ready => '',
       _ => a.status.toUpperCase(),
     };
@@ -361,21 +437,24 @@ class _VoiceBar extends StatelessWidget {
           _RoundIcon(icon: Icons.keyboard_alt_outlined, tooltip: 'Type instead', onTap: onKeyboard),
           const Spacer(),
           GestureDetector(
-            onTapDown: (_) {
-              HapticFeedback.mediumImpact();
-              a.pressTalk();
-            },
-            onTapUp: (_) {
-              HapticFeedback.lightImpact();
-              a.releaseTalk();
-            },
-            onTapCancel: () => a.releaseTalk(),
-            child: _MicButton(listening: listening, enabled: a.phase != Phase.loading),
+            onTapDown: stopMode || loading
+                ? null
+                : (_) {
+                    HapticFeedback.mediumImpact();
+                    a.pressTalk();
+                  },
+            onTapUp: stopMode || loading
+                ? null
+                : (_) {
+                    HapticFeedback.lightImpact();
+                    a.releaseTalk();
+                  },
+            onTapCancel: stopMode || loading ? null : () => a.releaseTalk(),
+            onTap: stopMode ? a.stop : null,
+            child: _MicButton(listening: listening, enabled: !loading, stop: stopMode),
           ),
           const Spacer(),
-          working || speaking
-              ? _RoundIcon(icon: Icons.stop, tooltip: 'Stop', onTap: a.stop, color: kClay)
-              : const SizedBox(width: 48),
+          const SizedBox(width: 48),
         ]),
         const SizedBox(height: 6),
         if (caption.isNotEmpty) Text(caption, style: label(listening ? kClay : kInkMuted, size: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
@@ -385,8 +464,8 @@ class _VoiceBar extends StatelessWidget {
 }
 
 class _MicButton extends StatefulWidget {
-  final bool listening, enabled;
-  const _MicButton({required this.listening, required this.enabled});
+  final bool listening, enabled, stop;
+  const _MicButton({required this.listening, required this.enabled, required this.stop});
 
   @override
   State<_MicButton> createState() => _MicButtonState();
@@ -410,33 +489,42 @@ class _MicButtonState extends State<_MicButton> with SingleTickerProviderStateMi
   }
 
   @override
-  Widget build(BuildContext context) => SizedBox(
-        width: 112,
-        height: 112,
-        child: AnimatedBuilder(
-          animation: _pulse,
-          builder: (_, child) => Stack(alignment: Alignment.center, children: [
-            if (widget.listening)
-              Container(
-                width: 84 + 28 * _pulse.value,
-                height: 84 + 28 * _pulse.value,
-                decoration: BoxDecoration(shape: BoxShape.circle, color: kClay.withValues(alpha: 0.35 * (1 - _pulse.value))),
-              ),
-            child!,
-          ]),
-          child: Container(
-            width: 84,
-            height: 84,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: widget.enabled ? (widget.listening ? kInk : kClay) : kOutline,
-              border: Border.all(color: kInk, width: 2),
-              boxShadow: const [BoxShadow(color: kInk, offset: Offset(0, 3))],
+  Widget build(BuildContext context) {
+    final color = !widget.enabled
+        ? kOutline
+        : widget.listening
+            ? kInk
+            : widget.stop
+                ? kInkMuted
+                : kClay;
+    return SizedBox(
+      width: 140,
+      height: 140,
+      child: AnimatedBuilder(
+        animation: _pulse,
+        builder: (_, child) => Stack(alignment: Alignment.center, children: [
+          if (widget.listening)
+            Container(
+              width: 110 + 30 * _pulse.value,
+              height: 110 + 30 * _pulse.value,
+              decoration: BoxDecoration(shape: BoxShape.circle, color: kClay.withValues(alpha: 0.35 * (1 - _pulse.value))),
             ),
-            child: Icon(widget.listening ? Icons.graphic_eq : Icons.mic, size: 40, color: kCard),
+          child!,
+        ]),
+        child: Container(
+          width: 110,
+          height: 110,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: color,
+            border: Border.all(color: kInk, width: 2),
+            boxShadow: const [BoxShadow(color: kInk, offset: Offset(0, 3))],
           ),
+          child: Icon(widget.listening ? Icons.graphic_eq : (widget.stop ? Icons.stop : Icons.mic), size: 52, color: kCard),
         ),
-      );
+      ),
+    );
+  }
 }
 
 class _RoundIcon extends StatelessWidget {
@@ -479,7 +567,7 @@ class _Composer extends StatelessWidget {
     final listening = a.phase == Phase.listening;
     final working = a.busy && !listening;
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 4, 16, 2),
+      margin: const EdgeInsets.fromLTRB(16, 4, 16, 8),
       padding: const EdgeInsets.all(6),
       decoration: BoxDecoration(
         color: kCard,
@@ -489,12 +577,12 @@ class _Composer extends StatelessWidget {
       child: Row(
         children: [
           _RoundIcon(icon: Icons.mic, tooltip: 'Talk instead', onTap: onClose, color: kClay),
-        const SizedBox(width: 6),
+          const SizedBox(width: 6),
           Expanded(
             child: TextField(
               controller: text,
               enabled: !working && a.phase != Phase.loading,
-            autofocus: true,
+              autofocus: true,
               textInputAction: TextInputAction.send,
               style: const TextStyle(fontSize: 15),
               decoration: const InputDecoration(
@@ -511,7 +599,7 @@ class _Composer extends StatelessWidget {
           SizedBox(
             width: 48,
             height: 48,
-            child: working || a.phase == Phase.speaking
+            child: working || a.speaking
                 ? IconButton.filled(
                     style: IconButton.styleFrom(
                       backgroundColor: kClay,
@@ -544,8 +632,8 @@ class _EmergencyTakeover extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final topic = RegExp(r'topic (\w+)').firstMatch(m.meta ?? '')?.group(1);
-    final section = topic == null ? null : a.guide?.byId(topic);
+    final topic = RegExp(r'topic (\w+)').firstMatch(m.debug ?? '')?.group(1);
+    final section = topic == null || topic == 'none' ? null : a.guide?.byId(topic);
     return Scaffold(
       backgroundColor: kClay,
       body: SafeArea(

@@ -19,7 +19,15 @@ class AiBridge {
   Future<bool> requestMic() async => (await _method.invokeMethod<bool>('requestMic')) ?? false;
 
   Future<void> startListening() => _method.invokeMethod('startListening');
-  Future<String> stopListening() async => (await _method.invokeMethod<String>('stopListening')) ?? '';
+  /// `{text, stt_ms, audio_ms}`
+  Future<Map<String, dynamic>> stopListening() async =>
+      Map<String, dynamic>.from(await _method.invokeMethod('stopListening') as Map);
+
+  /// Battery / memory / CPU snapshot from the Kotlin side.
+  Future<Map<String, dynamic>> metrics() async => Map<String, dynamic>.from(await _method.invokeMethod('metrics') as Map);
+
+  Future<Map<String, dynamic>> launchFlags() async =>
+      Map<String, dynamic>.from(await _method.invokeMethod('launchFlags') as Map);
 
   /// Laya zero-shot: [questions] is `{id: {type, instructions, criteria}}`.
   Future<Map<String, dynamic>> classify(String text, Map<String, dynamic> questions) async {
@@ -27,10 +35,39 @@ class AiBridge {
     return jsonDecode(raw!) as Map<String, dynamic>;
   }
 
-  Future<void> generate(String system, String prompt, {bool speak = true}) =>
-      _method.invokeMethod('generate', {'system': system, 'prompt': prompt, 'speak': speak});
+  Future<void> generate(String system, String prompt, {bool speak = true, bool newConversation = false}) =>
+      _method.invokeMethod('generate', {'system': system, 'prompt': prompt, 'speak': speak, 'newConversation': newConversation});
+  Future<void> resetConversation() => _method.invokeMethod('resetConversation');
   Future<void> cancelGenerate() => _method.invokeMethod('cancelGenerate');
   Future<void> speak(String text) => _method.invokeMethod('speak', {'text': text});
   Future<void> stopSpeaking() => _method.invokeMethod('stopSpeaking');
+  Future<void> setVoice(String? voice, double speed) =>
+      _method.invokeMethod('setVoice', {'voice': voice, 'speed': speed});
   Future<void> unloadLlm() => _method.invokeMethod('unloadLlm');
+
+  Future<List<Map<String, dynamic>>> listModels() async {
+    final list = await _method.invokeMethod<List>('listModels');
+    return (list ?? []).map((e) => Map<String, dynamic>.from(e as Map)).toList();
+  }
+
+  Future<void> setModel(String model, String backend) =>
+      _method.invokeMethod('setModel', {'model': model, 'backend': backend});
+
+  Future<void> setTtsEngine(String engine) =>
+      _method.invokeMethod('setTtsEngine', {'engine': engine});
+
+  Future<void> setTtsVoice(String? voice) =>
+      _method.invokeMethod('setTtsVoice', {'voice': voice});
+
+  Future<void> setTtsSpeed(double speed) =>
+      _method.invokeMethod('setTtsSpeed', {'speed': speed});
+
+  Future<Map<String, List<String>>> listTtsVoices() async {
+    final res = await _method.invokeMethod<Map>('listTtsVoices');
+    if (res == null) return {'kitten': [], 'system': []};
+    return {
+      'kitten': List<String>.from(res['kitten'] as List? ?? []),
+      'system': List<String>.from(res['system'] as List? ?? []),
+    };
+  }
 }

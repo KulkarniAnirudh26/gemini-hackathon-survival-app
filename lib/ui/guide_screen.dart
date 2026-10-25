@@ -152,10 +152,19 @@ class StepsScreen extends StatelessWidget {
         foregroundColor: kCard,
         title: Text(name.toUpperCase(), style: label(kCard, size: 18)),
         actions: [
-          IconButton(
-            tooltip: 'Read aloud',
-            icon: const Icon(Icons.volume_up),
-            onPressed: () => assistant.ai.speak(steps.join(' ')),
+          // speak / stop toggle; the global "Stop speaking" bar works here too
+          ListenableBuilder(
+            listenable: assistant,
+            builder: (_, _) => assistant.speaking && assistant.speakingSource == 'guide:${section.id}'
+                ? IconButton(tooltip: 'Stop', icon: const Icon(Icons.stop_circle, size: 30), onPressed: assistant.stopSpeaking)
+                : IconButton(
+                    tooltip: 'Read aloud',
+                    icon: const Icon(Icons.volume_up),
+                    onPressed: () async {
+                      if (assistant.speaking) await assistant.stopSpeaking();
+                      assistant.speak('$name. ${steps.join(' ')}', source: 'guide:${section.id}');
+                    },
+                  ),
           ),
         ],
       ),

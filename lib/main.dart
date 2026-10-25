@@ -10,6 +10,7 @@ import 'location/location_service.dart';
 import 'ui/here_card.dart';
 import 'ui/home_screen.dart';
 import 'ui/map_screen.dart';
+import 'ui/settings_screen.dart';
 import 'ui/theme.dart';
 
 void main() {
@@ -49,6 +50,12 @@ class _ShellState extends State<Shell> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    widget.assistant.mapFocus.addListener(_openMap);
+  }
+
+  /// A chat mini map was tapped: show the full map (MapScreen picks up the route).
+  void _openMap() {
+    if (widget.assistant.mapFocus.value != null && _tab != 0) setState(() => _tab = 0);
   }
 
   /// Opens the phone dialer with 911 filled in. Android does not let apps place emergency
@@ -69,6 +76,7 @@ class _ShellState extends State<Shell> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    widget.assistant.mapFocus.removeListener(_openMap);
     super.dispose();
   }
 
@@ -79,20 +87,42 @@ class _ShellState extends State<Shell> with WidgetsBindingObserver {
       if (_tab == 0) MapScreen(assistant: widget.assistant, location: widget.location) else const SizedBox(),
       HomeScreen(assistant: widget.assistant, location: widget.location),
       // SOS & Aid tab (GuideScreen) hidden for the demo; emergency answers in chat still open the takeover
+      SettingsScreen(assistant: widget.assistant, location: widget.location),
     ];
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
-            // the map gets the full height
-            if (_tab != 0) _Header(assistant: widget.assistant, location: widget.location),
+            // the map gets the full height; settings has its own title
+            if (_tab == 1) _Header(assistant: widget.assistant, location: widget.location),
             Expanded(
               child: IndexedStack(index: _tab, children: pages),
             ),
           ],
         ),
       ),
-      bottomNavigationBar: DecoratedBox(
+      bottomNavigationBar: Column(mainAxisSize: MainAxisSize.min, children: [
+        // speech can be stopped from every tab
+        ListenableBuilder(
+          listenable: widget.assistant,
+          builder: (_, _) => widget.assistant.speaking
+              ? Material(
+                  color: kClay,
+                  child: InkWell(
+                    onTap: widget.assistant.stopSpeaking,
+                    child: SizedBox(
+                      height: 52,
+                      child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                        const Icon(Icons.stop_circle, color: kCard, size: 28),
+                        const SizedBox(width: 10),
+                        Text('STOP SPEAKING', style: label(kCard, size: 16)),
+                      ]),
+                    ),
+                  ),
+                )
+              : const SizedBox.shrink(),
+        ),
+        DecoratedBox(
         decoration: const BoxDecoration(
           border: Border(top: BorderSide(color: kLine)),
         ),
@@ -105,13 +135,18 @@ class _ShellState extends State<Shell> with WidgetsBindingObserver {
             child: NavigationBar(
               selectedIndex: _tab,
               // the last item is a call button, not a tab
-              onDestinationSelected: (i) => i == 2 ? _callSos() : setState(() => _tab = i),
+              onDestinationSelected: (i) => i == 3 ? _callSos() : setState(() => _tab = i),
               destinations: [
                 const NavigationDestination(icon: _MapIcon(), selectedIcon: _MapIcon(selected: true), label: 'TRAIL MAP'),
                 const NavigationDestination(
                   icon: Icon(Icons.auto_awesome_outlined, color: kInkMuted),
                   selectedIcon: Icon(Icons.auto_awesome, color: kMoss),
                   label: 'AI',
+                ),
+                const NavigationDestination(
+                  icon: Icon(Icons.tune_outlined, color: kInkMuted),
+                  selectedIcon: Icon(Icons.tune, color: kMoss),
+                  label: 'SETTINGS',
                 ),
                 NavigationDestination(
                   icon: Container(
@@ -130,6 +165,7 @@ class _ShellState extends State<Shell> with WidgetsBindingObserver {
           ),
         ),
       ),
+      ]),
     );
   }
 }
