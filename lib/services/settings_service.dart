@@ -13,6 +13,7 @@ class SettingsService extends ChangeNotifier {
   static const _keyMaxTokens = 'settings_max_tokens';
   static const _keySpeakAnswers = 'settings_speak_answers';
   static const _keyEnableThinking = 'settings_enable_thinking';
+  static const _keyEnableLaya = 'settings_enable_laya';
   static const _keySelectedModel = 'settings_selected_model';
   static const _keySelectedBackend = 'settings_selected_backend';
   static const _keyTtsEngine = 'settings_tts_engine';
@@ -25,6 +26,7 @@ class SettingsService extends ChangeNotifier {
   int _maxTokens = 256;
   bool _speakAnswers = true;
   bool _enableThinking = false;
+  bool _enableLaya = true;
 
   String _selectedModel = 'gemma-4-E2B-it_Google_Tensor_G5.litertlm';
   String _selectedBackend = 'NPU';
@@ -39,6 +41,7 @@ class SettingsService extends ChangeNotifier {
   int get maxTokens => _maxTokens;
   bool get speakAnswers => _speakAnswers;
   bool get enableThinking => _enableThinking;
+  bool get enableLaya => _enableLaya;
 
   String get selectedModel => _selectedModel;
   String get selectedBackend => _selectedBackend;
@@ -60,6 +63,7 @@ class SettingsService extends ChangeNotifier {
       _maxTokens = prefs.getInt(_keyMaxTokens) ?? 256;
       _speakAnswers = prefs.getBool(_keySpeakAnswers) ?? true;
       _enableThinking = prefs.getBool(_keyEnableThinking) ?? false;
+      _enableLaya = prefs.getBool(_keyEnableLaya) ?? true;
       _selectedModel = prefs.getString(_keySelectedModel) ?? _selectedModel;
       _selectedBackend = prefs.getString(_keySelectedBackend) ?? _selectedBackend;
       _ttsEngine = prefs.getString(_keyTtsEngine) ?? 'kitten';
@@ -182,11 +186,19 @@ class SettingsService extends ChangeNotifier {
     await prefs.setBool(_keyEnableThinking, val);
   }
 
+  Future<void> setEnableLaya(bool val) async {
+    _enableLaya = val;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keyEnableLaya, val);
+  }
+
   Future<void> resetToDefaults() async {
     _systemPrompt = defaultSystemPrompt;
     _maxTokens = 256;
     _speakAnswers = true;
     _enableThinking = false;
+    _enableLaya = true;
     _ttsEngine = 'kitten';
     _ttsVoice = 'expr-voice-2-m';
     _ttsSpeed = 1.0;
@@ -196,6 +208,7 @@ class SettingsService extends ChangeNotifier {
     await prefs.remove(_keyMaxTokens);
     await prefs.remove(_keySpeakAnswers);
     await prefs.remove(_keyEnableThinking);
+    await prefs.remove(_keyEnableLaya);
     await prefs.remove(_keyTtsEngine);
     await prefs.remove(_keyTtsVoice);
     await prefs.remove(_keyTtsSpeed);

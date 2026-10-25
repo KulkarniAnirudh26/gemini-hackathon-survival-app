@@ -55,6 +55,7 @@ class MainActivity : FlutterActivity() {
                 call.argument<String>("prompt")!!,
                 call.argument<Boolean>("speak") ?: true,
                 call.argument<Boolean>("newConversation") ?: false,
+                call.argument<String>("imagePath"),
               )
               result.success(null)
             }

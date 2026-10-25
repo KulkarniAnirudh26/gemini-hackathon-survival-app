@@ -330,6 +330,67 @@ Be calm, direct, and explicit. Advise Satellite SOS or 911 for life threats.''';
 
               const SizedBox(height: 20),
 
+              // SECTION: ROUTING & INTENT PIPELINE
+              Row(
+                children: [
+                  const Icon(Icons.alt_route, size: 15, color: Color(0xFF4EEBA2)),
+                  const SizedBox(width: 6),
+                  _sectionTitle('DECISION & INTENT ROUTING'),
+                ],
+              ),
+              const SizedBox(height: 8),
+
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0E141A),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFF1B2631)),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'LAYA ZERO-SHOT ROUTER',
+                            style: TextStyle(
+                              fontFamily: 'monospace',
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            s.enableLaya
+                                ? 'Active: Routes lookups to instant cards, deep questions to Gemma'
+                                : 'Disabled: All queries bypass router and go directly to Gemma LLM',
+                            style: const TextStyle(
+                              color: Color(0xFF8BA2B5),
+                              fontSize: 11,
+                              height: 1.3,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Switch(
+                      value: s.enableLaya,
+                      activeTrackColor: const Color(0xFF4EEBA2),
+                      activeThumbColor: const Color(0xFF090D11),
+                      inactiveTrackColor: const Color(0xFF1B2631),
+                      inactiveThumbColor: const Color(0xFF6B8296),
+                      onChanged: (val) => s.setEnableLaya(val),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
               // SECTION: SPEECH & VOICE SYNTHESIS (TTS)
               Row(
                 children: [
