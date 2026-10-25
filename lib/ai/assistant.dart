@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../geo/geo_data.dart';
+import '../geo/map_pack.dart';
 import '../geo/nps_layers.dart';
 import '../geo/trail_router.dart';
 import '../location/location_service.dart';
@@ -111,6 +112,7 @@ class Assistant extends ChangeNotifier {
   GeoData? geo;
   TrailRouter? router;
   NpsLayers? nps;
+  MapPack? mapPack; // official NPS park map: places, printed guidance, map image
   Guide? guide;
   late final QuestionRouter questionRouter = QuestionRouter(ai);
 
@@ -153,6 +155,7 @@ class Assistant extends ChangeNotifier {
       geo = await GeoData.load();
       router = TrailRouter(geo!);
       nps = await NpsLayers.load();
+      mapPack = await MapPack.load();
     } catch (e) {
       status = 'Map data missing: $e';
     }

@@ -67,6 +67,7 @@ flutter:
     - assets/geo/
     - assets/guide/
     - assets/nps/
+    - assets/park_map/
     - assets/calibration/
 
   # Space Grotesk (OFL, assets/fonts/OFL.txt), bundled so it works offline.
