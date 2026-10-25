@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../ai/assistant.dart';
 import '../ai/situation.dart';
@@ -24,6 +27,22 @@ class _HomeScreenState extends State<HomeScreen> {
   final _scroll = ScrollController();
   int _seen = 0;
   bool _typing = false;
+  String? _pendingImagePath;
+  final _picker = ImagePicker();
+
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final photo = await _picker.pickImage(source: source, maxWidth: 1024, maxHeight: 1024, imageQuality: 85);
+      if (photo != null) {
+        setState(() {
+          _pendingImagePath = photo.path;
+          _typing = true; // Switch to composer to see preview and attach question
+        });
+      }
+    } catch (e) {
+      debugPrint('Error picking image: $e');
+    }
+  }
 
   /// An emergency answer takes over the screen at once, before Gemma adds anything.
   void _checkEmergency(Assistant a) {
@@ -75,9 +94,23 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ],
             if (_typing)
-              _Composer(a: a, text: _text, onClose: () => setState(() => _typing = false))
+              _Composer(
+                a: a,
+                text: _text,
+                pendingImagePath: _pendingImagePath,
+                onClearImage: () => setState(() => _pendingImagePath = null),
+                onPickImage: _pickImage,
+                onClose: () => setState(() {
+                  _typing = false;
+                  _pendingImagePath = null;
+                }),
+              )
             else
-              _VoiceBar(a: a, onKeyboard: () => setState(() => _typing = true)),
+              _VoiceBar(
+                a: a,
+                onKeyboard: () => setState(() => _typing = true),
+                onPickImage: _pickImage,
+              ),
           ],
         );
       },
@@ -124,17 +157,6 @@ class _StatusBar extends StatelessWidget {
               icon: f == null ? Icons.gps_off : Icons.gps_fixed,
               text: f == null ? 'FINDING GPS' : (f.simulated ? 'PINNED POSITION' : 'GPS ±${f.accuracy.round()} M'),
               warn: f == null,
-            ),
-          ),
-          const Spacer(),
-          IconButton(
-            visualDensity: VisualDensity.compact,
-            tooltip: 'Voice and battery',
-            icon: const Icon(Icons.tune, size: 20, color: kInkMuted),
-            onPressed: () => showModalBottomSheet(
-              context: context,
-              showDragHandle: true,
-              builder: (_) => _SettingsSheet(a: a, location: location),
             ),
           ),
         ],
@@ -514,7 +536,25 @@ class _Bubble extends StatelessWidget {
                 bottomRight: Radius.circular(12),
               ),
             ),
-            child: Text(m.text, style: const TextStyle(fontSize: 15, height: 1.35)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (m.imagePath != null) ...[
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.file(
+                      File(m.imagePath!),
+                      width: double.infinity,
+                      height: 180,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  if (m.text.isNotEmpty) const SizedBox(height: 8),
+                ],
+                if (m.text.isNotEmpty)
+                  Text(m.text, style: const TextStyle(fontSize: 15, height: 1.35)),
+              ],
+            ),
           ),
         ],
       ),
@@ -642,83 +682,16 @@ class _Bubble extends StatelessWidget {
   }
 }
 
-/// Voice, pace and battery mode (the battery mode can be forced for demos).
-class _SettingsSheet extends StatelessWidget {
-  final Assistant a;
-  final LocationService location;
-  const _SettingsSheet({required this.a, required this.location});
-
-  static String _label(String v) {
-    final m = RegExp(r'expr-voice-(\d)-(m|f)').firstMatch(v);
-    if (m == null) return v;
-    return '${m.group(2) == 'f' ? 'Female' : 'Male'} ${int.parse(m.group(1)!) - 1}';
-  }
-
-  @override
-  Widget build(BuildContext context) => ListenableBuilder(
-        listenable: Listenable.merge([a, location]),
-        builder: (context, _) => Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('VOICE', style: label(kInk, size: 16)),
-            const SizedBox(height: 4),
-            const Text('KittenTTS, on-device.', style: TextStyle(color: kInkMuted)),
-            const SizedBox(height: 12),
-            Wrap(spacing: 8, runSpacing: 8, children: [
-              for (final v in a.voices)
-                ChoiceChip(
-                  label: Text(_label(v)),
-                  selected: (a.voice ?? (a.voices.isEmpty ? null : a.voices.first)) == v,
-                  onSelected: (_) => a.setVoice(v, a.speed),
-                ),
-            ]),
-            const SizedBox(height: 12),
-            Row(children: [
-              const Text('Pace'),
-              Expanded(
-                child: Slider(
-                  value: a.speed.clamp(0.7, 1.2),
-                  min: 0.7,
-                  max: 1.2,
-                  divisions: 10,
-                  label: '${a.speed.toStringAsFixed(2)}x',
-                  onChanged: (v) => a.setVoice(a.voice, v),
-                ),
-              ),
-              Text('${a.speed.toStringAsFixed(2)}x'),
-            ]),
-            FilledButton.icon(
-              icon: Icon(a.speaking ? Icons.stop : Icons.play_arrow),
-              label: Text(a.speaking ? 'STOP' : 'TEST VOICE'),
-              onPressed: () async {
-                if (a.speaking) return a.stopSpeaking();
-                a.speak("Okay, I'm here with you. Take a slow breath. We'll find the way out together.", source: 'voice-test');
-              },
-            ),
-            const SizedBox(height: 20),
-            Text('BATTERY MODE · ${location.batteryLevel}%', style: label(kInk, size: 16)),
-            const SizedBox(height: 4),
-            const Text('Set automatically from the battery level; force one to demo it.', style: TextStyle(color: kInkMuted)),
-            const SizedBox(height: 8),
-            SegmentedButton<PowerTier>(
-              segments: const [
-                ButtonSegment(value: PowerTier.normal, label: Text('Normal')),
-                ButtonSegment(value: PowerTier.saver, label: Text('Saver')),
-                ButtonSegment(value: PowerTier.critical, label: Text('Critical')),
-              ],
-              selected: {location.tier},
-              onSelectionChanged: (s) => location.overrideTier(s.first),
-            ),
-          ]),
-        ),
-      );
-}
-
 /// The main input: one big hold-to-talk button. Typing is the secondary path.
 class _VoiceBar extends StatelessWidget {
   final Assistant a;
   final VoidCallback onKeyboard;
-  const _VoiceBar({required this.a, required this.onKeyboard});
+  final void Function(ImageSource) onPickImage;
+  const _VoiceBar({
+    required this.a,
+    required this.onKeyboard,
+    required this.onPickImage,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -738,6 +711,12 @@ class _VoiceBar extends StatelessWidget {
       child: Column(mainAxisSize: MainAxisSize.min, children: [
         Row(children: [
           _RoundIcon(icon: Icons.keyboard_alt_outlined, tooltip: 'Type instead', onTap: onKeyboard),
+          const SizedBox(width: 8),
+          _RoundIcon(
+            icon: Icons.camera_alt_outlined,
+            tooltip: 'Camera snapshot',
+            onTap: () => onPickImage(ImageSource.camera),
+          ),
           const Spacer(),
           GestureDetector(
             onTapDown: stopMode || loading
@@ -757,7 +736,11 @@ class _VoiceBar extends StatelessWidget {
             child: _MicButton(listening: listening, enabled: !loading, stop: stopMode),
           ),
           const Spacer(),
-          const SizedBox(width: 48),
+          _RoundIcon(
+            icon: Icons.photo_outlined,
+            tooltip: 'Pick photo',
+            onTap: () => onPickImage(ImageSource.gallery),
+          ),
         ]),
         const SizedBox(height: 6),
         Text(caption, style: label(listening ? kClay : kInkMuted, size: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
@@ -855,14 +838,26 @@ class _RoundIcon extends StatelessWidget {
 class _Composer extends StatelessWidget {
   final Assistant a;
   final TextEditingController text;
+  final String? pendingImagePath;
+  final VoidCallback onClearImage;
+  final void Function(ImageSource) onPickImage;
   final VoidCallback onClose;
-  const _Composer({required this.a, required this.text, required this.onClose});
+  const _Composer({
+    required this.a,
+    required this.text,
+    required this.pendingImagePath,
+    required this.onClearImage,
+    required this.onPickImage,
+    required this.onClose,
+  });
 
   void _send() {
     final v = text.text.trim();
-    if (v.isEmpty) return;
-    a.ask(v);
+    if (v.isEmpty && pendingImagePath == null) return;
+    final prompt = v.isEmpty ? 'Analyze and describe what you see in this photo.' : v;
+    a.ask(prompt, imagePath: pendingImagePath);
     text.clear();
+    onClearImage();
   }
 
   @override
@@ -877,48 +872,101 @@ class _Composer extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: kLine),
       ),
-      child: Row(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          _RoundIcon(icon: Icons.mic, tooltip: 'Talk instead', onTap: onClose, color: kClay),
-          const SizedBox(width: 6),
-          Expanded(
-            child: TextField(
-              controller: text,
-              enabled: !working && a.phase != Phase.loading,
-              autofocus: true,
-              textInputAction: TextInputAction.send,
-              style: const TextStyle(fontSize: 15),
-              decoration: const InputDecoration(
-                hintText: 'Ask Gemma about navigation, wildlife',
-                hintStyle: TextStyle(color: Color(0xFF5C6E61), fontSize: 14),
-                border: InputBorder.none,
-                isDense: true,
-                contentPadding: EdgeInsets.symmetric(horizontal: 6, vertical: 12),
-              ),
-              onSubmitted: (_) => _send(),
-            ),
-          ),
-          const SizedBox(width: 6),
-          SizedBox(
-            width: 48,
-            height: 48,
-            child: working || a.speaking
-                ? IconButton.filled(
-                    style: IconButton.styleFrom(
-                      backgroundColor: kClay,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          if (pendingImagePath != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
+              child: Stack(
+                alignment: Alignment.topRight,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.file(
+                      File(pendingImagePath!),
+                      height: 100,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
                     ),
-                    onPressed: a.stop,
-                    icon: const Icon(Icons.stop, color: kCard),
-                  )
-                : IconButton.filled(
-                    style: IconButton.styleFrom(
-                      backgroundColor: kInk,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                    onPressed: _send,
-                    icon: const Icon(Icons.arrow_upward, color: kCard),
                   ),
+                  Positioned(
+                    top: 4,
+                    right: 4,
+                    child: GestureDetector(
+                      onTap: onClearImage,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: Colors.black54,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.close, size: 16, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          Row(
+            children: [
+              _RoundIcon(icon: Icons.mic, tooltip: 'Talk instead', onTap: onClose, color: kClay),
+              const SizedBox(width: 4),
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                tooltip: 'Camera snapshot',
+                icon: const Icon(Icons.camera_alt_outlined, size: 20, color: kInkMuted),
+                onPressed: () => onPickImage(ImageSource.camera),
+              ),
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                tooltip: 'Pick photo',
+                icon: const Icon(Icons.photo_outlined, size: 20, color: kInkMuted),
+                onPressed: () => onPickImage(ImageSource.gallery),
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: TextField(
+                  controller: text,
+                  enabled: !working && a.phase != Phase.loading,
+                  autofocus: true,
+                  textInputAction: TextInputAction.send,
+                  style: const TextStyle(fontSize: 15),
+                  decoration: InputDecoration(
+                    hintText: pendingImagePath != null
+                        ? 'Ask about this image…'
+                        : 'Ask Gemma about navigation, wildlife',
+                    hintStyle: const TextStyle(color: Color(0xFF5C6E61), fontSize: 14),
+                    border: InputBorder.none,
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 12),
+                  ),
+                  onSubmitted: (_) => _send(),
+                ),
+              ),
+              const SizedBox(width: 6),
+              SizedBox(
+                width: 48,
+                height: 48,
+                child: working || a.speaking
+                    ? IconButton.filled(
+                        style: IconButton.styleFrom(
+                          backgroundColor: kClay,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                        onPressed: a.stop,
+                        icon: const Icon(Icons.stop, color: kCard),
+                      )
+                    : IconButton.filled(
+                        style: IconButton.styleFrom(
+                          backgroundColor: kInk,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                        onPressed: _send,
+                        icon: const Icon(Icons.arrow_upward, color: kCard),
+                      ),
+              ),
+            ],
           ),
         ],
       ),

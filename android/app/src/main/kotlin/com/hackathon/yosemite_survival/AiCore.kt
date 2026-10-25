@@ -6,6 +6,7 @@ import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.util.Log
 import com.google.ai.edge.litertlm.Content
+import com.google.ai.edge.litertlm.Contents
 import com.google.ai.edge.litertlm.Message
 import com.hackathon.yosemite_survival.asr.LiteRtTranscriber
 import com.hackathon.yosemite_survival.laya.LayaEngine
@@ -305,7 +306,13 @@ class AiCore(private val context: Context, private val emit: (Map<String, Any?>)
     scope.launch { if (generateJob?.isActive != true) dropConversation() }
   }
 
-  fun generate(system: String, prompt: String, speak: Boolean, newConversation: Boolean = false) {
+  fun generate(
+    system: String,
+    prompt: String,
+    speak: Boolean,
+    newConversation: Boolean = false,
+    imagePath: String? = null,
+  ) {
     if (generateJob?.isActive == true) {
       emit(mapOf("type" to "error", "message" to "busy"))
       return
@@ -323,8 +330,13 @@ class AiCore(private val context: Context, private val emit: (Map<String, Any?>)
           val conversation = convo ?: engine.createConversation(system, emptyList()).also { convo = it }
           convoTurns++
           val sentAt = System.nanoTime() // after any model load: TTFT = prefill + first decode step
+          val userMessage = if (!imagePath.isNullOrEmpty() && File(imagePath).exists()) {
+            Message.user(Contents.of(Content.ImageFile(imagePath), Content.Text(prompt)))
+          } else {
+            Message.user(prompt)
+          }
           try {
-            conversation.send(Message.user(prompt), thinking = false).collect { m ->
+            conversation.send(userMessage, thinking = false).collect { m ->
               val piece = m.contents.contents.filterIsInstance<Content.Text>().joinToString("") { it.text }
               if (piece.isNotEmpty()) {
                 if (chunks == 0) {
