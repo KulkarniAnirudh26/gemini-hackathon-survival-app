@@ -36,6 +36,7 @@ void main() {
   });
 
   test('a named danger with low reasoning reads the guide', () {
+    expect(p('I see a bear', Intent.general, 0.54, topic: null, topicConf: 0.51), Route.guide);
     expect(p('There is a bear near me.', Intent.other, 0.6, topic: 'bear', topicConf: 0.95), Route.guide);
     expect(p('I saw a cougar on the trail', Intent.survivalHowto, 0.8, topic: 'mountain_lion', topicConf: 0.8), Route.guide);
     expect(p('What animals live here?', Intent.other, 0.6, topic: 'bear', topicConf: 0.95), Route.llm);

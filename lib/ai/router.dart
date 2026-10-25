@@ -304,6 +304,11 @@ class QuestionRouter {
     if (topic != null && topicConf >= guideTopicConf && topicsMentioned(text).contains(topic)) {
       return (Route.guide, 'guide: $topic ${(topicConf * 100).round()}%', Intent.survivalHowto);
     }
+    final mentionedTopics = topicsMentioned(text);
+    if (mentionedTopics.length == 1) {
+      final t = mentionedTopics.first;
+      return (Route.guide, 'guide keyword: $t', Intent.survivalHowto);
+    }
     final lookup = lookupFromWords(text, intent);
     if (lookup != null) {
       if (reasoning >= templateReasoning) return (Route.llm, 'needs reasoning ${(reasoning * 100).round()}%', lookup);
