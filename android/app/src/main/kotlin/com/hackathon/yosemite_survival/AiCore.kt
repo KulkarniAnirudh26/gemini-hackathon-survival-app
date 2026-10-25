@@ -327,6 +327,26 @@ class AiCore(private val context: Context, private val emit: (Map<String, Any?>)
     systemTts?.setSpeechRate(ttsSpeed)
   }
 
+  fun setVoice(name: String?, newSpeed: Float) {
+    ttsVoice = name
+    ttsSpeed = newSpeed
+  }
+
+  fun metrics(): Map<String, Any?> {
+    val bm = context.getSystemService(Context.BATTERY_SERVICE) as android.os.BatteryManager
+    val intent = context.registerReceiver(null, android.content.IntentFilter(android.content.Intent.ACTION_BATTERY_CHANGED))
+    val mem = android.os.Debug.MemoryInfo().also { android.os.Debug.getMemoryInfo(it) }
+    return mapOf(
+      "battery_pct" to bm.getIntProperty(android.os.BatteryManager.BATTERY_PROPERTY_CAPACITY),
+      "current_ua" to bm.getIntProperty(android.os.BatteryManager.BATTERY_PROPERTY_CURRENT_NOW),
+      "voltage_mv" to intent?.getIntExtra(android.os.BatteryManager.EXTRA_VOLTAGE, -1),
+      "temp_c" to (intent?.getIntExtra(android.os.BatteryManager.EXTRA_TEMPERATURE, 0) ?: 0) / 10.0,
+      "charging" to bm.isCharging,
+      "pss_mb" to mem.totalPss / 1024.0,
+      "llm_loaded" to llmLoaded(),
+    )
+  }
+
   fun listTtsVoices(): Map<String, List<String>> {
     val kittenVoices = LiteRtSpeaker.VOICES
     val systemVoices = if (systemTtsReady) {
