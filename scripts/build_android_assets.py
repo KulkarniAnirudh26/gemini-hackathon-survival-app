@@ -5,8 +5,9 @@
 writes
     android/app/src/main/assets/maps/yosemite/{mappack.json, map.jpg}
     android/app/src/main/assets/maps/yosemite/yosemite.mbtiles          (--tiles; map tiles for 3D)
-    android/app/src/main/assets/maps/yosemite/yosemite-terrain.mbtiles  (--terrain; elevation, needs
-                                                                         internet; both gitignored)
+    android/app/src/main/assets/maps/yosemite/yosemite-terrain.mbtiles  (--terrain; elevation)
+    android/app/src/main/assets/maps/yosemite/yosemite-imagery.mbtiles  (--imagery; aerial photos)
+                                    (--terrain and --imagery download; all .mbtiles are gitignored)
     android/mappack/src/test/resources/parity.json   (what the Python side answers, which the
                                                       Kotlin tests must reproduce)
 """
@@ -16,6 +17,7 @@ from pathlib import Path
 
 from geopdf_locator import GeoPdfMap, Guidance
 from geopdf_locator.export import export
+from geopdf_locator.imagery import fetch_imagery
 from geopdf_locator.terrain import fetch_terrain
 from geopdf_locator.tiles import write_mbtiles
 
@@ -54,6 +56,8 @@ def main() -> int:
     parser.add_argument("--max-zoom", type=int, default=13, help="highest map tile zoom (default 13, ~8 MB)")
     parser.add_argument("--terrain", action="store_true", help="also download elevation tiles for 3D")
     parser.add_argument("--terrain-max-zoom", type=int, default=11, help="default 11, ~6.5 MB")
+    parser.add_argument("--imagery", action="store_true", help="also download aerial imagery for 3D")
+    parser.add_argument("--imagery-max-zoom", type=int, default=13, help="default 13, ~15 MB")
     args = parser.parse_args()
 
     pack_path, image_path = export(args.pdf, str(ASSETS / args.name), dpi=args.dpi)
@@ -69,6 +73,10 @@ def main() -> int:
         terrain = ASSETS / args.name / f"{args.name}-terrain.mbtiles"
         fetch_terrain(args.pdf, str(terrain), max_zoom=args.terrain_max_zoom)
         written.append(terrain)
+    if args.imagery:
+        imagery = ASSETS / args.name / f"{args.name}-imagery.mbtiles"
+        fetch_imagery(args.pdf, str(imagery), max_zoom=args.imagery_max_zoom)
+        written.append(imagery)
     for p in written:
         print(f"wrote {p.relative_to(ROOT)} ({p.stat().st_size / 1e6:.2f} MB)")
     return 0

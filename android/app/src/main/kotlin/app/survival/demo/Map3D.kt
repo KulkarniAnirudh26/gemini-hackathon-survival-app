@@ -31,9 +31,10 @@ private const val TAG = "Map3D"
 private const val ORIGIN = "https://appassets.androidplatform.net"
 
 /**
- * The offline tilesets for the 3D view: the park map ("pdf") and elevation ("terrain"), both
- * MBTiles shipped in the app's assets. SQLite can't open a file inside the APK, so each is
- * copied to app storage once (again only if the bundled file changes size).
+ * The offline tilesets for the 3D view, MBTiles shipped in the app's assets: the park map ("pdf")
+ * and elevation ("terrain") are required, aerial imagery ("imagery") is optional. SQLite can't
+ * open a file inside the APK, so each is copied to app storage once (again only if the bundled
+ * file changes size).
  */
 class TileStore private constructor(private val dbs: Map<String, SQLiteDatabase>) {
     fun tile(name: String, z: Int, x: Int, y: Int): ByteArray? {
@@ -44,27 +45,35 @@ class TileStore private constructor(private val dbs: Map<String, SQLiteDatabase>
         ).use { c -> return if (c.moveToFirst()) c.getBlob(0) else null }
     }
 
+    fun has(name: String) = name in dbs
+
     fun metadata(name: String, key: String): String? =
         dbs[name]?.rawQuery("SELECT value FROM metadata WHERE name=?", arrayOf(key))?.use { c ->
             if (c.moveToFirst()) c.getString(0) else null
         }
 
     companion object {
-        /** null when the tilesets aren't bundled (run scripts/build_android_assets.py --tiles --terrain). */
-        fun open(context: Context, mapDir: String, files: Map<String, String>): TileStore? {
-            val dbs = files.mapValues { (_, file) ->
-                val asset = "$mapDir/$file"
-                val target = File(context.noBackupFilesDir, "tiles/$file")
-                val size = runCatching { context.assets.openFd(asset).use { it.length } }.getOrNull()
-                if (!target.exists() || (size != null && size != target.length())) {
-                    target.parentFile?.mkdirs()
-                    runCatching {
-                        context.assets.open(asset).use { input -> target.outputStream().use { input.copyTo(it) } }
-                    }.onFailure { Log.w(TAG, "missing tileset $asset", it); return null }
-                }
-                SQLiteDatabase.openDatabase(target.path, null, SQLiteDatabase.OPEN_READONLY)
+        /** null when a required tileset isn't bundled (run scripts/build_android_assets.py --tiles --terrain). */
+        fun open(context: Context, mapDir: String, required: Map<String, String>,
+                 optional: Map<String, String> = emptyMap()): TileStore? {
+            val dbs = mutableMapOf<String, SQLiteDatabase>()
+            for ((name, file) in required + optional) {
+                val db = openBundled(context, "$mapDir/$file", file)
+                if (db != null) dbs[name] = db else if (name in required) return null
             }
             return TileStore(dbs)
+        }
+
+        private fun openBundled(context: Context, asset: String, file: String): SQLiteDatabase? {
+            val target = File(context.noBackupFilesDir, "tiles/$file")
+            val size = runCatching { context.assets.openFd(asset).use { it.length } }.getOrNull()
+            if (!target.exists() || (size != null && size != target.length())) {
+                target.parentFile?.mkdirs()
+                runCatching {
+                    context.assets.open(asset).use { input -> target.outputStream().use { input.copyTo(it) } }
+                }.onFailure { Log.w(TAG, "missing tileset $asset"); return null }
+            }
+            return SQLiteDatabase.openDatabase(target.path, null, SQLiteDatabase.OPEN_READONLY)
         }
     }
 }
@@ -102,7 +111,8 @@ private class PageEvents(private val listener: (String) -> Unit) {
 }
 
 /**
- * Terrain-draped 3D park map (MapLibre GL in a WebView, using the phone's GPU through WebGL).
+ * 3D map: aerial imagery (or the park map) draped over terrain, in MapLibre GL in a WebView
+ * using the phone's GPU through WebGL.
  * [place] gets a red pin and the camera flies to it; [me] is shown as a blue dot.
  */
 @SuppressLint("SetJavaScriptEnabled")
@@ -135,8 +145,9 @@ fun Map3D(store: TileStore, place: Pair<LatLon, String>?, me: LatLon?, modifier:
             }
             val pdfMax = store.metadata("pdf", "maxzoom") ?: "13"
             val demMax = store.metadata("terrain", "maxzoom") ?: "11"
+            val imgMax = if (store.has("imagery")) store.metadata("imagery", "maxzoom") ?: "13" else "0"
             val bounds = store.metadata("pdf", "bounds") ?: ""
-            loadUrl("$ORIGIN/assets/map3d/index.html?tiles=/tiles&pdfMax=$pdfMax&demMax=$demMax&bounds=$bounds")
+            loadUrl("$ORIGIN/assets/map3d/index.html?tiles=/tiles&pdfMax=$pdfMax&demMax=$demMax&imgMax=$imgMax&bounds=$bounds")
         }
     }
     DisposableEffect(Unit) { onDispose { webView.destroy() } }  // frees the GL context when leaving 3D

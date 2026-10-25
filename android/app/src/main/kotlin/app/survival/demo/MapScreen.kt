@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -115,10 +116,12 @@ fun MapScreen(
                 // top-left: the 3D view's attribution bar runs along the bottom
                 Row(Modifier.align(Alignment.TopStart).padding(12.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    // solid background so the chips stay readable over aerial imagery
+                    val chipColors = FilterChipDefaults.filterChipColors(containerColor = MaterialTheme.colorScheme.surface)
                     FilterChip(selected = !threeD, onClick = { threeD = false }, label = { Text("2D") },
-                               modifier = Modifier.testTag("mode-2d"))
+                               colors = chipColors, modifier = Modifier.testTag("mode-2d"))
                     FilterChip(selected = threeD, onClick = { threeD = true }, label = { Text("3D") },
-                               modifier = Modifier.testTag("mode-3d"))
+                               colors = chipColors, modifier = Modifier.testTag("mode-3d"))
                 }
             }
             if (threeD && status3d == "unsupported") {

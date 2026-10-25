@@ -70,7 +70,9 @@ private suspend fun loadMap(context: Context): LoadedMap = withContext(Dispatche
     val options = BitmapFactory.Options().apply { inPreferredConfig = android.graphics.Bitmap.Config.RGB_565 }
     val bitmap = context.assets.open("$MAP_DIR/${pack.pack.image.file}").use { BitmapFactory.decodeStream(it, null, options) }
         ?: error("cannot decode map image")
-    val tiles = TileStore.open(context, MAP_DIR, mapOf("pdf" to "yosemite.mbtiles", "terrain" to "yosemite-terrain.mbtiles"))
+    val tiles = TileStore.open(context, MAP_DIR,
+        required = mapOf("pdf" to "yosemite.mbtiles", "terrain" to "yosemite-terrain.mbtiles"),
+        optional = mapOf("imagery" to "yosemite-imagery.mbtiles"))
     LoadedMap(pack, bitmap.asImageBitmap(), tiles)
 }
 

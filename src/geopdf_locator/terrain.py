@@ -32,19 +32,20 @@ def tile_range(z, lon0, lat0, lon1, lat1):
     return [(z, x, y) for x in range(tx(lon0), tx(lon1) + 1) for y in range(ty(lat1), ty(lat0) + 1)]
 
 
-def fetch(tile):
-    z, x, y = tile
-    with urllib.request.urlopen(URL.format(z=z, x=x, y=y), timeout=30) as r:
-        return tile, r.read()
-
-
-def fetch_terrain(pdf: str, out: str, min_zoom: int = 8, max_zoom: int = 12) -> int:
-    """Write Terrarium elevation tiles covering the GeoPDF's footprint to `out`. Returns the tile count."""
+def download_mbtiles(url: str, pdf: str, out: str, min_zoom: int, max_zoom: int, metadata: dict) -> int:
+    """Download the XYZ tiles of `url` (with {z}/{x}/{y}) covering the GeoPDF's footprint into an
+    MBTiles file. Returns the tile count."""
     from .locator import GeoPdfMap
     from .tiles import TileRenderer
 
     lon0, lat0, lon1, lat1 = TileRenderer(GeoPdfMap.open(pdf)).bounds_lonlat()
     tiles = [t for z in range(min_zoom, max_zoom + 1) for t in tile_range(z, lon0, lat0, lon1, lat1)]
+
+    def fetch(tile):
+        z, x, y = tile
+        with urllib.request.urlopen(url.format(z=z, x=x, y=y), timeout=30) as r:
+            return tile, r.read()
+
     path = Path(out)
     path.parent.mkdir(parents=True, exist_ok=True)
     if path.exists():
@@ -56,9 +57,8 @@ def fetch_terrain(pdf: str, out: str, min_zoom: int = 8, max_zoom: int = 12) -> 
         CREATE UNIQUE INDEX tile_index ON tiles (zoom_level, tile_column, tile_row);
     """)
     db.executemany("INSERT INTO metadata VALUES (?, ?)", {
-        "name": f"{Path(pdf).stem} terrain", "format": "png", "type": "baselayer",
-        "encoding": "terrarium", "minzoom": str(min_zoom), "maxzoom": str(max_zoom),
-        "bounds": f"{lon0:.6f},{lat0:.6f},{lon1:.6f},{lat1:.6f}", "attribution": ATTRIBUTION,
+        **metadata, "minzoom": str(min_zoom), "maxzoom": str(max_zoom),
+        "bounds": f"{lon0:.6f},{lat0:.6f},{lon1:.6f},{lat1:.6f}",
     }.items())
     with ThreadPoolExecutor(8) as pool:
         for (z, x, y), data in pool.map(fetch, tiles):
@@ -66,6 +66,14 @@ def fetch_terrain(pdf: str, out: str, min_zoom: int = 8, max_zoom: int = 12) -> 
     db.commit()
     db.close()
     return len(tiles)
+
+
+def fetch_terrain(pdf: str, out: str, min_zoom: int = 8, max_zoom: int = 12) -> int:
+    """Write Terrarium elevation tiles covering the GeoPDF's footprint to `out`. Returns the tile count."""
+    return download_mbtiles(URL, pdf, out, min_zoom, max_zoom, {
+        "name": f"{Path(pdf).stem} terrain", "format": "png", "type": "baselayer",
+        "encoding": "terrarium", "attribution": ATTRIBUTION,
+    })
 
 
 def main() -> int:

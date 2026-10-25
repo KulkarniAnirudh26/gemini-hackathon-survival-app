@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>3D map</title>
 <!-- Fully offline: MapLibre is bundled next to this page and every tile comes from the app.
-     The park map is draped over terrain, so its printed labels need no font files. -->
+     Aerial imagery (default) or the printed park map is draped over terrain; neither needs font files. -->
 <link rel="stylesheet" href="maplibre-gl.css">
 <script src="maplibre-gl.js"></script>
 <style>
@@ -14,16 +14,23 @@
         box-shadow: 0 0 0 10px rgba(30, 136, 229, .25); }
   #err { position: absolute; inset: 0; display: none; align-items: center; justify-content: center;
          font: 16px system-ui; color: #333; padding: 24px; text-align: center; }
+  #drape { position: absolute; left: 10px; bottom: 34px; display: flex; border-radius: 18px; overflow: hidden;
+           box-shadow: 0 1px 4px rgba(0,0,0,.35); font: 600 13px system-ui; }
+  #drape button { border: 0; padding: 8px 12px; background: #fff; color: #333; }
+  #drape button.on { background: #1b5e20; color: #fff; }
 </style>
 </head>
 <body>
 <div id="map"></div>
 <div id="err"></div>
+<div id="drape"><button id="d-imagery">Satellite</button><button id="d-park">Park map</button></div>
 <script>
 // Tile URLs and zoom limits come from the host (Android passes them in the query string).
 const q = new URLSearchParams(location.search);
 const tiles = q.get("tiles") || "tiles";
 const pdfMax = +(q.get("pdfMax") || 13), demMax = +(q.get("demMax") || 11);
+// imgMax=0 means no imagery tileset is available: the park map is the only drape
+const imgMax = +(q.get("imgMax") ?? 13);
 const bounds = (q.get("bounds") || "-119.9206,37.4655,-119.0368,38.2043").split(",").map(Number);
 const report = msg => (window.Host && Host.onEvent) ? Host.onEvent(msg) : console.log(msg);
 
@@ -47,6 +54,8 @@ const map = new maplibregl.Map({
     sources: {
       park: { type: "raster", tiles: [`${tiles}/pdf/{z}/{x}/{y}.jpg`], tileSize: 256, minzoom: 9,
               maxzoom: pdfMax, bounds, attribution: "National Park Service" },
+      imagery: { type: "raster", tiles: [`${tiles}/imagery/{z}/{x}/{y}.jpg`], tileSize: 256, minzoom: 9,
+                 maxzoom: imgMax || 13, bounds, attribution: "USDA, USGS The National Map: Orthoimagery" },
       dem: { type: "raster-dem", tiles: [`${tiles}/terrain/{z}/{x}/{y}.png`], tileSize: 256,
              encoding: "terrarium", minzoom: 8, maxzoom: demMax, bounds,
              attribution: "Terrain: USGS 3DEP, SRTM et al. (Terrain Tiles)" },
@@ -54,7 +63,8 @@ const map = new maplibregl.Map({
     terrain: { source: "dem", exaggeration: 1.2 },
     layers: [
       { id: "sky", type: "background", paint: { "background-color": "#dfe6ea" } },
-      { id: "park", type: "raster", source: "park" },
+      { id: "imagery", type: "raster", source: "imagery", layout: { visibility: imgMax ? "visible" : "none" } },
+      { id: "park", type: "raster", source: "park", layout: { visibility: imgMax ? "none" : "visible" } },
     ],
   },
 });
@@ -65,6 +75,25 @@ map.on("load", () => {
   report("loaded");
 });
 map.on("error", e => report("error: " + (e.error && e.error.message)));
+
+// Opened straight from disk there are no tiles (they come from the app or tools/map-viewer/serve.py)
+if (location.protocol === "file:") {
+  err.style.display = "flex";
+  err.textContent = "No map tiles here: open this page in the app, or through tools/map-viewer/serve.py.";
+}
+
+// Satellite / Park map switch
+const setDrape = which => {
+  map.setLayoutProperty("imagery", "visibility", which === "imagery" ? "visible" : "none");
+  map.setLayoutProperty("park", "visibility", which === "park" ? "visible" : "none");
+  document.getElementById("d-imagery").classList.toggle("on", which === "imagery");
+  document.getElementById("d-park").classList.toggle("on", which === "park");
+};
+document.getElementById("d-imagery").onclick = () => setDrape("imagery");
+document.getElementById("d-park").onclick = () => setDrape("park");
+if (!imgMax) document.getElementById("drape").style.display = "none";
+map.on("load", () => setDrape(imgMax ? "imagery" : "park"));
+window.setDrape = setDrape;
 
 let placeMarker = null, meMarker = null;
 

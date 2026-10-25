@@ -104,10 +104,15 @@ renderer's glyph files too.
 python -m geopdf_locator.terrain data/yosemite.pdf out/yosemite-terrain.mbtiles --max-zoom 11
 ```
 
-Downloads open elevation tiles (Terrain Tiles on AWS, Terrarium encoding; USGS 3DEP, SRTM et al.)
-for the map's footprint into MBTiles: zooms 8–11 are 6.6 MB (zoom 12: 24 MB). The app drapes the
-map tiles over it in 3D; `tools/map-viewer/serve.py --tiles pdf=… --tiles terrain=… --static
-android/app/src/main/assets/map3d` shows the same page in a desktop browser.
+```bash
+python -m geopdf_locator.imagery data/yosemite.pdf out/yosemite-imagery.mbtiles --max-zoom 13
+```
+
+Downloads, for the map's footprint, open elevation tiles (Terrain Tiles on AWS, Terrarium encoding;
+USGS 3DEP, SRTM et al.; zooms 8–11 are 6.6 MB) and aerial imagery (USDA/USGS The National Map,
+public domain; zooms 9–13 are 14.8 MB) into MBTiles. The app drapes the imagery (or the park map)
+over the terrain in 3D; `tools/map-viewer/serve.py --tiles pdf=… --tiles terrain=… --tiles
+imagery=… --static android/app/src/main/assets/map3d` shows the same page in a desktop browser.
 
 ### Mobile app (Android)
 

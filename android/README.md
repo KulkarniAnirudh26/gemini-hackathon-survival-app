@@ -54,24 +54,32 @@ Emulator GPS for trying "my location": `adb emu geo fix -119.4855 37.8102` (long
 
 ## 3D map
 
-The 2D/3D chips switch to a terrain-draped 3D view: the park-map tiles laid over real
-elevation, with the selected place pinned and the GPS position shown. It is MapLibre GL JS
-(bundled in `assets/map3d`, BSD-3) in a WebView, so it uses the phone's GPU through WebGL and
-needs no network: `WebViewAssetLoader` serves the page from assets and the tiles straight from
-the MBTiles files. The printed labels are part of the map image, so no font files are needed.
+The 2D/3D chips switch to a 3D view: real Yosemite terrain with **aerial imagery** draped over it
+by default (a Satellite / Park map switch on the map swaps in the printed park map), the selected
+place pinned and the GPS position shown. It is MapLibre GL JS (bundled in `assets/map3d`, BSD-3)
+in a WebView, so it uses the phone's GPU through WebGL and needs no network: `WebViewAssetLoader`
+serves the page from assets and the tiles straight from the MBTiles files.
 
-The tilesets aren't in git; build them before building the app (otherwise the 3D chips are hidden):
+The tilesets aren't in git; build them before building the app (without the first two the 3D
+chips are hidden; without imagery, 3D shows the park map only):
 
 ```bash
-python scripts/build_android_assets.py data/yosemite.pdf --tiles --terrain
+python scripts/build_android_assets.py data/yosemite.pdf --tiles --terrain --imagery
 ```
 
-`yosemite.mbtiles` (map, zooms 9–13, 8.3 MB) and `yosemite-terrain.mbtiles` (elevation, zooms
-8–11, 6.6 MB; downloaded once from the open Terrain Tiles, USGS 3DEP/SRTM, attribution shown on
-the map). The release APK is 17.8 MB.
+| File | What | Zooms | Size |
+|---|---|---|---|
+| `yosemite.mbtiles` | printed park map, rendered from the PDF | 9–13 | 8.3 MB |
+| `yosemite-terrain.mbtiles` | elevation (Terrain Tiles: USGS 3DEP, SRTM et al.) | 8–11 | 6.6 MB |
+| `yosemite-imagery.mbtiles` | aerial photos (USDA/USGS The National Map, public domain) | 9–13 | 14.8 MB |
 
-Known quirk: the printed map's white "see valley map" callout box drapes over the valley like
-a white wall.
+The release APK is 31.7 MB. The terrain checks out against real summits: Half Dome 2686 m (true
+2695), Yosemite Valley floor 1207 m (1220), El Capitan 2303 m (2307), Tuolumne Meadows 2617 m
+(2620). Imagery at zoom 13 is ~15 m per pixel and looks soft when zoomed right in;
+`--imagery-max-zoom 14` sharpens it at ~65 MB.
+
+The 3D page opened straight from disk (`file://`) has no tiles and says so; use the app or
+`tools/map-viewer/serve.py`.
 
 ## Device notes
 
@@ -99,7 +107,9 @@ and the minified release APK:
   Python gives for that position; denying the permission shows a message and nothing breaks.
 
 3D, on the same emulator with the host GPU passed through (WebView 145, WebGL 2): search →
-3D flies to the place with a pin on the map's own symbol; GPS dot on the terrain; five 2D/3D
+3D flies to the place with a pin on the map's own symbol (Half Dome's summit, the top of El
+Capitan's face, Glacier Point's rim, over aerial imagery); GPS dot on the terrain; the Satellite /
+Park map switch; five 2D/3D
 switches with no crash and memory back to ~155 MB PSS (the WebView and its GL context are
 destroyed on leaving 3D); minified release APK too. A device without WebGL gets a message.
 
