@@ -243,15 +243,48 @@ class AiCore(private val context: Context, private val emit: (Map<String, Any?>)
     llmLock.withLock {
       chat?.let { return it }
       emit(mapOf("type" to "llm_loading"))
-      val file = File(modelsDir, selectedModelFile)
-      check(file.exists()) { "Model file does not exist: ${file.absolutePath}" }
+      
+      var file = File(modelsDir, selectedModelFile)
+      var backend = selectedBackend
+      
+      // If the selected model doesn't exist, try falling back to the standard GPU model
+      if (!file.exists()) {
+        val gpuModel = File(modelsDir, GEMMA_GPU_FILE)
+        if (gpuModel.exists()) {
+          file = gpuModel
+          backend = "GPU"
+          selectedModelFile = GEMMA_GPU_FILE
+          selectedBackend = "GPU"
+        } else {
+          error("Model file does not exist: ${file.absolutePath}")
+        }
+      }
+
       val t0 = System.nanoTime()
-      val engine = ChatEngine.open(
-        modelFile = file,
-        cacheDir = File(context.cacheDir, "litertlm"),
-        backendType = selectedBackend,
-        nativeLibraryDir = context.applicationInfo.nativeLibraryDir,
-      )
+      val engine = try {
+        ChatEngine.open(
+          modelFile = file,
+          cacheDir = File(context.cacheDir, "litertlm"),
+          backendType = backend,
+          nativeLibraryDir = context.applicationInfo.nativeLibraryDir,
+        )
+      } catch (t: Throwable) {
+        // If NPU initialization failed on the TPU bundle, fallback to the GPU model file if available
+        val gpuModel = File(modelsDir, GEMMA_GPU_FILE)
+        if (file.name != GEMMA_GPU_FILE && gpuModel.exists()) {
+          Log.w(TAG, "Model ${file.name} failed ($t). Falling back to $GEMMA_GPU_FILE on GPU...")
+          selectedModelFile = GEMMA_GPU_FILE
+          selectedBackend = "GPU"
+          ChatEngine.open(
+            modelFile = gpuModel,
+            cacheDir = File(context.cacheDir, "litertlm"),
+            backendType = "GPU",
+            nativeLibraryDir = context.applicationInfo.nativeLibraryDir,
+          )
+        } else {
+          throw t
+        }
+      }
       chat = engine
       emit(mapOf("type" to "llm_ready", "load_ms" to (System.nanoTime() - t0) / 1e6))
       engine
