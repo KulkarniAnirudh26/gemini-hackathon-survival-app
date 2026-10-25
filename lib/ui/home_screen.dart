@@ -32,7 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _pickImage(ImageSource source) async {
     try {
-      final photo = await _picker.pickImage(source: source, maxWidth: 1024, maxHeight: 1024, imageQuality: 85);
+      final photo = await _picker.pickImage(source: source, maxWidth: 640, maxHeight: 640, imageQuality: 75);
       if (photo != null) {
         setState(() {
           _pendingImagePath = photo.path;
