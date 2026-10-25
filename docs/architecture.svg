@@ -1,0 +1,138 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 940" width="1400" height="940" font-family="Space Grotesk, Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#142019"/>
+    </marker>
+    <style>
+      .title { font-size: 30px; font-weight: 700; fill: #142019; letter-spacing: 1px; }
+      .sub { font-size: 15px; fill: #485B4F; }
+      .band { font-size: 13px; font-weight: 700; letter-spacing: 1.5px; fill: #485B4F; }
+      .h { font-size: 16px; font-weight: 700; fill: #142019; }
+      .t { font-size: 12.5px; fill: #485B4F; }
+      .tw { font-size: 12.5px; fill: #FFFFFF; }
+      .hw { font-size: 16px; font-weight: 700; fill: #FFFFFF; }
+      .chip { font-size: 11px; font-weight: 700; letter-spacing: 1px; }
+      .line { stroke: #142019; stroke-width: 1.8; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #485B4F; stroke-width: 1.4; fill: none; stroke-dasharray: 5 4; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="1400" height="940" fill="#F4F7F4"/>
+
+  <!-- header -->
+  <rect x="40" y="28" width="44" height="44" rx="8" fill="#142019"/>
+  <path d="M50 62 L62 42 L70 54 L74 48 L80 62 Z" fill="#D94819"/>
+  <text x="100" y="58" class="title">SHERPA · offline survival assistant for Yosemite</text>
+  <text x="100" y="82" class="sub">Pixel 11 Pro (Tensor G6) · every model runs on the phone · release build has no INTERNET permission</text>
+
+  <!-- ===== band 1: user + UI ===== -->
+  <text x="40" y="128" class="band">YOU · FLUTTER UI</text>
+  <rect x="40" y="138" width="170" height="120" rx="12" fill="#FFFFFF" stroke="#BDC9BD" stroke-width="1.5"/>
+  <text x="60" y="170" class="h">Hiker</text>
+  <text x="60" y="194" class="t">hold-to-talk (voice)</text>
+  <text x="60" y="214" class="t">type a question</text>
+  <text x="60" y="234" class="t">tap Way out / Water / Help</text>
+
+  <rect x="250" y="138" width="1110" height="120" rx="12" fill="#FFFFFF" stroke="#BDC9BD" stroke-width="1.5"/>
+  <rect x="270" y="156" width="330" height="86" rx="8" fill="#F8FAF8" stroke="#D9E0D9"/>
+  <text x="288" y="182" class="h">GEMMA AI (talk)</text>
+  <text x="288" y="204" class="t">status chips · way-out / water / help cards</text>
+  <text x="288" y="224" class="t">answers + in-chat route mini map</text>
+  <rect x="616" y="156" width="330" height="86" rx="8" fill="#F8FAF8" stroke="#D9E0D9"/>
+  <text x="634" y="182" class="h">TRAIL MAP</text>
+  <text x="634" y="204" class="t">NPS Park Tiles basemap + hillshade</text>
+  <text x="634" y="224" class="t">route, breadcrumbs, POI details</text>
+  <rect x="962" y="156" width="378" height="86" rx="8" fill="#F8FAF8" stroke="#D9E0D9"/>
+  <text x="980" y="182" class="h">SOS &amp; AID</text>
+  <text x="980" y="204" class="t">vetted survival guide (15 sections)</text>
+  <text x="980" y="224" class="t">read aloud · stop speaking on every tab</text>
+  <path d="M210 198 L246 198" class="line"/>
+
+  <!-- ===== band 2: orchestration ===== -->
+  <text x="40" y="304" class="band">ORCHESTRATION (DART)</text>
+  <rect x="40" y="314" width="300" height="150" rx="12" fill="#FFFFFF" stroke="#BDC9BD" stroke-width="1.5"/>
+  <text x="60" y="344" class="h">Assistant</text>
+  <text x="60" y="368" class="t">situation: time, sunset, GPS fix,</text>
+  <text x="60" y="388" class="t">elevation, nearest exit / water / help</text>
+  <text x="60" y="408" class="t">per-turn metrics → turns.jsonl</text>
+  <text x="60" y="428" class="t">battery tiers: normal · saver · critical</text>
+
+  <rect x="380" y="314" width="300" height="150" rx="12" fill="#1D5C2F"/>
+  <text x="400" y="344" class="hw">Laya router  (~0.6 s, GPU)</text>
+  <text x="400" y="368" class="tw">zero-shot classifier, 5 questions:</text>
+  <text x="400" y="388" class="tw">intent · survival topic · on-topic ·</text>
+  <text x="400" y="408" class="tw">urgency · needs reasoning</text>
+  <text x="400" y="434" class="tw">→ picks the cheapest safe path</text>
+  <path d="M340 389 L376 389" class="line"/>
+
+  <!-- four paths -->
+  <rect x="720" y="314" width="150" height="68" rx="10" fill="#FFFFFF" stroke="#1D5C2F" stroke-width="2"/>
+  <text x="734" y="340" class="h">⚡ Template</text>
+  <text x="734" y="362" class="t">map data, no LLM</text>
+  <rect x="884" y="314" width="150" height="68" rx="10" fill="#FFFFFF" stroke="#1D5C2F" stroke-width="2"/>
+  <text x="898" y="340" class="h">⚡ Guide</text>
+  <text x="898" y="362" class="t">vetted text, no LLM</text>
+  <rect x="1048" y="314" width="150" height="68" rx="10" fill="#FFFFFF" stroke="#D94819" stroke-width="2"/>
+  <text x="1062" y="340" class="h">🚨 Emergency</text>
+  <text x="1062" y="362" class="t">911 / Satellite SOS</text>
+  <rect x="1212" y="314" width="148" height="68" rx="10" fill="#142019"/>
+  <text x="1226" y="340" class="hw">🧠 Gemma</text>
+  <text x="1226" y="362" class="tw">open questions</text>
+  <path d="M680 350 C700 350 700 348 716 348" class="line"/>
+  <text x="720" y="410" class="t">“where's water?” “way out?” “sunset?”</text>
+  <text x="720" y="430" class="t">“bear near me” → guide · “someone is bleeding” → emergency</text>
+  <text x="720" y="450" class="t">anything general or uncertain → Gemma, grounded with SITUATION + ROUTE + GUIDE context</text>
+
+  <!-- ===== band 3: Kotlin AI core ===== -->
+  <text x="40" y="510" class="band">ON-DEVICE AI CORE (KOTLIN · LiteRT 2.3 / LiteRT-LM 0.16) · METHOD + EVENT CHANNEL</text>
+  <rect x="40" y="520" width="1320" height="150" rx="12" fill="#FFFFFF" stroke="#BDC9BD" stroke-width="1.5"/>
+
+  <rect x="60" y="540" width="300" height="110" rx="10" fill="#F8FAF8" stroke="#D9E0D9"/>
+  <text x="78" y="566" class="h">Zipformer CTC · speech→text</text>
+  <text x="78" y="588" class="t">131 MB fp16 · GPU · ~60 ms / utterance</text>
+  <text x="78" y="608" class="t">16 kHz push-to-talk, 16 s window</text>
+  <text x="78" y="628" class="t">no always-on mic</text>
+
+  <rect x="376" y="540" width="300" height="110" rx="10" fill="#F8FAF8" stroke="#D9E0D9"/>
+  <text x="394" y="566" class="h">Laya multilingual · router</text>
+  <text x="394" y="588" class="t">mmBERT encoder, 680 MB · GPU FP32</text>
+  <text x="394" y="608" class="t">~50–120 ms per question</text>
+  <text x="394" y="628" class="t">token table memory-mapped</text>
+
+  <rect x="692" y="540" width="330" height="110" rx="10" fill="#142019"/>
+  <text x="710" y="566" class="hw">Gemma 4 E2B-it · LLM</text>
+  <text x="710" y="588" class="tw">2.6 GB .litertlm · LiteRT-LM · GPU</text>
+  <text x="710" y="608" class="tw">loaded only when routed to · unloaded</text>
+  <text x="710" y="628" class="tw">after 5 min idle or on low memory/battery</text>
+
+  <rect x="1038" y="540" width="302" height="110" rx="10" fill="#F8FAF8" stroke="#D9E0D9"/>
+  <text x="1056" y="566" class="h">KittenTTS nano · text→speech</text>
+  <text x="1056" y="588" class="t">94 MB incl. G2P · CPU · RTF ≈ 0.07</text>
+  <text x="1056" y="608" class="t">sentence streaming, 8 voices</text>
+  <text x="1056" y="628" class="t">stoppable mid-sentence</text>
+
+  <path d="M190 464 L190 536" class="dash"/>
+  <path d="M530 464 L530 536" class="line"/>
+  <path d="M1286 382 L1286 470 L857 470 L857 536" class="line"/>
+  <path d="M790 382 L790 480 L1189 480 L1189 536" class="dash"/>
+
+  <!-- ===== band 4: offline data + sensors + battery ===== -->
+  <text x="40" y="716" class="band">BUNDLED OFFLINE DATA</text>
+  <rect x="40" y="726" width="650" height="170" rx="12" fill="#FFFFFF" stroke="#BDC9BD" stroke-width="1.5"/>
+  <text x="60" y="756" class="h">NPS Park Tiles (vector, cut to Yosemite)</text>
+  <text x="60" y="778" class="t">trails, roads, lakes &amp; streams, buildings, park boundary · 865 named POIs</text>
+  <text x="60" y="806" class="h">OSM trail graph + Dijkstra router</text>
+  <text x="60" y="828" class="t">5,975 junctions · uphill-penalized routing · Naismith walking time vs. sunset</text>
+  <text x="60" y="856" class="h">Elevation: AWS terrain tiles (≈30 m) + hillshade</text>
+  <text x="60" y="878" class="t">Survival guide (RAG): Laya topic choice + BM25 fallback</text>
+
+  <text x="720" y="716" class="band">SENSORS · BATTERY LEVERS · METRICS</text>
+  <rect x="720" y="726" width="640" height="170" rx="12" fill="#FFFFFF" stroke="#BDC9BD" stroke-width="1.5"/>
+  <text x="740" y="756" class="h">GPS tiers</text>
+  <text x="740" y="778" class="t">normal 60 s / 25 m · saver 5 min · critical on demand</text>
+  <text x="740" y="806" class="h">Why it lasts</text>
+  <text x="740" y="828" class="t">quick paths skip the LLM · lazy Gemma · push-to-talk · light UI · map only when visible</text>
+  <text x="740" y="856" class="h">Measured</text>
+  <text x="740" y="878" class="t">STT, Laya, Gemma load / TTFT / decode, first audio, battery mA, PSS, CPU (adb session)</text>
+  <path d="M365 726 L365 680" class="dash"/>
+</svg>

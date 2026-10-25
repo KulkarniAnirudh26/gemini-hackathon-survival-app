@@ -21,7 +21,7 @@ const overlay = [
 ];
 const map = new maplibregl.Map({container:"m", center:[-119.533,37.746], zoom:13.5, maxZoom:15.5,
  style:{version:8, glyphs:"https://protomaps.github.io/basemaps-assets/fonts/{fontstack}/{range}.pbf",
-  sources:{pdf:{type:"raster", tiles:[location.origin+"/tiles/{z}/{x}/{y}.jpg"], tileSize:256, minzoom:9, maxzoom:14, attribution:"NPS"},
+  sources:{pdf:{type:"raster", tiles:[location.origin+"/tiles/pdf/{z}/{x}/{y}.jpg"], tileSize:256, minzoom:9, maxzoom:14, attribution:"NPS"},
    boundary:pm("boundary"), data:pm("data"), hydro:pm("hydro"), label:pm("label-point")},
   layers:[{id:"bg",type:"background",paint:{"background-color":"#eee"}},{id:"pdf",type:"raster",source:"pdf"}, ...overlay]}});
 map.addControl(new maplibregl.NavigationControl());
