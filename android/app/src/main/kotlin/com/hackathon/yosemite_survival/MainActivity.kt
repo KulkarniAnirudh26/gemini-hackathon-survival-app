@@ -54,9 +54,11 @@ class MainActivity : FlutterActivity() {
                 call.argument<String>("system")!!,
                 call.argument<String>("prompt")!!,
                 call.argument<Boolean>("speak") ?: true,
+                call.argument<Boolean>("newConversation") ?: false,
               )
               result.success(null)
             }
+            "resetConversation" -> { ai.resetConversation(); result.success(null) }
             "cancelGenerate" -> { ai.cancelGenerate(); result.success(null) }
             "speak" -> { ai.speak(call.argument<String>("text")!!); result.success(null) }
             "stopSpeaking" -> { ai.stopSpeaking(); result.success(null) }

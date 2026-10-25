@@ -94,7 +94,7 @@ class ChatEngine private constructor(private val engine: Engine) : AutoCloseable
       ConversationConfig(
         systemInstruction = Contents.of(systemInstruction),
         tools = tools,
-        samplerConfig = GREEDY,
+        samplerConfig = SAMPLED,
         automaticToolCalling = false,
         channels = CHANNELS,
       )
@@ -368,7 +368,8 @@ class ChatEngine private constructor(private val engine: Engine) : AutoCloseable
     const val MAX_OUTPUT_TOKENS = 256
 
     /** Greedy decoding: the same prompt on the same model state gives the same answer. */
-    private val GREEDY = SamplerConfig(topK = 1, topP = 1.0, temperature = 0.0, seed = 0)
+    // Greedy decoding made the 2B model flat and repetitive; light sampling reads more naturally.
+    private val SAMPLED = SamplerConfig(topK = 40, topP = 0.95, temperature = 0.6, seed = 0)
 
     /**
      * Gemma 4's thought channel, as the bundle declares it in its own header: reasoning streams

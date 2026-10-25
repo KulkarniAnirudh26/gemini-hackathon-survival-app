@@ -482,7 +482,7 @@ class _Bubble extends StatelessWidget {
   const _Bubble({required this.m, required this.a});
 
   @override
-  Widget build(BuildContext context) => m.user ? _user(context) : _answer();
+  Widget build(BuildContext context) => m.user ? _user(context) : GestureDetector(onLongPress: () => _debug(context), child: _answer());
 
   Widget _user(BuildContext context) => Align(
     alignment: Alignment.centerRight,
@@ -520,6 +520,28 @@ class _Bubble extends StatelessWidget {
       ),
     ),
   );
+
+  /// Long-press: how this answer was routed and, for Gemma, the exact prompt.
+  void _debug(BuildContext context) => showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        showDragHandle: true,
+        builder: (_) => DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.6,
+          builder: (_, sc) => ListView(controller: sc, padding: const EdgeInsets.fromLTRB(20, 0, 20, 24), children: [
+            Text('WHY THIS ANSWER', style: label(kInk, size: 14)),
+            const SizedBox(height: 8),
+            SelectableText(m.debug ?? '—', style: const TextStyle(fontSize: 13, height: 1.4)),
+            if (m.prompt != null) ...[
+              const SizedBox(height: 16),
+              Text('PROMPT SENT TO GEMMA', style: label(kInk, size: 14)),
+              const SizedBox(height: 8),
+              SelectableText(m.prompt!, style: const TextStyle(fontSize: 12, fontFamily: 'monospace', height: 1.35)),
+            ],
+          ]),
+        ),
+      );
 
   Widget _answer() {
     final gemma = m.kind == AnswerKind.gemma;
@@ -570,6 +592,17 @@ class _Bubble extends StatelessWidget {
                   if (!gemma) ...[Text('VERIFIED OFFLINE ACTION', style: label(kClay, size: 10)), const SizedBox(height: 4)],
                   Text(m.text.isEmpty ? '…' : m.text, style: const TextStyle(fontSize: 15, height: 1.4)),
                   if (m.map != null) RouteMiniMap(assistant: a, route: m.map!),
+                  // quick answers come from Laya + templates; one tap re-asks Gemma instead
+                  if (!gemma && m.question != null)
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton.icon(
+                        style: TextButton.styleFrom(foregroundColor: kMoss, visualDensity: VisualDensity.compact),
+                        onPressed: a.busy ? null : () => a.ask(m.question!, forceLlm: true),
+                        icon: const Icon(Icons.auto_awesome, size: 16),
+                        label: Text('ASK GEMMA', style: label(kMoss, size: 11)),
+                      ),
+                    ),
                 ],
               ),
             ),
