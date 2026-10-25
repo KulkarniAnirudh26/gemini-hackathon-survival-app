@@ -9,6 +9,7 @@ import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
+import com.hackathon.yosemite_survival.map3d.Map3dActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -19,6 +20,16 @@ class MainActivity : FlutterActivity() {
   private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
   private var sink: EventChannel.EventSink? = null
   private lateinit var ai: AiCore
+  private var map3dResult: MethodChannel.Result? = null
+
+  @Deprecated("Activity result API") // startActivityForResult is what FlutterActivity offers
+  override fun onActivityResult(requestCode: Int, resultCode: Int, data: android.content.Intent?) {
+    super.onActivityResult(requestCode, resultCode, data)
+    if (requestCode == MAP3D_REQUEST) {
+      map3dResult?.success(resultCode == RESULT_OK && data?.getBooleanExtra(Map3dActivity.RESULT_HOME, false) == true)
+      map3dResult = null
+    }
+  }
 
   override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
     super.configureFlutterEngine(flutterEngine)
@@ -37,6 +48,21 @@ class MainActivity : FlutterActivity() {
           }
         }
       )
+
+    // 3D MAP chip on the home screen: offline terrain + aerial imagery (map3d/Map3dActivity)
+    MethodChannel(messenger, "survival/map3d").setMethodCallHandler { call, result ->
+      when (call.method) {
+        "available" -> result.success(Map3dActivity.available(this))
+        "open" -> {
+          // answered when the 3D map closes: true if the user tapped "Home"
+          map3dResult?.success(false)
+          map3dResult = result
+          startActivityForResult(
+            Map3dActivity.intent(this, call.argument<Double>("lat"), call.argument<Double>("lon")), MAP3D_REQUEST)
+        }
+        else -> result.notImplemented()
+      }
+    }
 
     MethodChannel(messenger, "survival/ai").setMethodCallHandler { call, result ->
       scope.launch {
@@ -129,3 +155,5 @@ class MainActivity : FlutterActivity() {
     private const val MIC_REQUEST = 7
   }
 }
+
+private const val MAP3D_REQUEST = 3301

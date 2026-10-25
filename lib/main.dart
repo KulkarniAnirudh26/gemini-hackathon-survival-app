@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'ai/assistant.dart';
 import 'location/location_service.dart';
+import 'map3d/map3d.dart';
 import 'ui/guide_screen.dart';
 import 'ui/home_screen.dart';
 import 'ui/map_screen.dart';
@@ -78,7 +79,15 @@ class _ShellState extends State<Shell> with WidgetsBindingObserver {
       body: SafeArea(
         child: Column(
           children: [
-            if (_tab == 1) const _Header(), // brand only on Home
+            if (_tab == 1)
+              _Header(
+                location: widget.location,
+                // "Home" on the 3D map: back to the home dashboard
+                onHome: () {
+                  widget.assistant.clearChat();
+                  setState(() => _tab = 1);
+                },
+              ), // brand only on Home
             Expanded(
               child: IndexedStack(index: _tab, children: pages),
             ),
@@ -143,7 +152,9 @@ class _ShellState extends State<Shell> with WidgetsBindingObserver {
 }
 
 class _Header extends StatelessWidget {
-  const _Header();
+  final LocationService location;
+  final VoidCallback onHome;
+  const _Header({required this.location, required this.onHome});
 
   @override
   Widget build(BuildContext context) => Container(
@@ -161,6 +172,8 @@ class _Header extends StatelessWidget {
         ),
         const SizedBox(width: 8),
         Text('SHERPA', style: label(kInk, size: 20).copyWith(letterSpacing: 0.4)),
+        const Spacer(),
+        Map3dButton(location: location, onHome: onHome),
       ],
     ),
   );

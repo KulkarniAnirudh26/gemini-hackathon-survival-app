@@ -8,11 +8,14 @@ writes
     android-native/app/src/main/assets/maps/yosemite/yosemite-terrain.mbtiles  (--terrain; elevation)
     android-native/app/src/main/assets/maps/yosemite/yosemite-imagery.mbtiles  (--imagery; aerial photos)
                                     (--terrain and --imagery download; all .mbtiles are gitignored)
+    android/app/src/main/assets/maps/yosemite/{*.mbtiles, mappack.json}   (copies for the Flutter app's
+                                                                          3D MAP screen)
     android-native/mappack/src/test/resources/parity.json   (what the Python side answers, which the
                                                       Kotlin tests must reproduce)
 """
 import argparse
 import json
+import shutil
 from pathlib import Path
 
 from geopdf_locator import GeoPdfMap, Guidance
@@ -23,6 +26,7 @@ from geopdf_locator.tiles import write_mbtiles
 
 ROOT = Path(__file__).resolve().parent.parent
 ASSETS = ROOT / "android-native" / "app" / "src" / "main" / "assets" / "maps"
+FLUTTER_ASSETS = ROOT / "android" / "app" / "src" / "main" / "assets" / "maps" / "yosemite"
 FIXTURE = ROOT / "android-native" / "mappack" / "src" / "test" / "resources" / "parity.json"
 
 
@@ -77,6 +81,15 @@ def main() -> int:
         imagery = ASSETS / args.name / f"{args.name}-imagery.mbtiles"
         fetch_imagery(args.pdf, str(imagery), max_zoom=args.imagery_max_zoom)
         written.append(imagery)
+    # the Flutter app's 3D MAP screen reads the same tilesets from its own Android assets
+    mbtiles = [p for p in written if p.suffix == ".mbtiles"]
+    mbtiles.append(pack_path)  # its search box and guidance use the map pack
+    if mbtiles:
+        FLUTTER_ASSETS.mkdir(parents=True, exist_ok=True)
+        for p in mbtiles:
+            copy = FLUTTER_ASSETS / p.name
+            shutil.copyfile(p, copy)
+            written.append(copy)
     for p in written:
         print(f"wrote {p.relative_to(ROOT)} ({p.stat().st_size / 1e6:.2f} MB)")
     return 0
