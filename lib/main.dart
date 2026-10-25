@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'ai/assistant.dart';
 import 'ai/situation.dart';
@@ -49,6 +51,16 @@ class _ShellState extends State<Shell> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
   }
 
+  /// Opens the phone dialer with 911 filled in. Android does not let apps place emergency
+  /// calls themselves, and the extra tap guards against a pocket dial.
+  Future<void> _callSos() async {
+    HapticFeedback.heavyImpact();
+    final ok = await launchUrl(Uri(scheme: 'tel', path: '911'));
+    if (!ok && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not open the phone app. Dial 911.')));
+    }
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused) widget.location.flush();
@@ -92,17 +104,26 @@ class _ShellState extends State<Shell> with WidgetsBindingObserver {
             padding: EdgeInsets.only(bottom: math.max(0, MediaQuery.paddingOf(context).bottom - 20)),
             child: NavigationBar(
               selectedIndex: _tab,
-              onDestinationSelected: (i) => setState(() => _tab = i),
-              destinations: const [
-                NavigationDestination(
-                  icon: Icon(Icons.explore_outlined, color: kInkMuted),
-                  selectedIcon: Icon(Icons.explore, color: kInk),
-                  label: 'TRAIL MAP',
-                ),
-                NavigationDestination(
+              // the last item is a call button, not a tab
+              onDestinationSelected: (i) => i == 2 ? _callSos() : setState(() => _tab = i),
+              destinations: [
+                const NavigationDestination(icon: _MapIcon(), selectedIcon: _MapIcon(selected: true), label: 'TRAIL MAP'),
+                const NavigationDestination(
                   icon: Icon(Icons.auto_awesome_outlined, color: kInkMuted),
                   selectedIcon: Icon(Icons.auto_awesome, color: kMoss),
                   label: 'AI',
+                ),
+                NavigationDestination(
+                  icon: Container(
+                    width: 48,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: kClay, width: 2),
+                    ),
+                    child: const Icon(Icons.phone, color: kClay, size: 20),
+                  ),
+                  label: 'SOS 911',
                 ),
               ],
             ),
@@ -150,5 +171,23 @@ class _Header extends StatelessWidget {
         ],
       ),
     ),
+  );
+}
+
+/// Trail Map tab icon: a water-to-moss gradient pill, the same size as the SOS button.
+class _MapIcon extends StatelessWidget {
+  final bool selected;
+  const _MapIcon({this.selected = false});
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: 48,
+    height: 32,
+    decoration: BoxDecoration(
+      gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [kWater, kMoss]),
+      borderRadius: BorderRadius.circular(16),
+      border: selected ? Border.all(color: kInk, width: 2) : null,
+    ),
+    child: const Icon(Icons.explore, color: kCard, size: 20),
   );
 }
