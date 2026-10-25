@@ -326,12 +326,13 @@ class AiCore(private val context: Context, private val emit: (Map<String, Any?>)
         var firstAt = 0L
         try {
           val engine = ensureChat()
-          if (newConversation || convo == null || convoTurns >= MAX_CONVO_TURNS) dropConversation()
+          val hasImage = !imagePath.isNullOrEmpty() && File(imagePath).exists()
+          if (newConversation || hasImage || convo == null || convoTurns >= MAX_CONVO_TURNS) dropConversation()
           val conversation = convo ?: engine.createConversation(system, emptyList()).also { convo = it }
           convoTurns++
           val sentAt = System.nanoTime() // after any model load: TTFT = prefill + first decode step
-          val userMessage = if (!imagePath.isNullOrEmpty() && File(imagePath).exists()) {
-            Message.user(Contents.of(Content.ImageFile(imagePath), Content.Text(prompt)))
+          val userMessage = if (hasImage) {
+            Message.user(Contents.of(Content.ImageFile(imagePath!!), Content.Text(prompt)))
           } else {
             Message.user(prompt)
           }
