@@ -66,3 +66,4 @@ android-native/local.properties
 android-native/captures/
 *.mbtiles
 *.pmtiles
+packages/sherpa_ios/swift-tests/.build/

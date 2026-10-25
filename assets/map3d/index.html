@@ -32,7 +32,10 @@ const pdfMax = +(q.get("pdfMax") || 13), demMax = +(q.get("demMax") || 11);
 // imgMax=0 means no imagery tileset is available: the park map is the only drape
 const imgMax = +(q.get("imgMax") ?? 13);
 const bounds = (q.get("bounds") || "-119.9206,37.4655,-119.0368,38.2043").split(",").map(Number);
-const report = msg => (window.Host && Host.onEvent) ? Host.onEvent(msg) : console.log(msg);
+// events to the app: Android (JavascriptInterface "Host") or iOS (WKScriptMessageHandler "Host")
+const report = msg => window.Host && Host.onEvent ? Host.onEvent(msg)
+  : window.webkit?.messageHandlers?.Host ? webkit.messageHandlers.Host.postMessage(msg)
+  : console.log(msg);
 
 // Probe for WebGL, then release the probe context at once: some WebViews allow very few live
 // contexts, and holding this one leaves the map's canvas blank.

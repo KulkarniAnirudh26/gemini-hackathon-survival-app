@@ -41,7 +41,9 @@ import java.util.Locale
 
 private const val TAG = "Map3D"
 private const val ORIGIN = "https://appassets.androidplatform.net"
-private const val MAP_DIR = "maps/yosemite"
+// Flutter assets (pubspec.yaml), shared with iOS; inside the APK they live under flutter_assets/
+private const val MAP_DIR = "flutter_assets/assets/maps/yosemite"
+private const val PAGE = "flutter_assets/assets/map3d/index.html"
 private val REQUIRED = mapOf("pdf" to "yosemite.mbtiles", "terrain" to "yosemite-terrain.mbtiles")
 private val OPTIONAL = mapOf("imagery" to "yosemite-imagery.mbtiles")
 
@@ -56,7 +58,7 @@ private val LINE = Color.parseColor("#D9E0D9")
 
 /**
  * Offline 3D map of Yosemite: aerial imagery (or the printed NPS park map) draped over real
- * terrain, in MapLibre GL running in a WebView on the phone's GPU. The page (assets/map3d) and
+ * terrain, in MapLibre GL running in a WebView on the phone's GPU. The page (Flutter assets/map3d) and
  * every tile are served from the app by WebViewAssetLoader, so it works with no network and no
  * INTERNET permission. Under the map, a search box finds a place on the NPS park map, flies there
  * and lists the map's safety guidance for that spot (or for the GPS position).
@@ -107,7 +109,7 @@ class Map3dActivity : Activity() {
         }
       }, "Host")
       val imgMax = if (store.has("imagery")) store.metadata("imagery", "maxzoom") ?: "13" else "0"
-      loadUrl("$ORIGIN/assets/map3d/index.html?tiles=/tiles" +
+      loadUrl("$ORIGIN/assets/$PAGE?tiles=/tiles" +
         "&pdfMax=${store.metadata("pdf", "maxzoom") ?: "13"}" +
         "&demMax=${store.metadata("terrain", "maxzoom") ?: "11"}" +
         "&imgMax=$imgMax&bounds=${store.metadata("pdf", "bounds") ?: ""}")
