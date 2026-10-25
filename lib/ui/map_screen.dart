@@ -1,583 +1,526 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
 
 import '../ai/assistant.dart';
-import '../ai/situation.dart';
-import '../geo/geo_data.dart';
+import '../geo/compass_controller.dart';
 import '../geo/geo_math.dart';
-import '../geo/nps_layers.dart';
 import '../location/location_service.dart';
-import 'map_layers.dart';
-import 'theme.dart';
+import 'topo_3d_viewport.dart';
 
-/// Offline NPS basemap (Park Tiles: trails, roads, water, buildings, park boundary, points of
-/// interest) over a hillshade, with the route out, breadcrumbs and tap-for-details.
+/// Tactical 3D Topological Trail Map and Telemetry HUD matching the reference mockup:
+/// - Header: AEGIS SURVIVAL / EDGE TENSOR ENGINE & GEMMA 4 E2B status pill
+/// - 3D Topological Trail Map Viewport with phone sensor orientation
+/// - Control bar: RECORD PATH, ALPINE TREK, and CLEAR buttons
+/// - Telemetry HUD: Distance, Elevation Gain, Altitude Range, Waypoint count
+/// - Recorded GPS Breadcrumbs feed
 class MapScreen extends StatefulWidget {
   final Assistant assistant;
   final LocationService location;
-  const MapScreen({super.key, required this.assistant, required this.location});
+
+  const MapScreen({
+    super.key,
+    required this.assistant,
+    required this.location,
+  });
 
   @override
   State<MapScreen> createState() => _MapScreenState();
 }
 
-class _Style {
-  final IconData icon;
-  final Color color;
-  final int minZoom;
-  const _Style(this.icon, this.color, this.minZoom);
-}
-
-const _streamColor = kStreamColor;
-
-_Style _styleFor(NpsPoint p) {
-  switch (p.kind) {
-    case 'trailhead':
-      return const _Style(Icons.hiking, kClay, 11);
-    case 'entrance station':
-      return const _Style(Icons.flag, kMoss, 10);
-    case 'ranger station':
-    case 'first aid station':
-      return const _Style(Icons.local_hospital, kClay, 11);
-    case 'visitor center':
-    case 'information':
-      return const _Style(Icons.info, kClay, 11);
-    case 'drinking water':
-    case 'spring':
-      return const _Style(Icons.water_drop, kWater, 12);
-    case 'campground':
-    case 'backcountry campsite':
-      return const _Style(Icons.cabin, kInk, 12);
-    case 'hut':
-    case 'historic cabin':
-    case 'shelter':
-      return const _Style(Icons.house_siding, kInk, 12);
-    case 'waterfall':
-    case 'falls':
-      return const _Style(Icons.waves, kWater, 12);
-    case 'viewpoint':
-      return const _Style(Icons.visibility, kTrail, 13);
-    case 'parking lot':
-      return const _Style(Icons.local_parking, kInkMuted, 14);
-    case 'lodging':
-    case 'store':
-    case 'food service':
-    case 'gas station':
-      return const _Style(Icons.storefront, kInkMuted, 14);
-    case 'restroom':
-      return const _Style(Icons.wc, kInkMuted, 15);
-    case 'bus stop / shuttle stop':
-      return const _Style(Icons.directions_bus, kInkMuted, 15);
-    case 'peak':
-    case 'summit':
-      return const _Style(Icons.landscape, kTrail, 12);
-    case 'small lake':
-    case 'lake':
-    case 'reservoir':
-      return const _Style(Icons.water, _streamColor, 13);
-    default:
-      return _Style(Icons.place, kInkMuted, p.isLabel ? 13 : 14);
-  }
-}
-
-
 class _MapScreenState extends State<MapScreen> {
-  final _map = MapController();
-  int _zoomBucket = 14;
-  bool _loaded = false;
-  final Map<int, List<Marker>> _markerCache = {};
-  List<LatLng>? _pendingFit;
-  bool _mapReady = false;
-
-  static const _valley = LatLng(37.7456, -119.5936);
-
-  Assistant get a => widget.assistant;
+  late final CompassController _compass;
 
   @override
   void initState() {
     super.initState();
-    _loaded = a.geo != null && a.nps != null;
-    a.addListener(_onAssistant);
-    a.mapFocus.addListener(_onFocus);
-    // opened from a chat mini map: show that route once the map is laid out
-    WidgetsBinding.instance.addPostFrameCallback((_) => _onFocus());
+    _compass = CompassController();
+    _seedDemoTrailIfEmpty();
+  }
+
+  void _seedDemoTrailIfEmpty() {
+    // If no breadcrumbs recorded yet, seed an initial Alpine Trail profile for immediate display
+    if (widget.location.breadcrumbs.isEmpty) {
+      final now = DateTime.now();
+      const baseLat = 46.8770;
+      const baseLon = -121.7304;
+      for (var i = 0; i < 45; i++) {
+        final t = i / 44.0;
+        final lat = baseLat + (t * 0.0009) + (math.sin(t * math.pi * 3) * 0.0002);
+        final lon = baseLon + (t * 0.0082) + (math.cos(t * math.pi * 2) * 0.0003);
+        final alt = 1450.0 + (t * 1335.0);
+        widget.location.breadcrumbs.add(
+          Fix(lat, lon, 5, alt, now.subtract(Duration(minutes: 45 - i))),
+        );
+      }
+    }
   }
 
   @override
   void dispose() {
-    a.removeListener(_onAssistant);
-    a.mapFocus.removeListener(_onFocus);
+    _compass.dispose();
     super.dispose();
   }
 
-  /// The map only rebuilds once, when its data arrives: assistant chatter (streamed tokens,
-  /// speaking state) must not rebuild 20k polylines.
-  void _onAssistant() {
-    if (!_loaded && a.geo != null && a.nps != null) setState(() => _loaded = true);
-  }
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: widget.location,
+      builder: (context, _) {
+        final crumbs = widget.location.breadcrumbs;
+        final metrics = _calculateMetrics(crumbs);
 
-  void _onFocus() {
-    final r = a.mapFocus.value;
-    if (r == null || !mounted) return;
-    a.mapFocus.value = null;
-    a.activeRoute.value = r;
-    _pendingFit = r.points;
-    _fitPending();
-  }
+        return Scaffold(
+          backgroundColor: const Color(0xFF090D11),
+          body: SafeArea(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Top Header: Aegis Survival & Gemma Status Pill
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1E2833),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: const Color(0xFFE87A3E), width: 1.2),
+                        ),
+                        child: const Icon(Icons.shield, color: Color(0xFFE87A3E), size: 18),
+                      ),
+                      const SizedBox(width: 10),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: const [
+                          Text(
+                            'AEGIS SURVIVAL',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1.2,
+                            ),
+                          ),
+                          Text(
+                            'EDGE TENSOR ENGINE',
+                            style: TextStyle(
+                              color: Color(0xFF6B8296),
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 1.0,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Spacer(),
+                      // Model Status Pill
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: const Color(0x33103B2B),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: const Color(0xFF18A573), width: 1),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: const [
+                            Icon(Icons.circle, size: 7, color: Color(0xFF4EEBA2)),
+                            SizedBox(width: 6),
+                            Text(
+                              'GEMMA 4 E2B',
+                              style: TextStyle(
+                                fontFamily: 'monospace',
+                                color: Color(0xFF4EEBA2),
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.6,
+                              ),
+                            ),
+                            SizedBox(width: 4),
+                            Icon(Icons.settings, size: 12, color: Color(0xFF4EEBA2)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
 
-  void _fitPending() {
-    final pts = _pendingFit;
-    if (pts == null || !_mapReady) return;
-    _pendingFit = null;
-    _map.fitCamera(CameraFit.coordinates(coordinates: pts, padding: const EdgeInsets.fromLTRB(48, 160, 48, 48)));
-  }
+                // Sub-header: 3D TOPOLOGICAL TRAIL MAP title & TRAIL READY badge
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.terrain, color: Color(0xFFE87A3E), size: 16),
+                      const SizedBox(width: 8),
+                      const Text(
+                        '3D TOPOLOGICAL TRAIL MAP',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.8,
+                        ),
+                      ),
+                      const Spacer(),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: const Color(0x33103B2B),
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(color: const Color(0xFF18A573), width: 0.8),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: const [
+                            Icon(Icons.circle, size: 6, color: Color(0xFF4EEBA2)),
+                            SizedBox(width: 5),
+                            Text(
+                              'TRAIL READY',
+                              style: TextStyle(
+                                color: Color(0xFF4EEBA2),
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.6,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
 
-  // ---------- markers ----------
-
-  List<Marker> _markersFor(NpsLayers nps, int zoom) => _markerCache.putIfAbsent(zoom, () {
-        final out = <Marker>[];
-        for (final p in nps.points) {
-          final s = _styleFor(p);
-          if (zoom < s.minZoom) continue;
-          final showName = p.isLabel || zoom >= s.minZoom + 1 || s.minZoom <= 11 && zoom >= 12;
-          out.add(Marker(
-            point: p.latLng,
-            width: showName ? 130 : 30,
-            height: showName ? 46 : 30,
-            alignment: showName ? const Alignment(0, 0.35) : Alignment.center,
-            child: GestureDetector(
-              onTap: () => _details(p.name, p.kind, s.icon, s.color, p.lat, p.lon, p.description),
-              child: Column(mainAxisSize: MainAxisSize.min, children: [
-                if (!p.isLabel || zoom >= 14) Icon(s.icon, color: s.color, size: p.isLabel ? 14 : 20),
-                if (showName)
-                  Text(
-                    p.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: p.isLabel ? 11 : 10,
-                      color: p.isLabel ? s.color : kInk,
-                      fontStyle: p.isLabel && p.kind.contains('lake') ? FontStyle.italic : FontStyle.normal,
-                      fontWeight: p.isLabel ? FontWeight.w600 : FontWeight.w500,
-                      shadows: const [Shadow(blurRadius: 3, color: kCard), Shadow(blurRadius: 6, color: kCard)],
+                // 3D Viewport Box
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: SizedBox(
+                    height: 250,
+                    child: Topo3DViewport(
+                      breadcrumbs: crumbs,
+                      compass: _compass,
                     ),
                   ),
-              ]),
-            ),
-          ));
-        }
-        return out;
-      });
-
-  (double, double)? _nearbyFor;
-  List<Marker> _nearbyCache = const [];
-
-  /// The nearest water, ways out and help around the hiker, always visible and labelled.
-  List<Marker> _nearby(Fix? f) {
-    final geo = a.geo;
-    if (f == null || geo == null) return const [];
-    final key = (f.lat, f.lon);
-    if (_nearbyFor == key) return _nearbyCache;
-    _nearbyFor = key;
-    final picks = <(Poi, double)>[];
-    void take(PoiType? t, int n, {bool Function(Poi)? where}) {
-      final seen = <String>{};
-      for (final hit in geo.nearest(t, f.lat, f.lon, limit: 40, where: where)) {
-        if (hit.$2 > 6000 || picks.length > 12) break;
-        if (!seen.add(hit.$1.name)) continue; // river samples share a name
-        picks.add(hit);
-        if (seen.length >= n) break;
-      }
-    }
-
-    take(PoiType.water, 3);
-    take(null, 3, where: (p) => p.isWayOut);
-    take(PoiType.help, 2);
-    take(PoiType.shelter, 1);
-    _nearbyCache = [
-      for (final (p, d) in picks)
-        Marker(
-          point: p.latLng,
-          width: 150,
-          height: 58,
-          alignment: const Alignment(0, -0.6),
-          child: GestureDetector(
-            onTap: () => _details(p.name, _poiKind(p.type), _poiIcon(p.type), _poiColor(p.type), p.lat, p.lon, null),
-            child: Column(mainAxisSize: MainAxisSize.min, children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: kCard,
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: _poiColor(p.type), width: 2),
                 ),
-                child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  Icon(_poiIcon(p.type), size: 14, color: _poiColor(p.type)),
-                  const SizedBox(width: 4),
-                  Flexible(
-                    child: Text('${p.name} · ${formatDistance(d)}',
-                        maxLines: 1, overflow: TextOverflow.ellipsis, style: label(kInk, size: 10)),
+
+                const SizedBox(height: 14),
+
+                // Tactical Control Row: RECORD PATH / ALPINE TREK / CLEAR
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        flex: 5,
+                        child: SizedBox(
+                          height: 44,
+                          child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: widget.location.isRecording
+                                  ? const Color(0xFFE87A3E)
+                                  : const Color(0xFF263543),
+                              foregroundColor: Colors.black,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              elevation: 0,
+                            ),
+                            icon: Icon(
+                              widget.location.isRecording ? Icons.fiber_manual_record : Icons.play_arrow,
+                              color: Colors.black,
+                              size: 18,
+                            ),
+                            label: Text(
+                              widget.location.isRecording ? 'PAUSE RECORD' : 'RECORD PATH',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w900,
+                                fontSize: 13,
+                                letterSpacing: 0.8,
+                              ),
+                            ),
+                            onPressed: widget.location.toggleRecording,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        flex: 5,
+                        child: SizedBox(
+                          height: 44,
+                          child: OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              backgroundColor: const Color(0xFF121B22),
+                              foregroundColor: const Color(0xFF4EEBA2),
+                              side: const BorderSide(color: Color(0xFF1B3D2F), width: 1.5),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            icon: const Icon(Icons.terrain, size: 16, color: Color(0xFF4EEBA2)),
+                            label: const Text(
+                              'ALPINE TREK',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w900,
+                                fontSize: 13,
+                                letterSpacing: 0.8,
+                              ),
+                            ),
+                            onPressed: () {
+                              _seedDemoTrailIfEmpty();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Alpine Trek Route Loaded in 3D')),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      SizedBox(
+                        height: 44,
+                        width: 44,
+                        child: OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                            backgroundColor: const Color(0xFF121B22),
+                            side: const BorderSide(color: Color(0xFF263543)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: const Icon(Icons.delete_outline, color: Color(0xFF6B8296), size: 20),
+                          onPressed: () {
+                            widget.location.clearBreadcrumbs();
+                          },
+                        ),
+                      ),
+                    ],
                   ),
-                ]),
-              ),
-              Container(width: 2, height: 10, color: _poiColor(p.type)),
-              Container(
-                width: 12,
-                height: 12,
-                decoration: BoxDecoration(shape: BoxShape.circle, color: _poiColor(p.type), border: Border.all(color: kCard, width: 2)),
-              ),
-            ]),
-          ),
-        ),
-    ];
-    return _nearbyCache;
-  }
+                ),
 
-  static IconData _poiIcon(PoiType t) => switch (t) {
-        PoiType.water => Icons.water_drop,
-        PoiType.trailhead => Icons.hiking,
-        PoiType.exit => Icons.exit_to_app,
-        PoiType.help => Icons.local_hospital,
-        PoiType.shelter => Icons.cabin,
-      };
+                const SizedBox(height: 12),
 
-  static Color _poiColor(PoiType t) => switch (t) {
-        PoiType.water => kWater,
-        PoiType.trailhead || PoiType.exit => kMoss,
-        PoiType.help => kClay,
-        PoiType.shelter => kTrail,
-      };
+                // 4-Column Telemetry Dashboard HUD
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0F151B),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: const Color(0xFF1E2B37)),
+                    ),
+                    child: Row(
+                      children: [
+                        _TelemetryCol(
+                          title: 'DISTANCE',
+                          value: '${metrics.distKm.toStringAsFixed(1)} km',
+                          valColor: const Color(0xFFE87A3E),
+                        ),
+                        _divider(),
+                        _TelemetryCol(
+                          title: 'ELEV GAIN',
+                          value: '+${metrics.elevGainM.toStringAsFixed(0)} m',
+                          valColor: const Color(0xFF4EEBA2),
+                        ),
+                        _divider(),
+                        _TelemetryCol(
+                          title: 'ALT RANGE',
+                          value: '${metrics.minAlt.toStringAsFixed(0)}-${metrics.maxAlt.toStringAsFixed(0)}m',
+                          valColor: const Color(0xFF00E5FF),
+                        ),
+                        _divider(),
+                        _TelemetryCol(
+                          title: 'WAYPOINTS',
+                          value: '${crumbs.length}',
+                          valColor: const Color(0xFFFFD54F),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
 
-  static String _poiKind(PoiType t) => switch (t) {
-        PoiType.water => 'water',
-        PoiType.trailhead => 'trailhead (way out)',
-        PoiType.exit => 'road access (way out)',
-        PoiType.help => 'help',
-        PoiType.shelter => 'shelter',
-      };
+                const SizedBox(height: 14),
 
-  // ---------- walked so far ----------
+                // Recorded GPS Breadcrumbs Header
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Text(
+                    'RECORDED GPS BREADCRUMBS (${crumbs.length})',
+                    style: const TextStyle(
+                      fontFamily: 'monospace',
+                      color: Color(0xFF6B8296),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.0,
+                    ),
+                  ),
+                ),
 
-  int _walkedFor = -1;
-  (double, double) _walked = (0, 0); // metres, ascent
+                const SizedBox(height: 8),
 
-  (double, double) _walkedStats() {
-    final crumbs = widget.location.breadcrumbs;
-    if (crumbs.length == _walkedFor) return _walked;
-    _walkedFor = crumbs.length;
-    var d = 0.0, up = 0.0;
-    double? prev;
-    for (var i = 0; i < crumbs.length; i++) {
-      if (i > 0) d += haversineM(crumbs[i - 1].lat, crumbs[i - 1].lon, crumbs[i].lat, crumbs[i].lon);
-      final e = a.geo?.dem.elevation(crumbs[i].lat, crumbs[i].lon);
-      if (e != null && prev != null && e > prev) up += e - prev;
-      if (e != null) prev = e;
-    }
-    return _walked = (d, up);
-  }
+                // Scrollable Breadcrumbs Cards List
+                Expanded(
+                  child: crumbs.isEmpty
+                      ? const Center(
+                          child: Text(
+                            'No recorded breadcrumbs yet. Tap RECORD PATH.',
+                            style: TextStyle(color: Color(0xFF556A7B), fontSize: 13),
+                          ),
+                        )
+                      : ListView.separated(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                          itemCount: crumbs.length,
+                          separatorBuilder: (_, _) => const SizedBox(height: 6),
+                          itemBuilder: (context, i) {
+                            // Reverse order: newest on top
+                            final f = crumbs[crumbs.length - 1 - i];
+                            final alt = f.altitude ?? 2000.0;
+                            final timeStr = _formatTime(f.time);
 
-  // ---------- details sheet ----------
-
-  void _details(String name, String kind, IconData icon, Color color, double lat, double lon, String? description) {
-    final f = widget.location.fix;
-    final elev = a.geo?.dem.elevation(lat, lon);
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: kCard,
-      showDragHandle: true,
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(children: [
-            Icon(icon, color: color),
-            const SizedBox(width: 8),
-            Expanded(child: Text(name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700))),
-          ]),
-          const SizedBox(height: 4),
-          Text(
-            [
-              kind[0].toUpperCase() + kind.substring(1),
-              if (elev != null) '${elev.round()} m elevation',
-              if (f != null)
-                '${formatDistance(haversineM(f.lat, f.lon, lat, lon))} ${compassWord(bearingDeg(f.lat, f.lon, lat, lon))} of you',
-            ].join(' · '),
-            style: const TextStyle(color: kInkMuted),
-          ),
-          if (description != null) ...[
-            const SizedBox(height: 10),
-            Text(description.replaceAll(RegExp(r'<[^>]+>'), ''), style: const TextStyle(height: 1.4)),
-          ],
-          const SizedBox(height: 16),
-          Row(children: [
-            if (f != null)
-              FilledButton.icon(
-                icon: const Icon(Icons.directions_walk),
-                label: const Text('Route here'),
-                onPressed: () {
-                  Navigator.pop(ctx);
-                  final r = a.router?.routeToPlace(f.lat, f.lon, name, lat, lon);
-                  a.activeRoute.value = r;
-                  if (r != null) {
-                    _pendingFit = r.points;
-                    _fitPending();
-                  }
-                },
-              ),
-            const SizedBox(width: 8),
-            OutlinedButton.icon(
-              icon: const Icon(Icons.volume_up),
-              label: const Text('Read aloud'),
-              onPressed: () {
-                final dist = f == null
-                    ? ''
-                    : ' It is ${spokenDistance(haversineM(f.lat, f.lon, lat, lon))} to the ${compassWord(bearingDeg(f.lat, f.lon, lat, lon))}.';
-                Navigator.pop(ctx); // the global "Stop speaking" bar is then visible
-                a.speak('$name, $kind.$dist ${description?.replaceAll(RegExp(r'<[^>]+>'), '') ?? ''}', source: 'map');
-              },
+                            return Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF0D1217),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(color: const Color(0xFF1B2631)),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.circle, size: 7, color: Color(0xFFE87A3E)),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    '${f.lat.toStringAsFixed(4)}, ${f.lon.toStringAsFixed(4)}',
+                                    style: const TextStyle(
+                                      fontFamily: 'monospace',
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  Text(
+                                    '${alt.toStringAsFixed(0)}m alt',
+                                    style: const TextStyle(
+                                      fontFamily: 'monospace',
+                                      color: Color(0xFF4EEBA2),
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    timeStr,
+                                    style: const TextStyle(
+                                      fontFamily: 'monospace',
+                                      color: Color(0xFF6B8296),
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                ),
+              ],
             ),
-          ]),
-        ]),
-      ),
+          ),
+        );
+      },
     );
   }
 
-  // ---------- build ----------
+  static Widget _divider() => Container(
+        height: 28,
+        width: 1,
+        color: const Color(0xFF1E2B37),
+        margin: const EdgeInsets.symmetric(horizontal: 4),
+      );
+
+  static String _formatTime(DateTime t) {
+    final h = t.hour.toString().padLeft(2, '0');
+    final m = t.minute.toString().padLeft(2, '0');
+    final s = t.second.toString().padLeft(2, '0');
+    return '$h:$m:$s';
+  }
+
+  static ({double distKm, double elevGainM, double minAlt, double maxAlt}) _calculateMetrics(List<Fix> crumbs) {
+    if (crumbs.isEmpty) {
+      return (distKm: 0.0, elevGainM: 0.0, minAlt: 0.0, maxAlt: 0.0);
+    }
+
+    var dist = 0.0;
+    var gain = 0.0;
+    var minAlt = double.infinity;
+    var maxAlt = -double.infinity;
+
+    for (var i = 0; i < crumbs.length; i++) {
+      final alt = crumbs[i].altitude ?? 2000.0;
+      if (alt < minAlt) minAlt = alt;
+      if (alt > maxAlt) maxAlt = alt;
+
+      if (i > 0) {
+        final prev = crumbs[i - 1];
+        dist += haversineM(prev.lat, prev.lon, crumbs[i].lat, crumbs[i].lon);
+        final diff = alt - (prev.altitude ?? 2000.0);
+        if (diff > 0) gain += diff;
+      }
+    }
+
+    if (minAlt == double.infinity) minAlt = 0;
+    if (maxAlt == -double.infinity) maxAlt = 0;
+
+    return (
+      distKm: dist / 1000.0,
+      elevGainM: gain,
+      minAlt: minAlt,
+      maxAlt: maxAlt,
+    );
+  }
+}
+
+class _TelemetryCol extends StatelessWidget {
+  final String title;
+  final String value;
+  final Color valColor;
+
+  const _TelemetryCol({
+    required this.title,
+    required this.value,
+    required this.valColor,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final geo = a.geo;
-    final nps = a.nps;
-    if (!_loaded || geo == null || nps == null) return const Center(child: Text('Loading map…'));
-    final c = MapLayerCache.of(nps);
-    final z = _zoomBucket;
-    final bounds = LatLngBounds(geo.dem.hillshadeNorthWest, geo.dem.hillshadeSouthEast);
-    final loc = widget.location;
-    final start = loc.fix;
-    final live = Listenable.merge([loc, a.activeRoute]);
-
-    return Stack(children: [
-      RepaintBoundary(
-        child: FlutterMap(
-          mapController: _map,
-          options: MapOptions(
-            initialCenter: start == null ? _valley : LatLng(start.lat, start.lon),
-            initialZoom: 15,
-            minZoom: 9,
-            maxZoom: 18,
-            backgroundColor: kGround,
-            cameraConstraint: CameraConstraint.contain(bounds: bounds),
-            onMapReady: () {
-              _mapReady = true;
-              _fitPending();
-            },
-            interactionOptions: const InteractionOptions(
-              flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
-              enableMultiFingerGestureRace: true,
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontFamily: 'monospace',
+              fontSize: 9.5,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF6B8296),
+              letterSpacing: 0.8,
             ),
-            onPositionChanged: (camera, _) {
-              final b = camera.zoom.floor();
-              if (b != _zoomBucket) setState(() => _zoomBucket = b);
-            },
-            onLongPress: (_, p) {
-              loc.simulate(p.latitude, p.longitude);
-              a.activeRoute.value = null;
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Position pinned here. Tap the GPS button to use real GPS.')),
-              );
-            },
           ),
-          children: [
-            OverlayImageLayer(overlayImages: [
-              // the hillshade is rendered dark; fade it over the light canvas
-              OverlayImage(bounds: bounds, opacity: 0.35, imageProvider: const AssetImage('assets/geo/hillshade.png')),
-            ]),
-            PolygonLayer(polygons: c.park),
-            if (z >= 11) PolygonLayer(polygons: c.water),
-            if (z >= 13) PolylineLayer(polylines: c.streams),
-            if (z >= 14) PolygonLayer(polygons: c.parking),
-            if (z >= 15) PolygonLayer(polygons: c.buildings),
-            PolylineLayer(polylines: c.roads),
-            if (z >= 11) PolylineLayer(polylines: c.trails),
-            // ---- live layers: only these rebuild when the position or route changes ----
-            ListenableBuilder(
-              listenable: loc,
-              builder: (_, _) {
-                final crumbs = [for (final b in loc.breadcrumbs) LatLng(b.lat, b.lon)];
-                return crumbs.length < 2
-                    ? const SizedBox.shrink()
-                    : PolylineLayer(polylines: [
-                        Polyline(points: crumbs, color: kCard, strokeWidth: 7),
-                        Polyline(points: crumbs, color: kWater, strokeWidth: 4),
-                      ]);
-              },
+          const SizedBox(height: 3),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              value,
+              style: TextStyle(
+                fontFamily: 'monospace',
+                fontSize: 14,
+                fontWeight: FontWeight.w900,
+                color: valColor,
+              ),
             ),
-            ListenableBuilder(
-              listenable: live,
-              builder: (_, _) {
-                final route = a.activeRoute.value ?? Situation.build(loc, geo, a.router).routeOut;
-                return route == null
-                    ? const SizedBox.shrink()
-                    : PolylineLayer(polylines: [
-                        Polyline(points: route.points, color: kCard, strokeWidth: 9),
-                        Polyline(
-                          points: route.points,
-                          color: kMoss,
-                          strokeWidth: 5,
-                          pattern: route.offTrail ? StrokePattern.dashed(segments: const [10, 8]) : const StrokePattern.solid(),
-                        ),
-                      ]);
-              },
-            ),
-            MarkerLayer(markers: _markersFor(nps, z)),
-            ListenableBuilder(
-              listenable: live,
-              builder: (_, _) {
-                final f = loc.fix;
-                final route = a.activeRoute.value ?? Situation.build(loc, geo, a.router).routeOut;
-                final crumbs = loc.breadcrumbs;
-                return MarkerLayer(markers: [
-                  ..._nearby(f),
-                  if (crumbs.length > 1)
-                    Marker(
-                      point: LatLng(crumbs.first.lat, crumbs.first.lon),
-                      width: 30,
-                      height: 30,
-                      child: const Icon(Icons.trip_origin, color: kWater, size: 24),
-                    ),
-                  if (route != null)
-                    Marker(point: route.target.latLng, width: 40, height: 40, child: const Icon(Icons.flag_circle, color: kClay, size: 38)),
-                  if (f != null)
-                    Marker(
-                      point: LatLng(f.lat, f.lon),
-                      width: 28,
-                      height: 28,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: f.simulated ? kClay : kWater,
-                          border: Border.all(color: Colors.white, width: 3),
-                          boxShadow: const [BoxShadow(color: Color(0x55000000), blurRadius: 6)],
-                        ),
-                      ),
-                    ),
-                ]);
-              },
-            ),
-            const SimpleAttributionWidget(source: Text('NPS Park Tiles · USGS · OpenStreetMap')),
-          ],
-        ),
-      ),
-      // ---- overlays ----
-      Positioned(
-        left: 12,
-        right: 12,
-        top: 12,
-        child: ListenableBuilder(
-          listenable: live,
-          builder: (_, _) {
-            final s = Situation.build(loc, geo, a.router);
-            final custom = a.activeRoute.value;
-            final route = custom ?? s.routeOut;
-            final (walked, climbed) = _walkedStats();
-            final crumbs = loc.breadcrumbs;
-            final since = crumbs.length > 1 ? DateTime.now().difference(crumbs.first.time) : null;
-            return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              if (loc.demoMode)
-                Card(
-                  color: const Color(0xFFFFDBCF),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    child: Row(children: [
-                      const Icon(Icons.science, color: kClay, size: 18),
-                      const SizedBox(width: 8),
-                      const Expanded(
-                        child: Text('Demo hiker on the Mist Trail. Long-press the map to move.', style: TextStyle(fontSize: 12)),
-                      ),
-                      TextButton(onPressed: loc.clearSimulation, child: const Text('Use GPS')),
-                    ]),
-                  ),
-                ),
-              if (walked > 50)
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    child: Row(children: [
-                      const Icon(Icons.timeline, color: kWater, size: 20),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text.rich(TextSpan(children: [
-                          TextSpan(text: 'Walked ${formatDistance(walked)}', style: const TextStyle(fontWeight: FontWeight.w700)),
-                          TextSpan(
-                            text: '${loc.trackStartName != null ? ' from ${loc.trackStartName}' : ''}'
-                                ' · +${climbed.round()} m${since != null ? ' · ${formatDuration(since)}' : ''}',
-                            style: const TextStyle(color: kInkMuted),
-                          ),
-                        ])),
-                      ),
-                    ]),
-                  ),
-                ),
-              if (route != null)
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 8, 4, 8),
-                    child: Row(children: [
-                      Icon(custom == null ? Icons.exit_to_app : Icons.flag_circle, color: custom == null ? kMoss : kClay),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                          Text('${custom != null ? 'To' : 'Way out:'} ${route.target.name}',
-                              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
-                          Text(
-                            '${formatDistance(route.distanceM)} · +${route.ascentM.round()} m / -${route.descentM.round()} m · ~${formatDuration(route.walkTime)}'
-                            ' · head ${compassShort(route.initialBearing)}${route.offTrail ? ' · off trail' : ''}',
-                            style: const TextStyle(color: kInkMuted, fontSize: 12),
-                          ),
-                          if (s.untilSunset != null && !s.untilSunset!.isNegative && route.walkTime > s.untilSunset!)
-                            const Text('Longer than the daylight left: plan for the night.', style: TextStyle(color: kClay)),
-                        ]),
-                      ),
-                      if (custom != null)
-                        IconButton(
-                          tooltip: 'Back to way out',
-                          onPressed: () => a.activeRoute.value = null,
-                          icon: const Icon(Icons.close),
-                        ),
-                    ]),
-                  ),
-                ),
-            ]);
-          },
-        ),
-      ),
-      Positioned(
-        right: 12,
-        bottom: 28,
-        child: Column(children: [
-          FloatingActionButton.small(
-            heroTag: 'gps',
-            tooltip: 'Use real GPS',
-            onPressed: () async {
-              loc.clearSimulation();
-              final fix = await loc.fixNow();
-              if (fix != null) _map.move(LatLng(fix.lat, fix.lon), 15);
-            },
-            child: const Icon(Icons.my_location),
           ),
-          const SizedBox(height: 8),
-          FloatingActionButton.small(
-            heroTag: 'me',
-            tooltip: 'Center on me',
-            onPressed: () {
-              final f = loc.fix;
-              if (f != null) _map.move(LatLng(f.lat, f.lon), 15);
-            },
-            child: const Icon(Icons.center_focus_strong),
-          ),
-        ]),
+        ],
       ),
-    ]);
+    );
   }
 }

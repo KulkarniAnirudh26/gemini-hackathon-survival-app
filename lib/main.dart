@@ -5,6 +5,7 @@ import 'location/location_service.dart';
 import 'ui/guide_screen.dart';
 import 'ui/home_screen.dart';
 import 'ui/map_screen.dart';
+import 'ui/settings_screen.dart';
 import 'ui/theme.dart';
 
 void main() {
@@ -71,6 +72,7 @@ class _ShellState extends State<Shell> with WidgetsBindingObserver {
       if (_tab == 0) MapScreen(assistant: widget.assistant, location: widget.location) else const SizedBox(),
       HomeScreen(assistant: widget.assistant, location: widget.location),
       GuideScreen(assistant: widget.assistant),
+      SettingsScreen(assistant: widget.assistant, location: widget.location),
     ];
     return Scaffold(
       body: SafeArea(
@@ -126,6 +128,11 @@ class _ShellState extends State<Shell> with WidgetsBindingObserver {
               icon: Icon(Icons.emergency_outlined, color: kClay),
               selectedIcon: Icon(Icons.emergency, color: kClay),
               label: 'SOS & AID',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.tune_outlined, color: kInkMuted),
+              selectedIcon: Icon(Icons.tune, color: kMoss),
+              label: 'SETTINGS',
             ),
           ],
         ),
