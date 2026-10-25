@@ -7,12 +7,14 @@ import 'package:latlong2/latlong.dart';
 
 /// Offline elevation grid (Web Mercator pixels at zoom [z]), built by tool/build_geo.py.
 class Dem {
+  /// Name of the offline region pack (e.g. "Yosemite"); null for packs built before it was added.
+  final String? region;
   final int z, px0, py0, width, height;
   final Int16List data;
   final LatLng hillshadeNorthWest;
   final LatLng hillshadeSouthEast;
 
-  Dem._(this.z, this.px0, this.py0, this.width, this.height, this.data, this.hillshadeNorthWest,
+  Dem._(this.region, this.z, this.px0, this.py0, this.width, this.height, this.data, this.hillshadeNorthWest,
       this.hillshadeSouthEast);
 
   static Future<Dem> load() async {
@@ -21,6 +23,7 @@ class Dem {
     final data = bytes.buffer.asInt16List(bytes.offsetInBytes, bytes.lengthInBytes ~/ 2);
     final hs = meta['hillshade'] as Map<String, dynamic>;
     return Dem._(
+      meta['region'] as String?,
       meta['z'] as int,
       meta['px0'] as int,
       meta['py0'] as int,

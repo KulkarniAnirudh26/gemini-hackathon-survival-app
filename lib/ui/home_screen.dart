@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -6,10 +7,9 @@ import 'package:image_picker/image_picker.dart';
 
 import '../ai/assistant.dart';
 import '../ai/situation.dart';
-import '../geo/geo_data.dart';
-import '../geo/geo_math.dart';
 import '../location/location_service.dart';
 import 'guide_screen.dart';
+import 'here_card.dart';
 import 'route_mini_map.dart';
 import 'theme.dart';
 
@@ -72,27 +72,23 @@ class _HomeScreenState extends State<HomeScreen> {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (_scroll.hasClients) _scroll.jumpTo(_scroll.position.maxScrollExtent);
         });
-        final chatting = a.messages.isNotEmpty;
         return Column(
           children: [
-            _StatusBar(s: s, a: a, location: widget.location, onBack: chatting ? a.clearChat : null),
-            if (!chatting)
-              // dashboard: the essentials, big; asking anything switches to the chat view
-              Expanded(child: _Dashboard(s: s, a: a))
-            else ...[
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-                child: _Cards(s: s, a: a),
-              ),
-              Expanded(
-                child: ListView.builder(
-                  controller: _scroll,
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                  itemCount: a.messages.length,
-                  itemBuilder: (_, i) => _Bubble(m: a.messages[i], a: a),
-                ),
-              ),
-            ],
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              child: HereCard(s: s, geo: a.geo),
+            ),
+            if (a.messages.isNotEmpty) _QuickPrompts(a: a),
+            Expanded(
+              child: a.messages.isEmpty
+                  ? _Welcome(a: a, s: s)
+                  : ListView.builder(
+                      controller: _scroll,
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                      itemCount: a.messages.length,
+                      itemBuilder: (_, i) => _Bubble(key: ObjectKey(a.messages[i]), m: a.messages[i], a: a),
+                    ),
+            ),
             if (_typing)
               _Composer(
                 a: a,
@@ -117,348 +113,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-
-class _StatusBar extends StatelessWidget {
-  final Situation s;
-  final Assistant a;
-  final LocationService location;
-  final VoidCallback? onBack; // chat view: back to the dashboard
-  const _StatusBar({required this.s, required this.a, required this.location, this.onBack});
-
-  @override
-  Widget build(BuildContext context) {
-    // no clock or battery here: the phone's own status bar already shows them
-    final us = s.untilSunset;
-    final sunText = s.isNight
-        ? 'DARK'
-        : us == null
-            ? '--'
-            : us.isNegative
-                ? 'DUSK'
-                : 'SUNSET IN ${formatDuration(us).toUpperCase()}';
-    final sunWarn = s.isNight || (us != null && us < const Duration(hours: 1));
-    final f = s.fix;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 10, 8, 4),
-      child: Row(
-        children: [
-          if (onBack != null) ...[
-            InkWell(
-              onTap: onBack,
-              borderRadius: BorderRadius.circular(8),
-              child: const Padding(padding: EdgeInsets.all(4), child: Icon(Icons.dashboard_outlined, size: 20, color: kInk)),
-            ),
-            const SizedBox(width: 6),
-          ],
-          Flexible(child: _Chip(icon: Icons.wb_twilight, text: sunText, warn: sunWarn)),
-          const SizedBox(width: 8),
-          Flexible(
-            child: _Chip(
-              icon: f == null ? Icons.gps_off : Icons.gps_fixed,
-              text: f == null ? 'FINDING GPS' : (f.simulated ? 'PINNED POSITION' : 'GPS ±${f.accuracy.round()} M'),
-              warn: f == null,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// The home screen before any question: big, glanceable tiles. Tapping one asks about it.
-class _Dashboard extends StatelessWidget {
-  final Situation s;
-  final Assistant a;
-  const _Dashboard({required this.s, required this.a});
-
-  void _ask(String q) {
-    if (!a.busy && a.phase != Phase.loading) a.ask(q, input: 'card');
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final r = s.routeOut;
-    final w = s.water;
-    final h = s.help;
-    final f = s.fix;
-    final us = s.untilSunset;
-    final sunset = s.sun.sunset;
-    final dark = s.isNight || (us != null && us.isNegative);
-    final lowLight = us != null && !us.isNegative && us < const Duration(hours: 1);
-    String dir((Poi, double)? p) => p == null || f == null ? '' : compassShort(bearingDeg(f.lat, f.lon, p.$1.lat, p.$1.lon));
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
-      children: [
-        Row(children: [
-          Expanded(
-            child: _BigTile(
-              icon: Icons.exit_to_app,
-              color: r != null && r.offTrail ? kClay : kMoss,
-              title: 'WAY OUT',
-              value: r == null ? '—' : formatDistance(r.distanceM),
-              unit: r == null ? '' : compassShort(r.initialBearing),
-              lines: [
-                r == null ? (f == null ? 'Waiting for GPS' : 'No route found') : r.target.name,
-                if (r != null) '~${formatDuration(r.walkTime)} walk · +${r.ascentM.round()} m${r.offTrail ? ' · off trail' : ''}',
-              ],
-              onTap: () => _ask('How do I get out of here?'),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: _BigTile(
-              icon: Icons.water_drop,
-              color: kWater,
-              title: 'WATER',
-              value: w == null ? '—' : formatDistance(w.$2),
-              unit: dir(w),
-              lines: [w?.$1.name ?? 'None mapped nearby', 'Treat before drinking'],
-              onTap: () => _ask('Where is the nearest water?'),
-            ),
-          ),
-        ]),
-        const SizedBox(height: 10),
-        Row(children: [
-          Expanded(
-            child: _BigTile(
-              icon: dark ? Icons.nights_stay : Icons.wb_twilight,
-              color: dark || lowLight ? kClay : kTrail,
-              title: 'DAYLIGHT',
-              value: dark ? 'Dark' : (us == null ? '—' : formatDuration(us)),
-              unit: dark ? '' : 'left',
-              lines: [
-                'Now ${_hhmm(s.now)}',
-                if (sunset != null) 'Sunset ${_hhmm(sunset)}',
-              ],
-              onTap: () => _ask('How long until sunset?'),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: _BigTile(
-              icon: Icons.local_hospital,
-              color: kClay,
-              title: 'HELP',
-              value: h == null ? '—' : formatDistance(h.$2),
-              unit: dir(h),
-              lines: [h?.$1.name ?? 'None mapped nearby', 'SOS: 911 / Satellite'],
-              onTap: () => _ask('Where is the nearest ranger station or help?'),
-            ),
-          ),
-        ]),
-        const SizedBox(height: 14),
-        _QuickPrompts(a: a),
-        const SizedBox(height: 8),
-        Text(a.status, style: label(kInkMuted, size: 10), textAlign: TextAlign.center),
-      ],
-    );
-  }
-}
-
-class _BigTile extends StatelessWidget {
-  final IconData icon;
-  final Color color;
-  final String title, value, unit;
-  final List<String> lines;
-  final VoidCallback onTap;
-  const _BigTile({
-    required this.icon,
-    required this.color,
-    required this.title,
-    required this.value,
-    required this.unit,
-    required this.lines,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) => Material(
-        color: kCard,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14), side: BorderSide(color: color, width: 2)),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(14),
-          onTap: onTap,
-          child: SizedBox(
-            height: 168,
-            child: Padding(
-              padding: const EdgeInsets.all(14),
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Row(children: [
-                  Icon(icon, color: color, size: 26),
-                  const SizedBox(width: 6),
-                  Text(title, style: label(color, size: 13)),
-                ]),
-                const Spacer(),
-                Row(crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
-                  Flexible(
-                    child: Text(
-                      value,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w700, height: 1.0, fontFeatures: [FontFeature.tabularFigures()]),
-                    ),
-                  ),
-                  if (unit.isNotEmpty) ...[
-                    const SizedBox(width: 6),
-                    Text(unit, style: label(kInkMuted, size: 15)),
-                  ],
-                ]),
-                const SizedBox(height: 6),
-                for (final l in lines)
-                  Text(l, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: kInkMuted, fontSize: 12.5)),
-              ]),
-            ),
-          ),
-        ),
-      );
-}
-
 String _hhmm(DateTime t) => '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
-
-/// Pill status chip: inset fill, moss (nominal) or clay (warning) border, solid pip.
-class _Chip extends StatelessWidget {
-  final IconData icon;
-  final String text;
-  final bool warn;
-  const _Chip({required this.icon, required this.text, this.warn = false});
-
-  @override
-  Widget build(BuildContext context) {
-    final c = warn ? kClay : kMoss;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: kInset,
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: c, width: 1.5),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 6,
-            height: 6,
-            decoration: BoxDecoration(color: c, shape: BoxShape.circle),
-          ),
-          const SizedBox(width: 5),
-          Icon(icon, size: 13, color: c),
-          const SizedBox(width: 3),
-          Flexible(
-            child: Text(text, style: label(kInk, size: 10), overflow: TextOverflow.ellipsis),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Cards extends StatelessWidget {
-  final Situation s;
-  final Assistant a;
-  const _Cards({required this.s, required this.a});
-
-  void _ask(String q) {
-    if (!a.busy && a.phase != Phase.loading) a.ask(q, input: 'card');
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final r = s.routeOut;
-    final w = s.water;
-    final h = s.help;
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            flex: 3,
-            child: _Card(
-              onTap: () => _ask('How do I get out of here?'),
-              icon: Icons.directions_walk,
-              color: r != null && r.offTrail ? kClay : kMoss,
-              title: 'WAY OUT',
-              main: r == null ? '—' : '${formatDistance(r.distanceM)} ${compassShort(r.initialBearing)}',
-              sub: r == null
-                  ? (s.fix == null ? 'waiting for GPS' : 'no route')
-                  : '${r.target.name} · ${formatDuration(r.walkTime)}${r.offTrail ? ' · off trail' : ''}',
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            flex: 2,
-            child: _Card(
-              onTap: () => _ask('Where is the nearest water?'),
-              icon: Icons.water_drop,
-              color: kWater,
-              title: 'WATER',
-              main: w == null
-                  ? '—'
-                  : '${formatDistance(w.$2)} ${s.fix == null ? '' : compassShort(bearingDeg(s.fix!.lat, s.fix!.lon, w.$1.lat, w.$1.lon))}',
-              sub: w?.$1.name ?? '',
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            flex: 2,
-            child: _Card(
-              onTap: () => _ask('Where is the nearest ranger station or help?'),
-              icon: Icons.local_hospital,
-              color: kClay,
-              title: 'HELP',
-              main: h == null ? '—' : formatDistance(h.$2),
-              sub: h?.$1.name ?? '',
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Card extends StatelessWidget {
-  final IconData icon;
-  final Color color;
-  final String title, main, sub;
-  final VoidCallback? onTap;
-  const _Card({required this.icon, required this.color, required this.title, required this.main, required this.sub, this.onTap});
-
-  @override
-  Widget build(BuildContext context) => GestureDetector(onTap: onTap, child: _body());
-
-  Widget _body() => Container(
-    padding: const EdgeInsets.all(10),
-    decoration: BoxDecoration(
-      color: kCard,
-      borderRadius: BorderRadius.circular(8),
-      border: Border.all(color: kOutline, width: 1.5),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(icon, color: color, size: 14),
-            const SizedBox(width: 4),
-            Text(title, style: label(color, size: 10)),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Text(
-          main,
-          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, fontFeatures: [FontFeature.tabularFigures()]),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        Text(
-          sub,
-          style: const TextStyle(color: kInkMuted, fontSize: 11),
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ],
-    ),
-  );
-}
 
 /// One-tap questions that go through the same router as typed or spoken ones.
 class _QuickPrompts extends StatelessWidget {
@@ -498,13 +153,134 @@ class _QuickPrompts extends StatelessWidget {
   }
 }
 
+/// Empty state: what the app can do, as big tappable tiles. The most urgent one comes first.
+class _Welcome extends StatelessWidget {
+  final Assistant a;
+  final Situation s;
+  const _Welcome({required this.a, required this.s});
+
+  @override
+  Widget build(BuildContext context) {
+    final us = s.untilSunset;
+    final dusk = s.isNight || (us != null && us < const Duration(hours: 1));
+    final tiles = [
+      (Icons.water_drop, kWater, 'Find water', 'Where is the nearest water?'),
+      (Icons.hiking, kMoss, 'Get me out', 'How do I get out of here?'),
+      (Icons.nights_stay, dusk ? kClay : kInk, 'Getting dark', 'I am cold and it is getting dark.'),
+      (Icons.pets, kTrail, 'Wildlife', 'There is a bear near me.'),
+    ];
+    if (dusk) tiles.insert(0, tiles.removeAt(2));
+    final loading = a.phase == Phase.loading;
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const Text('What do you need?', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+        const SizedBox(height: 2),
+        Text(
+          loading ? a.status : 'Tap one or hold the mic.',
+          style: const TextStyle(color: kInkMuted, fontSize: 13),
+        ),
+        const SizedBox(height: 10),
+        GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          mainAxisSpacing: 8,
+          crossAxisSpacing: 8,
+          childAspectRatio: 3.1,
+          children: [
+            for (final (icon, color, text, question) in tiles)
+              _Suggestion(icon: icon, color: color, text: text, onTap: a.busy || loading ? null : () => a.ask(question)),
+          ],
+        ),
+      ]),
+    );
+  }
+}
+
+class _Suggestion extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String text;
+  final VoidCallback? onTap;
+  const _Suggestion({required this.icon, required this.color, required this.text, this.onTap});
+
+  @override
+  Widget build(BuildContext context) => Material(
+        color: kCard,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: const BorderSide(color: kLine, width: 1.5)),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: onTap == null
+              ? null
+              : () {
+                  HapticFeedback.selectionClick();
+                  onTap!();
+                },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: Row(children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(color: color.withValues(alpha: 0.12), shape: BoxShape.circle),
+                child: Icon(icon, size: 20, color: color),
+              ),
+              const SizedBox(width: 10),
+              Expanded(child: Text(text, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700))),
+            ]),
+          ),
+        ),
+      );
+}
+
+/// Three bouncing dots while an answer is on its way (only alive until the first words arrive).
+class _Dots extends StatefulWidget {
+  const _Dots();
+
+  @override
+  State<_Dots> createState() => _DotsState();
+}
+
+class _DotsState extends State<_Dots> with SingleTickerProviderStateMixin {
+  late final _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 900))..repeat();
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AnimatedBuilder(
+        animation: _c,
+        builder: (_, _) => Row(mainAxisSize: MainAxisSize.min, children: [
+          for (var i = 0; i < 3; i++)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 6),
+              child: Transform.translate(
+                offset: Offset(0, -4 * math.max(0, math.sin((_c.value - i / 6) * 2 * math.pi))),
+                child: Container(width: 8, height: 8, decoration: const BoxDecoration(color: kMoss, shape: BoxShape.circle)),
+              ),
+            ),
+        ]),
+      );
+}
+
 class _Bubble extends StatelessWidget {
   final ChatMessage m;
   final Assistant a;
-  const _Bubble({required this.m, required this.a});
+  const _Bubble({super.key, required this.m, required this.a});
 
+  // one-shot fade and rise as each message arrives
   @override
-  Widget build(BuildContext context) => m.user ? _user(context) : GestureDetector(onLongPress: () => _debug(context), child: _answer());
+  Widget build(BuildContext context) => TweenAnimationBuilder<double>(
+        tween: Tween(begin: 0, end: 1),
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOut,
+        builder: (_, t, child) => Opacity(opacity: t, child: Transform.translate(offset: Offset(0, 12 * (1 - t)), child: child)),
+        child: m.user ? _user(context) : GestureDetector(onLongPress: () => _debug(context), child: _answer()),
+      );
 
   Widget _user(BuildContext context) => Align(
     alignment: Alignment.centerRight,
@@ -643,11 +419,14 @@ class _Bubble extends StatelessWidget {
                 children: [
                   // Gemma answers are generated; only the scripted ones are vetted text
                   if (!gemma) ...[Text('VERIFIED OFFLINE ACTION', style: label(kClay, size: 10)), const SizedBox(height: 4)],
+                  if (m.text.isEmpty)
+                    const _Dots()
+                  else
                   RichText(
                     text: TextSpan(
                       style: const TextStyle(fontSize: 15, height: 1.4, color: Colors.black87),
                       children: [
-                        TextSpan(text: m.text.isEmpty ? (isStreamingThis ? 'Generating…' : '…') : m.text),
+                        TextSpan(text: m.text),
                         if (isStreamingThis)
                           const TextSpan(
                             text: ' ▊',
@@ -703,7 +482,7 @@ class _VoiceBar extends StatelessWidget {
       Phase.loading => 'GETTING READY…',
       Phase.listening => 'LISTENING… RELEASE TO ASK',
       _ when stopMode => 'TAP TO STOP',
-      Phase.ready => 'HOLD TO TALK',
+      Phase.ready => '',
       _ => a.status.toUpperCase(),
     };
     return Padding(
@@ -743,7 +522,7 @@ class _VoiceBar extends StatelessWidget {
           ),
         ]),
         const SizedBox(height: 6),
-        Text(caption, style: label(listening ? kClay : kInkMuted, size: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
+        if (caption.isNotEmpty) Text(caption, style: label(listening ? kClay : kInkMuted, size: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
       ]),
     );
   }
