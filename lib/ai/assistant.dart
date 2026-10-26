@@ -307,7 +307,13 @@ class Assistant extends ChangeNotifier {
   Future<void> pressTalk() async {
     if (phase == Phase.loading) return;
     await ai.stopSpeaking();
-    await ai.startListening();
+    try {
+      await ai.startListening();
+    } on PlatformException catch (e) {
+      status = e.message ?? 'The microphone could not start.';
+      notifyListeners();
+      return;
+    }
     phase = Phase.listening;
     status = 'Listening…';
     notifyListeners();

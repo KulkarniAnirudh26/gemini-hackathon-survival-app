@@ -50,3 +50,20 @@ app.*.map.json
 # geo build cache and model files
 /build/
 /models/
+
+# Python map tools (geopdf_locator) and the native Android demo
+__pycache__/
+*.egg-info/
+.venv/
+.pytest_cache/
+data/*.pdf
+out/
+# Android / Gradle
+android-native/.gradle/
+android-native/.kotlin/
+android-native/**/build/
+android-native/local.properties
+android-native/captures/
+*.mbtiles
+*.pmtiles
+packages/sherpa_ios/swift-tests/.build/

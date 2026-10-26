@@ -41,6 +41,13 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- offline 3D map (WebView + bundled MBTiles), opened from the home screen's 3D MAP chip -->
+        <activity
+            android:name=".map3d.Map3dActivity"
+            android:exported="false"
+            android:theme="@style/NormalTheme"
+            android:configChanges="orientation|keyboardHidden|screenSize|smallestScreenSize|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true" />
         <meta-data android:name="flutterEmbedding" android:value="2" />
         <provider android:name="androidx.startup.InitializationProvider" android:authorities="${applicationId}.androidx-startup" tools:node="merge">
             <meta-data android:name="androidx.work.WorkManagerInitializer" tools:node="remove" />

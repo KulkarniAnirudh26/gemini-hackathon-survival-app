@@ -37,42 +37,8 @@ Be calm, direct, and explicit. Advise Satellite SOS or 911 for life threats.''';
     _promptController = TextEditingController(
       text: widget.assistant.settings.systemPrompt,
     );
-    _seedDemoLlmCallsIfEmpty();
-  }
-
-  void _seedDemoLlmCallsIfEmpty() {
-    if (widget.assistant.recentCalls.isEmpty) {
-      final now = DateTime.now();
-      widget.assistant.recentCalls.addAll([
-        LlmCallRecord(
-          time: now.subtract(const Duration(minutes: 2)),
-          query: "What should I do if a black bear approaches?",
-          route: "llm (topic: bear)",
-          ttftMs: 312,
-          tokensPerSec: 28.4,
-          tokenCount: 78,
-          durationMs: 3050,
-        ),
-        LlmCallRecord(
-          time: now.subtract(const Duration(minutes: 6)),
-          query: "I twisted my ankle on the granite slope",
-          route: "emergency / aid",
-          ttftMs: 284,
-          tokensPerSec: 29.1,
-          tokenCount: 92,
-          durationMs: 3440,
-        ),
-        LlmCallRecord(
-          time: now.subtract(const Duration(minutes: 12)),
-          query: "How much daylight is left before dusk?",
-          route: "template / solar",
-          ttftMs: 14,
-          tokensPerSec: 0,
-          tokenCount: 22,
-          durationMs: 24,
-        ),
-      ]);
-    }
+    // No sample rows: these metrics only ever show real calls, so they can't be mistaken for
+    // measured performance (CLAUDE.md: no fabricated facts).
   }
 
   @override
@@ -562,7 +528,15 @@ Be calm, direct, and explicit. Advise Satellite SOS or 911 for life threats.''';
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: const Color(0xFF1B2631)),
                 ),
-                child: ClipRRect(
+                child: a.recentCalls.isEmpty
+                    ? const Padding(
+                        padding: EdgeInsets.all(14),
+                        child: Text(
+                          'No LLM calls yet. Real timings appear here after Gemma answers.',
+                          style: TextStyle(color: Color(0xFF6B8296), fontSize: 11.5),
+                        ),
+                      )
+                    : ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,

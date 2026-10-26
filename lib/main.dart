@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'ai/assistant.dart';
 import 'ai/situation.dart';
 import 'location/location_service.dart';
+import 'map3d/map3d.dart';
 import 'ui/here_card.dart';
 import 'ui/home_screen.dart';
 import 'ui/map_screen.dart';
@@ -94,7 +95,16 @@ class _ShellState extends State<Shell> with WidgetsBindingObserver {
         child: Column(
           children: [
             // the map gets the full height; settings has its own title
-            if (_tab == 1) _Header(assistant: widget.assistant, location: widget.location),
+            if (_tab == 1)
+              _Header(
+                assistant: widget.assistant,
+                location: widget.location,
+                // "Home" on the 3D map: back to the home dashboard
+                onHome: () {
+                  widget.assistant.clearChat();
+                  setState(() => _tab = 1);
+                },
+              ),
             Expanded(
               child: IndexedStack(index: _tab, children: pages),
             ),
@@ -173,7 +183,8 @@ class _ShellState extends State<Shell> with WidgetsBindingObserver {
 class _Header extends StatelessWidget {
   final Assistant assistant;
   final LocationService location;
-  const _Header({required this.assistant, required this.location});
+  final VoidCallback onHome;
+  const _Header({required this.assistant, required this.location, required this.onHome});
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
@@ -204,6 +215,8 @@ class _Header extends StatelessWidget {
               ),
             ),
           ),
+          const SizedBox(width: 8),
+          Map3dButton(location: location, onHome: onHome),
         ],
       ),
     ),

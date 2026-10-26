@@ -43,6 +43,9 @@ dependencies:
   url_launcher: ^6.3.3
   flutter_compass: ^0.8.1
   image_picker: ^1.2.4
+  # iOS side of the survival/ai and survival/map3d channels (Android: the host app)
+  sherpa_ios:
+    path: packages/sherpa_ios
 
 dev_dependencies:
   flutter_test:
@@ -60,6 +63,9 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
+  config:
+    # The iOS plugin (packages/sherpa_ios) pulls LiteRT-LM, which ships only as a Swift package.
+    enable-swift-package-manager: true
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
@@ -70,6 +76,9 @@ flutter:
     - assets/guide/
     - assets/nps/
     - assets/calibration/
+    # offline 3D map: MapLibre page, map pack, MBTiles (tilesets built by scripts/build_android_assets.py)
+    - assets/map3d/
+    - assets/maps/yosemite/
 
   # Space Grotesk (OFL, assets/fonts/OFL.txt), bundled so it works offline.
   # Medium is the lightest weight: thinner strokes wash out in sunlight.
