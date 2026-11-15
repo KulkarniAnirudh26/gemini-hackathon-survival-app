@@ -2,7 +2,7 @@
 
 ## The problem
 
-An offline map can show a trail winding back to the trailhead. Working out whether that’s a short walk or a steep hour uphill takes more information. We built Sherpa because the phone already has much of that information, from the terrain around the next bend to how far the hiker has moved in the last hour. We wanted it to put those details together in an answer that works in the backcountry.
+An offline map can show the way back to the trailhead. Working out how long it will take means factoring in the climb and how much ground you’ve covered in the past hour. We built Sherpa to put that information together on the phone, where the map and the models share memory and every answer draws from the same battery. We made Sherpa voice-first so hikers can ask a question when their hands are busy. They can also type a question or attach a photo.
 
 ![A hiker at a trail junction weighs fading daylight, no cell signal, and an available GPS position.](assets/figures/the-problem.png)
 
@@ -18,7 +18,7 @@ For questions that draw on the guide, BM25 ranks passages by how closely they ma
 
 ## How we used LiteRT
 
-We started with preconverted model files from LiteRT Community. We could use the hackathon to integrate the models and test them together on the phone. [Zipformer CTC](https://huggingface.co/litert-community/Zipformer-medium-CR-CTC-LiteRT) · [Laya Multilingual](https://huggingface.co/litert-community/Laya-Multilingual-LiteRT) · [Gemma 4 E2B-it](https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm) · [KittenTTS Nano](https://huggingface.co/litert-community/kitten-tts-nano-0.8) · [Matcha-TTS phonemizer assets](https://huggingface.co/litert-community/Matcha-TTS)
+We integrated four models into a single native Kotlin layer on Android and pinned its LiteRT dependencies to version 2.3.0. Starting with preconverted models from LiteRT Community gave us time to test the full pipeline on a Pixel during the hackathon. [Zipformer CTC](https://huggingface.co/litert-community/Zipformer-medium-CR-CTC-LiteRT) · [Laya Multilingual](https://huggingface.co/litert-community/Laya-Multilingual-LiteRT) · [Gemma 4 E2B-it](https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm) · [KittenTTS Nano](https://huggingface.co/litert-community/kitten-tts-nano-0.8) · [Matcha-TTS phonemizer assets](https://huggingface.co/litert-community/Matcha-TTS)
 
 ![The model lifecycle on Android, including startup, first generation, streaming, warm reuse, and idle unload.](assets/figures/how-we-use-litert.png)
 
@@ -42,11 +42,11 @@ During calibration, we found that two questions could use the same trail vocabul
 
 ![Two questions illustrate why the router checks wording and the need for reasoning before choosing a response.](assets/figures/what-we-learned.png)
 
-The settings screen turned into a debugging tool. Switching the model bundle, accelerator, and speech engine on the phone let the team reproduce behavior without rebuilding the app. For another project with several on-device models, we’d add those controls early and measure the time to the first token or first audio separately from the time to finish the response.
+We had fun challenging each other on which problem was worth solving, then narrowed the build to three features. With only a few hours and a stack that was new to most of us, we used Google AI Studio and Claude to prototype while the rest of the team tried things on a real Pixel. Our biggest surprise was how useful a simple Settings screen became. Switching the model, accelerator, or text-to-speech voice on the spot made it easier to show different configurations in the demo. We’d keep the scope tight and test on the actual device early again.
 
 ## What’s next
 
-We’ll test a second park end to end, with particular attention to how route estimates behave around junctions and gaps in the trail graph. We also want a way to check that a region is ready before heading out.
+We plan to refine the router, prompts, and guide retrieval so Sherpa chooses the right response more consistently and its answers sound more natural. On the map side, we’ll add richer offline trail data for more accurate routes. A second park will give us a way to test those improvements as we expand beyond Yosemite.
 
 ![Planned downloadable region packs for use offline on the trail.](assets/figures/whats-next.png)
 
