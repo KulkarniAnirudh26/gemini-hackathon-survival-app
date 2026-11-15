@@ -154,6 +154,7 @@ Flutter implements the UI, location services, retrieval, routing policy, and the
 
 | Metric | Gemini Nano via AICore · TPU | Gemma 4 E2B-it via LiteRT-LM · CPU | Gemma 4 E2B-it via LiteRT-LM · TPU |
 | --- | ---: | ---: | ---: |
+| Published model file size | — | 2.59 GB | 3.21 GB |
 | Prefill speed (tokens/s) | 616.14 | 229.87 | 1,904.54 |
 | Time to first token (s) | 0.45 | 1.18 | 0.19 |
 | Decode speed (tokens/s) | 47.17 | 15.74 | 19.49 |
@@ -164,11 +165,11 @@ AI Edge Gallery 1.0.23, three runs per configuration with 256 prefill tokens and
 
 ### Sherpa’s Voice Pipeline on Pixel 10 Pro: Recognition, Routing, and Synthesis
 
-| Component | LiteRT backend | Measured workload | Mean | p95 |
-| --- | --- | --- | ---: | ---: |
-| Zipformer CTC | GPU | Transcribe 4.56 s of audio | 225 ms | 240 ms |
-| Laya Multilingual | GPU | Four classifier questions in the first routing pass | 1,095 ms | 1,129 ms |
-| KittenTTS Nano 0.8 | CPU | Synthesize 8.42 s of audio | 798 ms | 811 ms |
+| Component | LiteRT backend | Model files | Measured workload | Mean | p95 |
+| --- | --- | ---: | --- | ---: | ---: |
+| Zipformer CTC | GPU | 131.5 MB | Transcribe 4.56 s of audio | 225 ms | 240 ms |
+| Laya Multilingual | GPU | 679.3 MB | Four classifier questions in the first routing pass | 1,095 ms | 1,129 ms |
+| KittenTTS Nano 0.8 | CPU | 94.4 MB | Synthesize 8.42 s of audio | 798 ms | 811 ms |
 
 Each component ran three warmups and 20 timed calls. The measurements cover individual stages. [Raw samples and method](docs/benchmarks/pixel-10-pro/README.md#sherpa-voice-pipeline).
 
