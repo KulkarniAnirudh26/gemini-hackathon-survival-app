@@ -25,17 +25,27 @@ Sherpa uses E2B and can retry with an installed generic bundle if the optimized 
 | Effective parameters | 2.3B | 4.5B |
 | Model file on disk | 2,583 MB | 3,654 MB |
 
-**On-device inference by hardware and backend**
+### Gemma 4 E2B on Pixel 10 Pro: AICore and LiteRT-LM
 
-| Hardware & Backend | Prefill Speed (tk/s) | Time to First Token (TTFT) | Decode Speed (tok/s) | Peak CPU RAM Usage |
-| --- | ---: | ---: | ---: | ---: |
-| iPhone GPU (Metal) | 2,800 – 3,800+ | ~0.1s – 0.3s (Lowest) | 50 – 60+ tok/s (Fastest) | ~1.4 GB |
-| Pixel TPU/NPU (Tensor Delegate) | 2,500 – 3,500 | ~0.2s – 0.4s | 30 – 45 tok/s | ~0.7 – 1.0 GB (Lowest) |
-| Pixel GPU (OpenCL/Vulkan) | 2,000 – 3,000 | ~0.3s – 0.5s | 40 – 50 tok/s | ~1.0 – 1.2 GB |
-| iPhone CPU (XNNPACK) | ~500 – 550 | ~1.8s – 1.9s | ~25 tok/s | ~0.6 GB |
-| Pixel CPU (XNNPACK) | ~300 – 450 | ~1.6s – 2.2s (Slowest) | ~10 – 18 tok/s (Slowest) | ~1.5 – 1.7 GB (Highest) |
+| Metric | Gemini Nano via AICore · TPU | Gemma 4 E2B-it via LiteRT-LM · CPU | Gemma 4 E2B-it via LiteRT-LM · TPU |
+| --- | ---: | ---: | ---: |
+| Prefill speed (tokens/s) | 616.14 | 229.87 | 1,904.54 |
+| Time to first token (s) | 0.45 | 1.18 | 0.19 |
+| Decode speed (tokens/s) | 47.17 | 15.74 | 19.49 |
+| First initialization (ms) | 107.57 | 8,438.25 | 7,798.01 |
+| Steady initialization (ms) | — | 791.29 | 2,440.95 |
 
-These reference ranges are grouped by backend. Device models, model bundles, and test conditions are unspecified. Sherpa’s end-to-end timings remain pending.
+AI Edge Gallery 1.0.23, three runs per configuration with 256 prefill tokens and 256 decode tokens. The LiteRT-LM TPU configuration had the fastest prefill and time to first token. AICore had the fastest decode and first initialization. [Benchmark data and method](benchmarks/pixel-10-pro/README.md#gemma-generation).
+
+### Sherpa’s Voice Pipeline on Pixel 10 Pro: Recognition, Routing, and Synthesis
+
+| Component | LiteRT backend | Measured workload | Mean | p95 |
+| --- | --- | --- | ---: | ---: |
+| Zipformer CTC | GPU | Transcribe 4.56 s of audio | 225 ms | 240 ms |
+| Laya Multilingual | GPU | Four classifier questions in the first routing pass | 1,095 ms | 1,129 ms |
+| KittenTTS Nano 0.8 | CPU | Synthesize 8.42 s of audio | 798 ms | 811 ms |
+
+Each component ran three warmups and 20 timed calls. The measurements cover individual stages. [Raw samples and method](benchmarks/pixel-10-pro/README.md#sherpa-voice-pipeline).
 
 > **[Architecture diagram]** Show the map and guide outside the model lifecycle. Trace Gemma’s load, reuse, and release states. Show the retry with an installed generic bundle.
 >

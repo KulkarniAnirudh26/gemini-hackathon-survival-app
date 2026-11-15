@@ -1,0 +1,4 @@
+timestamp_local,app_version,model,runtime,accelerator,prefill_tokens,decode_tokens,runs,prefill_tokens_per_sec_avg,decode_tokens_per_sec_avg,ttft_sec_avg,first_init_ms_avg,steady_init_ms_avg
+2026-11-15 14:00:39,1.0.23,Gemma 4 E2B (Gemini Nano),AICore,TPU,256,256,3,616.14,47.17,0.45,107.57,
+2026-11-15 14:02:58,1.0.23,Gemma 4 E2B-it,LiteRT-LM,CPU,256,256,3,229.87,15.74,1.18,8438.25,791.29
+2026-11-15 14:04:31,1.0.23,Gemma 4 E2B-it,LiteRT-LM,TPU,256,256,3,1904.54,19.49,0.19,7798.01,2440.95
