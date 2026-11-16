@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1720" height="1002" viewBox="0 0 1720 1002" font-family="Helvetica Neue, Helvetica, Arial, sans-serif">
+<rect width="1720" height="1002" fill="#FFFFFF"/>
+<text x="60" y="62" font-size="34" font-weight="700" fill="#1F2A30" text-anchor="start">How well Sherpa performs</text>
+<text x="60" y="98" font-size="20" font-weight="400" fill="#5B6670" text-anchor="start">Measured on a Pixel 10 Pro. Best result in each row is highlighted.</text>
+<text x="60" y="150" font-size="14" font-weight="700" fill="#1A73E8" text-anchor="start" letter-spacing="2">LITERT-LM</text>
+<text x="60" y="182" font-size="24" font-weight="700" fill="#1F2A30" text-anchor="start">Gemma 4 E2B</text>
+<rect x="60" y="210" width="1600" height="364" rx="16" fill="#FFFFFF" stroke="#C9D3D9" stroke-width="2"/>
+<path d="M60,262 L60,226 Q60,210 76,210 L1644,210 Q1660,210 1660,226 L1660,262 Z" fill="#F5F7F8"/>
+<rect x="60" y="210" width="1600" height="364" rx="16" fill="none" stroke="#C9D3D9" stroke-width="2"/>
+<text x="90" y="243" font-size="15" font-weight="700" fill="#5B6670" text-anchor="start">Metric</text>
+<text x="970" y="243" font-size="15" font-weight="700" fill="#5B6670" text-anchor="end">AICore · TPU</text>
+<text x="1300" y="243" font-size="15" font-weight="700" fill="#5B6670" text-anchor="end">LiteRT-LM · CPU</text>
+<text x="1630" y="243" font-size="15" font-weight="700" fill="#5B6670" text-anchor="end">LiteRT-LM · TPU</text>
+<line x1="60" y1="262" x2="1660" y2="262" stroke="#E3E8EB" stroke-width="1.5"/>
+<text x="90" y="295" font-size="18" font-weight="700" fill="#1F2A30" text-anchor="start">Model files</text>
+<text x="970" y="295" font-size="18" font-weight="400" fill="#7A858D" text-anchor="end">—</text>
+<text x="1300" y="295" font-size="18" font-weight="400" fill="#3D4850" text-anchor="end">2.59 GB</text>
+<text x="1630" y="295" font-size="18" font-weight="400" fill="#3D4850" text-anchor="end">3.21 GB</text>
+<line x1="60" y1="314" x2="1660" y2="314" stroke="#E3E8EB" stroke-width="1.5"/>
+<text x="90" y="347" font-size="18" font-weight="700" fill="#1F2A30" text-anchor="start">Prefill (tokens/s)</text>
+<text x="970" y="347" font-size="18" font-weight="400" fill="#3D4850" text-anchor="end">616.14</text>
+<text x="1300" y="347" font-size="18" font-weight="400" fill="#3D4850" text-anchor="end">229.87</text>
+<rect x="1490" y="323" width="160" height="34" rx="17" fill="#E8F0FE"/>
+<text x="1630" y="347" font-size="18" font-weight="700" fill="#1A73E8" text-anchor="end">1,904.54</text>
+<line x1="60" y1="366" x2="1660" y2="366" stroke="#E3E8EB" stroke-width="1.5"/>
+<text x="90" y="399" font-size="18" font-weight="700" fill="#1F2A30" text-anchor="start">Time to first token</text>
+<text x="970" y="399" font-size="18" font-weight="400" fill="#3D4850" text-anchor="end">0.45 s</text>
+<text x="1300" y="399" font-size="18" font-weight="400" fill="#3D4850" text-anchor="end">1.18 s</text>
+<rect x="1490" y="375" width="160" height="34" rx="17" fill="#E8F0FE"/>
+<text x="1630" y="399" font-size="18" font-weight="700" fill="#1A73E8" text-anchor="end">0.19 s</text>
+<line x1="60" y1="418" x2="1660" y2="418" stroke="#E3E8EB" stroke-width="1.5"/>
+<text x="90" y="451" font-size="18" font-weight="700" fill="#1F2A30" text-anchor="start">Decode (tokens/s)</text>
+<rect x="830" y="427" width="160" height="34" rx="17" fill="#E8F0FE"/>
+<text x="970" y="451" font-size="18" font-weight="700" fill="#1A73E8" text-anchor="end">47.17</text>
+<text x="1300" y="451" font-size="18" font-weight="400" fill="#3D4850" text-anchor="end">15.74</text>
+<text x="1630" y="451" font-size="18" font-weight="400" fill="#3D4850" text-anchor="end">19.49</text>
+<line x1="60" y1="470" x2="1660" y2="470" stroke="#E3E8EB" stroke-width="1.5"/>
+<text x="90" y="503" font-size="18" font-weight="700" fill="#1F2A30" text-anchor="start">First initialization</text>
+<text x="970" y="503" font-size="18" font-weight="400" fill="#3D4850" text-anchor="end">107.57 ms</text>
+<text x="1300" y="503" font-size="18" font-weight="400" fill="#3D4850" text-anchor="end">8,438.25 ms</text>
+<text x="1630" y="503" font-size="18" font-weight="400" fill="#3D4850" text-anchor="end">7,798.01 ms</text>
+<line x1="60" y1="522" x2="1660" y2="522" stroke="#E3E8EB" stroke-width="1.5"/>
+<text x="90" y="555" font-size="18" font-weight="700" fill="#1F2A30" text-anchor="start">Steady initialization</text>
+<text x="970" y="555" font-size="18" font-weight="400" fill="#7A858D" text-anchor="end">—</text>
+<text x="1300" y="555" font-size="18" font-weight="400" fill="#3D4850" text-anchor="end">791.29 ms</text>
+<text x="1630" y="555" font-size="18" font-weight="400" fill="#3D4850" text-anchor="end">2,440.95 ms</text>
+<text x="60" y="604" font-size="14" font-weight="400" fill="#7A858D" text-anchor="start">AI Edge Gallery 1.0.23 · 3 runs · 256 prefill / 256 decode tokens</text>
+<text x="60" y="664" font-size="14" font-weight="700" fill="#4E7A5E" text-anchor="start" letter-spacing="2">LITERT</text>
+<text x="60" y="696" font-size="24" font-weight="700" fill="#1F2A30" text-anchor="start">Sherpa voice pipeline</text>
+<rect x="60" y="724" width="1600" height="208" rx="16" fill="#FFFFFF" stroke="#C9D3D9" stroke-width="2"/>
+<path d="M60,776 L60,740 Q60,724 76,724 L1644,724 Q1660,724 1660,740 L1660,776 Z" fill="#F5F7F8"/>
+<rect x="60" y="724" width="1600" height="208" rx="16" fill="none" stroke="#C9D3D9" stroke-width="2"/>
+<text x="90" y="757" font-size="15" font-weight="700" fill="#5B6670" text-anchor="start">Model</text>
+<text x="770" y="757" font-size="15" font-weight="700" fill="#5B6670" text-anchor="end">Hardware</text>
+<text x="1070" y="757" font-size="15" font-weight="700" fill="#5B6670" text-anchor="end">Model files</text>
+<text x="1350" y="757" font-size="15" font-weight="700" fill="#5B6670" text-anchor="end">Mean</text>
+<text x="1630" y="757" font-size="15" font-weight="700" fill="#5B6670" text-anchor="end">p95</text>
+<line x1="60" y1="776" x2="1660" y2="776" stroke="#E3E8EB" stroke-width="1.5"/>
+<text x="90" y="800" font-size="18" font-weight="700" fill="#1F2A30" text-anchor="start">Zipformer CTC</text>
+<text x="90" y="819" font-size="13" font-weight="400" fill="#7A858D" text-anchor="start">transcribe 5 s of audio</text>
+<text x="770" y="809" font-size="18" font-weight="400" fill="#3D4850" text-anchor="end">GPU</text>
+<text x="1070" y="809" font-size="18" font-weight="400" fill="#3D4850" text-anchor="end">131.5 MB</text>
+<text x="1350" y="809" font-size="18" font-weight="400" fill="#3D4850" text-anchor="end">225 ms</text>
+<text x="1630" y="809" font-size="18" font-weight="400" fill="#3D4850" text-anchor="end">240 ms</text>
+<line x1="60" y1="828" x2="1660" y2="828" stroke="#E3E8EB" stroke-width="1.5"/>
+<text x="90" y="852" font-size="18" font-weight="700" fill="#1F2A30" text-anchor="start">Laya Multilingual</text>
+<text x="90" y="871" font-size="13" font-weight="400" fill="#7A858D" text-anchor="start">score 4 routing criteria</text>
+<text x="770" y="861" font-size="18" font-weight="400" fill="#3D4850" text-anchor="end">GPU</text>
+<text x="1070" y="861" font-size="18" font-weight="400" fill="#3D4850" text-anchor="end">679.3 MB</text>
+<text x="1350" y="861" font-size="18" font-weight="400" fill="#3D4850" text-anchor="end">1,095 ms</text>
+<text x="1630" y="861" font-size="18" font-weight="400" fill="#3D4850" text-anchor="end">1,129 ms</text>
+<line x1="60" y1="880" x2="1660" y2="880" stroke="#E3E8EB" stroke-width="1.5"/>
+<text x="90" y="904" font-size="18" font-weight="700" fill="#1F2A30" text-anchor="start">KittenTTS Nano 0.8</text>
+<text x="90" y="923" font-size="13" font-weight="400" fill="#7A858D" text-anchor="start">synthesize ~9 s of audio</text>
+<text x="770" y="913" font-size="18" font-weight="400" fill="#3D4850" text-anchor="end">CPU</text>
+<text x="1070" y="913" font-size="18" font-weight="400" fill="#3D4850" text-anchor="end">94.4 MB</text>
+<text x="1350" y="913" font-size="18" font-weight="400" fill="#3D4850" text-anchor="end">798 ms</text>
+<text x="1630" y="913" font-size="18" font-weight="400" fill="#3D4850" text-anchor="end">811 ms</text>
+<text x="60" y="962" font-size="14" font-weight="400" fill="#7A858D" text-anchor="start">Each component timed in isolation · 20 timed calls after 3 warmups</text>
+</svg>
