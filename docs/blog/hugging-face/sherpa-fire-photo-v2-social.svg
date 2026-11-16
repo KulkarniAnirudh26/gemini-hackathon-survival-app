@@ -8,43 +8,55 @@
   <rect x="844" y="142" width="146" height="38" rx="19" fill="#0F161C" fill-opacity="0.7"/>
   <circle cx="865" cy="161" r="5.5" fill="#9AA6AE"/>
   <text x="880" y="166.5" font-size="15" fill="#FFFFFF"><tspan font-weight="700">No cell signal</tspan></text>
-  <rect x="842" y="188" width="148" height="38" rx="19" fill="#0F161C" fill-opacity="0.7"/>
-  <circle cx="863" cy="207" r="5.5" fill="#7FCF9B"/>
-  <text x="878" y="212.5" font-size="15" fill="#FFFFFF"><tspan font-weight="700">Offline guide</tspan></text>
 
-  <!-- Mic button + question -->
-  <circle cx="62" cy="172" r="27" fill="#D9481C" fill-opacity="0.25"/>
-  <circle cx="62" cy="172" r="21" fill="#D9481C" stroke="#FFFFFF" stroke-opacity="0.9" stroke-width="2"/>
-  <g fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round">
-    <rect x="57" y="159" width="10" height="16" rx="5" fill="#FFFFFF" stroke="none"/>
-    <path d="M52.5,170 a9.5,9.5 0 0 0 19,0"/>
-    <line x1="62" y1="179.5" x2="62" y2="185"/>
+  <!-- Turn 1: guide answers -->
+  <circle cx="60" cy="118" r="25" fill="#D9481C" fill-opacity="0.25"/>
+  <circle cx="60" cy="118" r="19" fill="#D9481C" stroke="#FFFFFF" stroke-opacity="0.9" stroke-width="2"/>
+  <g fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round">
+    <rect x="55.5" y="106" width="9" height="14" rx="4.5" fill="#FFFFFF" stroke="none"/>
+    <path d="M51.5,116 a8.5,8.5 0 0 0 17,0"/>
+    <line x1="60" y1="124.5" x2="60" y2="129"/>
   </g>
-  <rect x="96" y="150" width="268" height="44" rx="22" fill="#1F2A30" fill-opacity="0.9"/>
-  <text x="116" y="178" font-size="18" font-weight="700" fill="#FFFFFF">How do I get a fire going?</text>
+  <rect x="92" y="96" width="262" height="44" rx="22" fill="#1F2A30" fill-opacity="0.9"/>
+  <text x="112" y="124" font-size="18" font-weight="700" fill="#FFFFFF">How do I get a fire going?</text>
 
-  <!-- Answer card -->
-  <rect x="40" y="206" width="448" height="214" rx="18" fill="#FFFFFF" fill-opacity="0.97"/>
-  <circle cx="61" cy="231" r="5.5" fill="#1A73E8"/>
-  <text x="74" y="236" font-size="12" font-weight="700" letter-spacing="1" fill="#1A73E8">SHERPA · GEMMA 4 E2B ON-DEVICE · NO SIGNAL</text>
-  <g>
-    <path d="M440,227 h4 l5.5,-4.5 v15 l-5.5,-4.5 h-4 z" fill="#1A73E8"/>
-    <path d="M453.5,226.5 a5.5,5.5 0 0 1 0,9" fill="none" stroke="#1A73E8" stroke-width="1.7" stroke-linecap="round"/>
-    <path d="M457,223 a10,10 0 0 1 0,16" fill="none" stroke="#1A73E8" stroke-width="1.7" stroke-linecap="round"/>
+  <rect x="40" y="150" width="448" height="146" rx="18" fill="#FFFFFF" fill-opacity="0.97"/>
+  <circle cx="61" cy="173" r="5.5" fill="#2E7D4F"/>
+  <text x="74" y="178" font-size="12" font-weight="700" letter-spacing="1" fill="#2E7D4F">OFFLINE GUIDE · MAKING A FIRE · INSTANT, NO LLM</text>
+  <path d="M448,174 h4 l5.5,-4.5 v15 l-5.5,-4.5 h-4 z" fill="#2E7D4F"/>
+  <path d="M461.5,173.5 a5.5,5.5 0 0 1 0,9" fill="none" stroke="#2E7D4F" stroke-width="1.7" stroke-linecap="round"/>
+  <path d="M465,170 a10,10 0 0 1 0,16" fill="none" stroke="#2E7D4F" stroke-width="1.7" stroke-linecap="round"/>
+  <circle cx="70" cy="207" r="10" fill="#E6F2EA"/>
+  <text x="70" y="212" font-size="12" font-weight="700" fill="#2E7D4F" text-anchor="middle">1</text>
+  <text x="88" y="212" font-size="16" fill="#1F2A30">Clear a circle to bare dirt, away from branches.</text>
+  <circle cx="70" cy="237" r="10" fill="#E6F2EA"/>
+  <text x="70" y="242" font-size="12" font-weight="700" fill="#2E7D4F" text-anchor="middle">2</text>
+  <text x="88" y="242" font-size="16" fill="#1F2A30">Tiny dry twigs first, then pencil-thick sticks.</text>
+  <circle cx="70" cy="267" r="10" fill="#E6F2EA"/>
+  <text x="70" y="272" font-size="12" font-weight="700" fill="#2E7D4F" text-anchor="middle">3</text>
+  <text x="88" y="272" font-size="16" fill="#1F2A30">Keep it small. Drown it and stir until cold.</text>
+
+  <!-- Turn 2: not in the guide, Gemma answers -->
+  <circle cx="60" cy="330" r="25" fill="#D9481C" fill-opacity="0.25"/>
+  <circle cx="60" cy="330" r="19" fill="#D9481C" stroke="#FFFFFF" stroke-opacity="0.9" stroke-width="2"/>
+  <g fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round">
+    <rect x="55.5" y="318" width="9" height="14" rx="4.5" fill="#FFFFFF" stroke="none"/>
+    <path d="M51.5,328 a8.5,8.5 0 0 0 17,0"/>
+    <line x1="60" y1="336.5" x2="60" y2="341"/>
   </g>
-  <circle cx="72" cy="270" r="11" fill="#E6F2EA"/>
-  <text x="72" y="275" font-size="13" font-weight="700" fill="#2E7D4F" text-anchor="middle">1</text>
-  <text x="92" y="276" font-size="17" fill="#1F2A30">Clear a circle to bare dirt, away from branches.</text>
-  <circle cx="72" cy="306" r="11" fill="#E6F2EA"/>
-  <text x="72" y="311" font-size="13" font-weight="700" fill="#2E7D4F" text-anchor="middle">2</text>
-  <text x="92" y="312" font-size="17" fill="#1F2A30">Tiny dry twigs first, then pencil-thick sticks.</text>
-  <circle cx="72" cy="342" r="11" fill="#E6F2EA"/>
-  <text x="72" y="347" font-size="13" font-weight="700" fill="#2E7D4F" text-anchor="middle">3</text>
-  <text x="92" y="348" font-size="17" fill="#1F2A30">Keep it small. Drown it and stir until cold.</text>
-  <line x1="58" y1="370" x2="470" y2="370" stroke="#E3E8EB" stroke-width="1.5"/>
-  <g fill="none" stroke="#7A858D" stroke-width="1.5" stroke-linejoin="round">
-    <path d="M58,388 q7,-3 14,0 v14 q-7,-3 -14,0 z"/>
-    <path d="M72,388 q7,-3 14,0 v14 q-7,-3 -14,0 z"/>
-  </g>
-  <text x="94" y="400" font-size="13" fill="#5B6670"><tspan font-weight="700">From the offline guide</tspan><tspan dx="5">· Making a fire</tspan></text>
+  <rect x="92" y="308" width="418" height="44" rx="22" fill="#1F2A30" fill-opacity="0.9"/>
+  <text x="112" y="336" font-size="17" font-weight="700" fill="#FFFFFF">I only have damp matches. What else works?</text>
+
+  <rect x="40" y="364" width="340" height="196" rx="18" fill="#E8F0FE" fill-opacity="0.97" stroke="#1A73E8" stroke-width="2"/>
+  <circle cx="61" cy="387" r="5.5" fill="#1A73E8"/>
+  <text x="74" y="392" font-size="12" font-weight="700" letter-spacing="1" fill="#1A73E8">GEMMA 4 E2B · ON-DEVICE</text>
+  <path d="M340,388 h4 l5.5,-4.5 v15 l-5.5,-4.5 h-4 z" fill="#1A73E8"/>
+  <path d="M353.5,387.5 a5.5,5.5 0 0 1 0,9" fill="none" stroke="#1A73E8" stroke-width="1.7" stroke-linecap="round"/>
+  <path d="M357,384 a10,10 0 0 1 0,16" fill="none" stroke="#1A73E8" stroke-width="1.7" stroke-linecap="round"/>
+  <text x="58" y="426" font-size="16" fill="#1F2A30">Check your kit for a lighter or a ferro</text>
+  <text x="58" y="448" font-size="16" fill="#1F2A30">rod first. Damp matches can still work:</text>
+  <text x="58" y="470" font-size="16" fill="#1F2A30">dry them inside your clothes for a few</text>
+  <text x="58" y="492" font-size="16" fill="#1F2A30">minutes, then strike on a dry rock.</text>
+  <line x1="58" y1="520" x2="362" y2="520" stroke="#C6D7F5" stroke-width="1.5"/>
+  <text x="58" y="542" font-size="13" fill="#3D5A85"><tspan font-weight="700">Not in the guide</tspan><tspan dx="5">→ Gemma answered offline</tspan></text>
 </svg>
