@@ -20,6 +20,9 @@ class CompassController extends ChangeNotifier {
   }
 
   void _init() {
+    // The offline map is previewable in Flutter Web, where the native compass
+    // plugin has no implementation. Android and iOS still subscribe.
+    if (kIsWeb) return;
     _sub = FlutterCompass.events?.listen((event) {
       if (!_sensorLocked) return;
       final h = event.heading;

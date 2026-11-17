@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:yosemite_survival/ai/ai_bridge.dart';
 import 'package:yosemite_survival/ai/router.dart';
 
 void main() {
@@ -63,5 +64,18 @@ void main() {
     expect(QuestionRouter.hasWord('be careful', 'car'), isFalse);
     expect(QuestionRouter.hasWord("i'm freezing", 'freez'), isTrue);
     expect(QuestionRouter.topicsMentioned('two bears near camp'), contains('bear'));
+  });
+
+  test('keyword fallback without Laya routes guide topics to guide', () async {
+    final router = QuestionRouter(AiBridge(), layaReady: false);
+    final bear = await router.decide('there is a bear near me');
+    expect(bear.route, Route.guide);
+    expect(bear.topic, 'bear');
+    final water = await router.decide('where is water');
+    expect(water.route, Route.template);
+    final emergency = await router.decide('my friend is bleeding badly');
+    expect(emergency.route, Route.emergency);
+    final joke = await router.decide('tell me a joke');
+    expect(joke.route, Route.llm);
   });
 }

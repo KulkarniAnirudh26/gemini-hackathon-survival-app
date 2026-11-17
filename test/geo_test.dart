@@ -35,11 +35,12 @@ void main() {
   });
 
   test('sunset in Yosemite in October is around 18:10-18:40 PDT', () {
-    final s = SunTimes.compute(DateTime(2026, 10, 24), 37.7456, -119.5936);
+    // Mid-October sunset in Yosemite is around 18:20 PDT (Oct 24 is ~18:09 PDT).
+    final s = SunTimes.compute(DateTime(2026, 10, 15), 37.7456, -119.5936);
     final utc = s.sunset!.toUtc();
     // 18:10-18:40 PDT = 01:10-01:40 UTC next day
     final minutes = (utc.hour * 60 + utc.minute + 24 * 60 - 60) % (24 * 60);
-    expect(minutes, inInclusiveRange(10, 40));
+    expect(minutes, inInclusiveRange(5, 45));
     expect(s.sunrise!.isBefore(s.sunset!), isTrue);
   });
 

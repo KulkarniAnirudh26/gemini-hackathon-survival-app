@@ -39,12 +39,22 @@ class SunTimes {
     final localMean = h + ra - 0.06571 * t - 6.622;
     var ut = (localMean - lngHour) % 24;
     if (ut < 0) ut += 24;
-    final utc = DateTime.utc(day.year, day.month, day.day).add(Duration(milliseconds: (ut * 3600000).round()));
-    var result = utc.toLocal();
-    // keep the event on the requested local calendar day
-    if (result.day != day.day) {
-      result = result.subtract(Duration(days: result.isAfter(day) ? 1 : -1));
+    // Approximate local solar noon expressed in UTC for the requested day.
+    final solarNoonUtc = DateTime.utc(day.year, day.month, day.day, 12)
+        .add(Duration(milliseconds: ((-lngHour) * 3600000).round()));
+    final baseUtc = DateTime.utc(solarNoonUtc.year, solarNoonUtc.month, solarNoonUtc.day);
+    final eventUtcOfBase = baseUtc.add(Duration(milliseconds: (ut * 3600000).round()));
+    // Pick the occurrence within ±12 hours of local solar noon (anchors sunrise < sunset).
+    var best = eventUtcOfBase;
+    var bestDelta = (eventUtcOfBase.difference(solarNoonUtc).inSeconds).abs();
+    for (final shift in const [-1, 0, 1]) {
+      final cand = eventUtcOfBase.add(Duration(days: shift));
+      final d = (cand.difference(solarNoonUtc).inSeconds).abs();
+      if (d < bestDelta) {
+        bestDelta = d;
+        best = cand;
+      }
     }
-    return result;
+    return best.toLocal();
   }
 }

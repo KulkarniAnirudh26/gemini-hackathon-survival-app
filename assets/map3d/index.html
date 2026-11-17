@@ -1,122 +1,255 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>3D map</title>
-<!-- Fully offline: MapLibre is bundled next to this page and every tile comes from the app.
-     Aerial imagery (default) or the printed park map is draped over terrain; neither needs font files. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#10231f">
+<title>Sherpa · Offline terrain</title>
 <link rel="stylesheet" href="maplibre-gl.css">
 <script src="maplibre-gl.js"></script>
 <style>
-  html, body, #map { height: 100%; margin: 0; background: #dfe6ea; }
-  .me { width: 16px; height: 16px; border-radius: 50%; background: #1e88e5; border: 3px solid #fff;
-        box-shadow: 0 0 0 10px rgba(30, 136, 229, .25); }
-  #err { position: absolute; inset: 0; display: none; align-items: center; justify-content: center;
-         font: 16px system-ui; color: #333; padding: 24px; text-align: center; }
-  #drape { position: absolute; left: 10px; bottom: 34px; display: flex; border-radius: 18px; overflow: hidden;
-           box-shadow: 0 1px 4px rgba(0,0,0,.35); font: 600 13px system-ui; }
-  #drape button { border: 0; padding: 8px 12px; background: #fff; color: #333; }
-  #drape button.on { background: #1b5e20; color: #fff; }
+  :root { color-scheme: light; --ink:#10231f; --paper:#fffdf8; --muted:#65736e; --accent:#e1783f; --teal:#126b5b; }
+  * { box-sizing:border-box; }
+  html,body,#map { height:100%; width:100%; margin:0; background:#dfe8e4; font:500 14px/1.35 system-ui,-apple-system,"Segoe UI",sans-serif; }
+  #map { position:absolute; inset:0; }
+  .hud { position:absolute; z-index:2; pointer-events:none; }
+  .hud button,.hud input,.hud a { pointer-events:auto; font:inherit; }
+  .top { top:max(12px,env(safe-area-inset-top)); left:12px; right:12px; display:flex; align-items:flex-start; justify-content:flex-end; gap:10px; }
+  .live { display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:999px;background:#10231fe8;color:white;font-size:11px;font-weight:800;letter-spacing:.06em;box-shadow:0 4px 14px #10231f2c; }
+  .dot { width:7px;height:7px;border-radius:50%;background:#54d39b;box-shadow:0 0 0 3px #54d39b33; }
+  .network-key { top:52px;left:12px;display:none;align-items:center;gap:9px;padding:6px 9px;border:1px solid #ffffffc9;border-radius:11px;background:#fffdf4ed;color:var(--ink);box-shadow:0 4px 14px #10231f22;font-size:10px;font-weight:800; }
+  .network-key.ready { display:flex; }
+  .network-key span { display:flex;align-items:center;gap:4px;white-space:nowrap; }
+  .network-key i { display:block;width:8px;height:8px;border-radius:50%;background:#2687b8; }
+  .network-key .trail { width:12px;height:3px;border-radius:2px;background:#237a5a; }
+  .network-key .road { width:12px;height:3px;border-radius:2px;background:#c46b3b; }
+  .right { right:12px; top:50%; transform:translateY(-50%); display:flex; flex-direction:column; gap:8px; }
+  .control { width:44px;height:44px;border:1px solid #ffffffc9;border-radius:15px;background:#fffdf4f2;color:var(--ink);display:grid;place-items:center;box-shadow:0 5px 18px #10231f25;cursor:pointer;font-size:19px;font-weight:800; }
+  .control:active,.segment button:active,.pill:active { transform:scale(.96); }
+  .control.active { background:var(--ink);color:white; }
+  .bottom { left:12px; right:64px; bottom:max(14px,env(safe-area-inset-bottom)); display:flex;flex-direction:column;gap:9px; }
+  .surface { border:1px solid #ffffffc9;border-radius:18px;background:#fffdf4f2;color:var(--ink);box-shadow:0 8px 26px #10231f26;backdrop-filter:blur(13px); }
+  .meta { display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 13px; }
+  .coord { min-width:0; }
+  .coord strong {display:block;font-size:12px;letter-spacing:.06em;}
+  .coord span {display:block;color:var(--muted);font:11px ui-monospace,SFMono-Regular,Menlo,monospace;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .north { flex:0 0 auto;display:flex;align-items:center;gap:7px;color:var(--muted);font-size:11px;font-weight:800; }
+  .north i { font-style:normal;color:var(--accent);font-size:20px;line-height:1; }
+  .layers { padding:8px;display:flex;align-items:center;justify-content:space-between;gap:8px; }
+  .segment {display:flex;gap:4px;padding:3px;border-radius:13px;background:#edf0e9;}
+  .segment button {border:0;border-radius:10px;padding:9px 12px;background:transparent;color:#53635d;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;}
+  .segment button.on {background:var(--ink);color:white;box-shadow:0 2px 7px #10231f24;}
+  .terrain { display:flex;align-items:center;gap:7px;color:var(--muted);font-size:11px;font-weight:800;white-space:nowrap; }
+  .terrain input { width:62px;accent-color:var(--teal); }
+  .terrain .val {min-width:23px;color:var(--ink);font-variant-numeric:tabular-nums;}
+  #err { position:absolute;z-index:5;inset:0;display:none;align-items:center;justify-content:center;background:#10231f;color:white;padding:28px;text-align:center;font:600 16px/1.5 system-ui; }
+  .maplibregl-ctrl-attrib { border-radius:10px 0 0 0!important;background:#fffdf4dd!important;color:#334!important;font-size:10px!important; }
+  .maplibregl-ctrl-attrib a {color:#234!important;}
+  .maplibregl-ctrl-bottom-left { bottom:118px!important; }
+  .me {width:18px;height:18px;border-radius:50%;background:#1675d1;border:3px solid white;box-shadow:0 0 0 9px #1675d13c,0 2px 8px #0006;}
+  @media(max-width:430px) {
+    .top{left:9px;right:9px;top:max(9px,env(safe-area-inset-top));}
+    .network-key{left:9px;top:50px;gap:7px;padding:5px 8px}
+    .bottom{left:9px;right:59px;bottom:max(10px,env(safe-area-inset-bottom));gap:7px}
+    .meta{padding:8px 10px}.layers{padding:6px;gap:5px}.segment button{padding:8px 9px;font-size:11px}.terrain{gap:4px}.terrain input{width:43px}
+    .control{width:42px;height:42px;border-radius:14px}.right{right:9px;gap:7px}
+    .maplibregl-ctrl-bottom-left { bottom:118px!important; }
+  }
+  @media(max-height:620px) {
+    .top { top:max(8px,env(safe-area-inset-top)); }
+    .network-key { top:50px; }
+    .bottom { gap:0; }
+    .meta { display:none; }
+    .right { gap:5px; }
+    .control { width:38px;height:38px;border-radius:12px;font-size:17px; }
+    .maplibregl-ctrl-bottom-left { bottom:60px!important; }
+  }
 </style>
 </head>
 <body>
-<div id="map"></div>
-<div id="err"></div>
-<div id="drape"><button id="d-imagery">Satellite</button><button id="d-park">Park map</button></div>
+<div id="map" aria-label="Offline 3D terrain map"></div>
+<div id="err" role="status"></div>
+<div class="hud top">
+  <div class="live"><span class="dot"></span> OFFLINE MAP</div>
+</div>
+<div class="hud network-key" id="network-key" aria-label="Map legend">
+  <span><i class="trail"></i>TRAILS</span><span><i class="road"></i>ROADS</span><span><i></i>WATER</span>
+</div>
+<div class="hud right" aria-label="Map controls">
+  <button class="control" id="north" title="Reset north-up" aria-label="Reset north-up">N</button>
+  <button class="control" id="locate" title="Center on my location" aria-label="Center on my location">◎</button>
+  <button class="control" id="zoom-in" title="Zoom in" aria-label="Zoom in">＋</button>
+  <button class="control" id="zoom-out" title="Zoom out" aria-label="Zoom out">−</button>
+  <button class="control" id="tilt" type="button" title="Toggle 3D terrain view" aria-label="Toggle 3D terrain view" aria-pressed="false">3D</button>
+</div>
+<div class="hud bottom">
+  <div class="surface meta">
+    <div class="coord"><strong id="center-label">MAP CENTER</strong><span id="coordinates">Move the map to inspect the terrain</span></div>
+    <div class="north"><i>▲</i><span id="heading-label">NORTH UP</span></div>
+  </div>
+  <div class="surface layers">
+    <div class="segment" role="group" aria-label="Map layer">
+      <button id="layer-aerial" type="button" aria-pressed="false">Aerial</button><button id="layer-park" type="button" aria-pressed="true">Park map</button>
+    </div>
+    <label class="terrain" for="exaggeration">RELIEF <input id="exaggeration" type="range" min="0.7" max="2.0" step="0.1" value="1.2"><span class="val" id="exaggeration-value">1.2×</span></label>
+  </div>
+</div>
 <script>
-// Tile URLs and zoom limits come from the host (Android passes them in the query string).
+// All terrain, raster, and hillshade tiles are supplied by the host app; no online style or request is used.
 const q = new URLSearchParams(location.search);
-const tiles = q.get("tiles") || "tiles";
-const pdfMax = +(q.get("pdfMax") || 13), demMax = +(q.get("demMax") || 11);
-// imgMax=0 means no imagery tileset is available: the park map is the only drape
-const imgMax = +(q.get("imgMax") ?? 13);
-const bounds = (q.get("bounds") || "-119.9206,37.4655,-119.0368,38.2043").split(",").map(Number);
-// events to the app: Android (JavascriptInterface "Host") or iOS (WKScriptMessageHandler "Host")
+const tiles = q.get('tiles') || 'tiles';
+const pdfMax = +(q.get('pdfMax') || 13), demMax = +(q.get('demMax') || 11);
+const imgMax = +(q.get('imgMax') ?? 13);
+const bounds = (q.get('bounds') || '-119.9206,37.4655,-119.0368,38.2043').split(',').map(Number);
+const validBounds = bounds.length === 4 && bounds.every(Number.isFinite);
+const center = q.get('center')?.split(',').map(Number);
+const hasCenter = center?.length === 2 && center.every(Number.isFinite);
+const initialCenter = hasCenter
+  ? center : [(bounds[0] + bounds[2]) / 2, (bounds[1] + bounds[3]) / 2];
+const maxLocalZoom = Math.max(10, Math.min(13, pdfMax || 13));
+const maxMapZoom = Math.min(15, maxLocalZoom + 1);
+const detailMinZoom = Math.max(9.5, Math.min(12, maxLocalZoom - 0.5));
+const initialDrape = q.get('layer') === 'aerial' && imgMax ? 'imagery' : 'park';
+let currentDrape=initialDrape,drapeBeforeTilt=null;
 const report = msg => window.Host && Host.onEvent ? Host.onEvent(msg)
-  : window.webkit?.messageHandlers?.Host ? webkit.messageHandlers.Host.postMessage(msg)
-  : console.log(msg);
-
-// Probe for WebGL, then release the probe context at once: some WebViews allow very few live
-// contexts, and holding this one leaves the map's canvas blank.
-const probe = document.createElement("canvas");
-const probeGl = probe.getContext("webgl2") || probe.getContext("webgl");
-report(probeGl ? "webgl: " + (probeGl instanceof WebGL2RenderingContext ? "2" : "1") : "unsupported");
-probeGl?.getExtension("WEBGL_lose_context")?.loseContext();
-if (!probeGl) {
-  err.style.display = "flex"; err.textContent = "3D needs WebGL, which this device doesn't provide.";
-}
-
+  : window.webkit?.messageHandlers?.Host ? webkit.messageHandlers.Host.postMessage(msg) : console.log(msg);
+const probe = document.createElement('canvas');
+const probeGl = probe.getContext('webgl2') || probe.getContext('webgl');
+report(probeGl ? 'webgl: ' + (probeGl instanceof WebGL2RenderingContext ? '2' : '1') : 'unsupported');
+probeGl?.getExtension('WEBGL_lose_context')?.loseContext();
+const err = document.getElementById('err');
+if (!probeGl) { err.style.display = 'flex'; err.textContent = '3D terrain needs WebGL, which is unavailable on this device. The offline 2D survival map remains available.'; }
 const map = new maplibregl.Map({
-  container: "map",
-  center: [-119.533, 37.746], zoom: 12.3, pitch: 62, bearing: -20, maxPitch: 80,
-  maxBounds: [[bounds[0] - 0.15, bounds[1] - 0.15], [bounds[2] + 0.15, bounds[3] + 0.15]],
-  attributionControl: { compact: true },
-  style: {
-    version: 8,
-    sources: {
-      park: { type: "raster", tiles: [`${tiles}/pdf/{z}/{x}/{y}.jpg`], tileSize: 256, minzoom: 9,
-              maxzoom: pdfMax, bounds, attribution: "National Park Service" },
-      imagery: { type: "raster", tiles: [`${tiles}/imagery/{z}/{x}/{y}.jpg`], tileSize: 256, minzoom: 9,
-                 maxzoom: imgMax || 13, bounds, attribution: "USDA, USGS The National Map: Orthoimagery" },
-      dem: { type: "raster-dem", tiles: [`${tiles}/terrain/{z}/{x}/{y}.png`], tileSize: 256,
-             encoding: "terrarium", minzoom: 8, maxzoom: demMax, bounds,
-             attribution: "Terrain: USGS 3DEP, SRTM et al. (Terrain Tiles)" },
-    },
-    terrain: { source: "dem", exaggeration: 1.2 },
-    layers: [
-      { id: "sky", type: "background", paint: { "background-color": "#dfe6ea" } },
-      { id: "imagery", type: "raster", source: "imagery", layout: { visibility: imgMax ? "visible" : "none" } },
-      { id: "park", type: "raster", source: "park", layout: { visibility: imgMax ? "none" : "visible" } },
-    ],
-  },
+  container:'map', center:initialCenter, zoom:hasCenter?12:10.2, pitch:0, bearing:0, maxPitch:70, maxZoom:maxMapZoom,
+  maxBounds:validBounds ? [[bounds[0]-.15,bounds[1]-.15],[bounds[2]+.15,bounds[3]+.15]] : undefined,
+  attributionControl:{compact:true}, style:{version:8,sources:{
+    park:{type:'raster',tiles:[`${tiles}/pdf/{z}/{x}/{y}.jpg`],tileSize:256,minzoom:9,maxzoom:pdfMax,bounds,attribution:'National Park Service'},
+    imagery:{type:'raster',tiles:[`${tiles}/imagery/{z}/{x}/{y}.jpg`],tileSize:256,minzoom:9,maxzoom:imgMax||13,bounds,attribution:'USDA, USGS The National Map: Orthoimagery'},
+    dem:{type:'raster-dem',tiles:[`${tiles}/terrain/{z}/{x}/{y}.png`],tileSize:256,encoding:'terrarium',minzoom:8,maxzoom:demMax,bounds,attribution:'Terrain: USGS 3DEP, SRTM et al. (Terrain Tiles)'}
+  },terrain:{source:'dem',exaggeration:1.2},layers:[
+    {id:'sky',type:'background',paint:{'background-color':'#dfe8e4'}},
+    {id:'imagery',type:'raster',source:'imagery',layout:{visibility:initialDrape==='imagery'?'visible':'none'}},
+    {id:'park',type:'raster',source:'park',layout:{visibility:initialDrape==='park'?'visible':'none'}}
+  ]}
 });
-map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), "top-right");
-map.on("load", () => {
-  // start with the attribution folded into its (i) button so it doesn't cover the app's controls
-  document.querySelector(".maplibregl-ctrl-attrib")?.classList.remove("maplibregl-compact-show");
-  report("loaded");
+map.addControl(new maplibregl.ScaleControl({maxWidth:95,unit:'metric'}),'bottom-left');
+map.on('load',()=>{
+  document.querySelector('.maplibregl-ctrl-attrib')?.classList.remove('maplibregl-compact-show');
+  report('loaded'); setDrape(initialDrape);
+  if(!hasCenter && validBounds) map.fitBounds([[bounds[0],bounds[1]],[bounds[2],bounds[3]]],{
+    padding:{top:62,right:62,bottom:68,left:12},maxZoom:10.5,duration:0
+  });
+  updateCenter();
+  void loadOfflineVectors();
 });
-map.on("error", e => report("error: " + (e.error && e.error.message)));
-
-// Opened straight from disk there are no tiles (they come from the app or tools/map-viewer/serve.py)
-if (location.protocol === "file:") {
-  err.style.display = "flex";
-  err.textContent = "No map tiles here: open this page in the app, or through tools/map-viewer/serve.py.";
+map.on('error',e=>report('error: '+(e.error&&e.error.message)));
+if(location.protocol==='file:'){err.style.display='flex';err.textContent='Map tiles are served by the app. Open this map inside Sherpa to use the bundled offline terrain.';}
+async function loadOfflineVectors(){
+  try{
+    const [trailResponse,poiResponse]=await Promise.all([
+      fetch('/assets/geo/trails.json'),fetch('/assets/geo/pois.json')
+    ]);
+    if(!trailResponse.ok||!poiResponse.ok)throw new Error('Region vector data unavailable');
+    const [graph,pois]=await Promise.all([trailResponse.json(),poiResponse.json()]);
+    const intersects=(coordinates)=>{
+      if(!validBounds)return true;
+      let west=Infinity,south=Infinity,east=-Infinity,north=-Infinity;
+      for(const [lon,lat] of coordinates){west=Math.min(west,lon);south=Math.min(south,lat);east=Math.max(east,lon);north=Math.max(north,lat);}
+      return east>=bounds[0]&&west<=bounds[2]&&north>=bounds[1]&&south<=bounds[3];
+    };
+    const lineFeatures=[];
+    for(let i=0;i<graph.edges.length;i++){
+      const edge=graph.edges[i],way=graph.ways[edge[5]]||{};
+      if(way.kind!=='trail'&&way.kind!=='road')continue;
+      const a=graph.nodes[edge[0]],b=graph.nodes[edge[1]],interior=graph.geom[String(i)]||[];
+      const coordinates=[[a[1],a[0]]];
+      for(let j=0;j+1<interior.length;j+=2)coordinates.push([interior[j+1],interior[j]]);
+      coordinates.push([b[1],b[0]]);
+      if(!intersects(coordinates))continue;
+      lineFeatures.push({type:'Feature',properties:{kind:way.kind,name:way.name||'',grade:way.sac||''},geometry:{type:'LineString',coordinates}});
+    }
+    const poiKinds=new Set(['water','trailhead','exit','help','shelter']);
+    const pointFeatures=pois.filter(p=>poiKinds.has(p.type)&&Number.isFinite(p.lat)&&Number.isFinite(p.lon)&&
+      (!validBounds||(p.lon>=bounds[0]&&p.lon<=bounds[2]&&p.lat>=bounds[1]&&p.lat<=bounds[3])))
+      .map(p=>({type:'Feature',properties:{name:p.name||'Unnamed place',kind:p.type,elevation:p.elev??null},geometry:{type:'Point',coordinates:[p.lon,p.lat]}}));
+    const safetyFeatures=pointFeatures.filter(f=>f.properties.kind!=='water');
+    const waterFeatures=pointFeatures.filter(f=>f.properties.kind==='water');
+    map.addSource('survival-network',{type:'geojson',data:{type:'FeatureCollection',features:lineFeatures}});
+    map.addSource('survival-pois',{type:'geojson',data:{type:'FeatureCollection',features:safetyFeatures}});
+    map.addSource('survival-water-data',{type:'geojson',data:{type:'FeatureCollection',features:waterFeatures},cluster:true,clusterRadius:34,clusterMaxZoom:maxLocalZoom});
+    const width=['interpolate',['linear'],['zoom'],9,0.8,13,2.1];
+    map.addLayer({id:'survival-roads-casing',type:'line',source:'survival-network',filter:['==',['get','kind'],'road'],paint:{'line-color':'#fffdf4','line-width':['interpolate',['linear'],['zoom'],9,2.2,13,4.2],'line-opacity':0.85,'line-blur':0.2}});
+    map.addLayer({id:'survival-roads',type:'line',source:'survival-network',filter:['==',['get','kind'],'road'],layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#c46b3b','line-width':width,'line-opacity':0.96}});
+    map.addLayer({id:'survival-trails-casing',type:'line',source:'survival-network',filter:['==',['get','kind'],'trail'],paint:{'line-color':'#fffdf4','line-width':['interpolate',['linear'],['zoom'],9,2.4,13,4.6],'line-opacity':0.9}});
+    map.addLayer({id:'survival-trails',type:'line',source:'survival-network',filter:['==',['get','kind'],'trail'],layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#237a5a','line-width':width,'line-opacity':0.98,'line-dasharray':[2,1.2]}});
+    map.addLayer({id:'survival-pois',type:'circle',source:'survival-pois',minzoom:detailMinZoom,paint:{
+      'circle-color':['match',['get','kind'],'trailhead','#176b52','exit','#d6542f','help','#b83343','shelter','#7756a3','#526d78'],
+      'circle-radius':['interpolate',['linear'],['zoom'],10,4.5,13,7.5],
+      'circle-stroke-color':'#fff','circle-stroke-width':2,'circle-opacity':0.98
+    }});
+    map.addLayer({id:'survival-water-clusters',type:'circle',source:'survival-water-data',filter:['has','point_count'],minzoom:detailMinZoom,paint:{
+      'circle-color':['step',['get','point_count'],'#2687b8',8,'#1d709c',24,'#125771'],
+      'circle-radius':['step',['get','point_count'],6,8,8,24,10],
+      'circle-stroke-color':'#fff','circle-stroke-width':2,'circle-opacity':0.96
+    }});
+    map.addLayer({id:'survival-water',type:'circle',source:'survival-water-data',filter:['!',['has','point_count']],minzoom:detailMinZoom,paint:{
+      'circle-color':'#2687b8','circle-radius':['interpolate',['linear'],['zoom'],12,4.2,13,6],
+      'circle-stroke-color':'#fff','circle-stroke-width':1.8,'circle-opacity':0.94
+    }});
+    const describe=f=>{
+      const p=f.properties||{},kind={water:'Water source · not verified potable',trailhead:'Trailhead',exit:'Exit',help:'Help point',shelter:'Shelter'}[p.kind]||p.kind;
+      return `${p.name||'Unmarked way'}\n${kind}${p.grade?` · ${p.grade.replaceAll('_',' ')}`:''}`;
+    };
+    for(const layer of ['survival-pois','survival-water'])map.on('click',layer,e=>{
+      const f=e.features?.[0];if(f)new maplibregl.Popup({offset:12}).setLngLat(e.lngLat).setText(describe(f)).addTo(map);
+    });
+    map.on('click','survival-water-clusters',e=>{
+      const f=e.features?.[0];if(f)map.easeTo({center:f.geometry.coordinates,zoom:Math.min(maxMapZoom,map.getZoom()+0.9),pitch:map.getPitch(),duration:450});
+    });
+    for(const layer of ['survival-trails','survival-roads'])map.on('click',layer,e=>{
+      const f=e.features?.[0];if(f)new maplibregl.Popup({offset:12}).setLngLat(e.lngLat).setText(describe(f)).addTo(map);
+    });
+    for(const layer of ['survival-pois','survival-water','survival-water-clusters','survival-trails','survival-roads']){
+      map.on('mouseenter',layer,()=>{map.getCanvas().style.cursor='pointer';});
+      map.on('mouseleave',layer,()=>{map.getCanvas().style.cursor='';});
+    }
+    document.getElementById('network-key').classList.add('ready');
+    console.info(`Offline survival overlays ready: ${lineFeatures.length} ways, ${pointFeatures.length} POIs`);
+  }catch(error){console.warn('Offline survival overlays unavailable:',error);}
 }
-
-// Satellite / Park map switch
-const setDrape = which => {
-  map.setLayoutProperty("imagery", "visibility", which === "imagery" ? "visible" : "none");
-  map.setLayoutProperty("park", "visibility", which === "park" ? "visible" : "none");
-  document.getElementById("d-imagery").classList.toggle("on", which === "imagery");
-  document.getElementById("d-park").classList.toggle("on", which === "park");
+function setDrape(which){
+  if(!map.getLayer('imagery'))return;
+  const aerial=which==='imagery';
+  currentDrape=which;
+  map.setLayoutProperty('imagery','visibility',aerial?'visible':'none');
+  map.setLayoutProperty('park','visibility',aerial?'none':'visible');
+  document.getElementById('layer-aerial').classList.toggle('on',aerial);
+  document.getElementById('layer-park').classList.toggle('on',!aerial);
+  document.getElementById('layer-aerial').setAttribute('aria-pressed',String(aerial));
+  document.getElementById('layer-park').setAttribute('aria-pressed',String(!aerial));
+}
+document.getElementById('layer-aerial').onclick=()=>{if(map.getPitch()>15)drapeBeforeTilt='imagery';setDrape('imagery');};
+document.getElementById('layer-park').onclick=()=>{if(map.getPitch()>15)drapeBeforeTilt='park';setDrape('park');};
+if(!imgMax)document.getElementById('layer-aerial').disabled=true;
+let placeMarker=null,meMarker=null,lastMe=null;
+window.showPlace=(lat,lon,name)=>{if(placeMarker)placeMarker.remove();placeMarker=new maplibregl.Marker({color:'#d94825'}).setLngLat([lon,lat]).setPopup(new maplibregl.Popup({offset:28}).setText(name)).addTo(map);map.flyTo({center:[lon,lat],zoom:Math.min(12.2,maxLocalZoom),pitch:map.getPitch(),bearing:map.getBearing(),duration:900,essential:true});};
+window.showMe=(lat,lon)=>{lastMe=[lon,lat];if(!meMarker){const el=document.createElement('div');el.className='me';meMarker=new maplibregl.Marker({element:el});}meMarker.setLngLat(lastMe).addTo(map);map.flyTo({center:lastMe,zoom:Math.min(12.2,maxLocalZoom),pitch:map.getPitch(),bearing:map.getBearing(),duration:900,essential:true});};
+window.setExaggeration=x=>{map.setTerrain({source:'dem',exaggeration:x});document.getElementById('exaggeration').value=x;document.getElementById('exaggeration-value').textContent=Number(x).toFixed(1)+'×';};
+document.getElementById('exaggeration').addEventListener('input',e=>window.setExaggeration(+e.target.value));
+document.getElementById('zoom-in').onclick=()=>map.zoomTo(Math.min(17,map.getZoom()+1),{duration:250});
+document.getElementById('zoom-out').onclick=()=>map.zoomTo(Math.max(9,map.getZoom()-1),{duration:250});
+document.getElementById('north').onclick=()=>map.easeTo({bearing:0,duration:500});
+document.getElementById('locate').onclick=()=>{if(lastMe)window.showMe(lastMe[1],lastMe[0]);else if(validBounds)map.fitBounds([[bounds[0],bounds[1]],[bounds[2],bounds[3]]],{padding:{top:62,right:62,bottom:68,left:12},maxZoom:10.5,duration:600});};
+document.getElementById('tilt').onclick=()=>{
+  const entering=map.getPitch()<15,button=document.getElementById('tilt');
+  if(entering){drapeBeforeTilt=currentDrape;if(imgMax)setDrape('imagery');}
+  map.easeTo({pitch:entering?(imgMax?30:20):0,bearing:entering?map.getBearing():0,duration:400});
+  if(!entering&&drapeBeforeTilt){const restore=drapeBeforeTilt;drapeBeforeTilt=null;setDrape(restore);}
+  button.classList.toggle('active',entering);button.setAttribute('aria-pressed',String(entering));
 };
-document.getElementById("d-imagery").onclick = () => setDrape("imagery");
-document.getElementById("d-park").onclick = () => setDrape("park");
-if (!imgMax) document.getElementById("drape").style.display = "none";
-map.on("load", () => setDrape(imgMax ? "imagery" : "park"));
-window.setDrape = setDrape;
-
-let placeMarker = null, meMarker = null;
-
-// Called by the app ------------------------------------------------------------------------
-window.showPlace = (lat, lon, name) => {
-  if (placeMarker) placeMarker.remove();
-  placeMarker = new maplibregl.Marker({ color: "#c62828" }).setLngLat([lon, lat])
-    .setPopup(new maplibregl.Popup({ offset: 28 }).setText(name)).addTo(map);
-  map.flyTo({ center: [lon, lat], zoom: 13.2, pitch: 62, duration: 1500, essential: true });
-};
-window.showMe = (lat, lon) => {
-  if (!meMarker) {
-    const el = document.createElement("div"); el.className = "me";
-    meMarker = new maplibregl.Marker({ element: el });
-  }
-  meMarker.setLngLat([lon, lat]).addTo(map);
-  map.flyTo({ center: [lon, lat], zoom: 13.2, pitch: 62, duration: 1500, essential: true });
-};
-window.setExaggeration = x => map.setTerrain({ source: "dem", exaggeration: x });
-window.map = map;
+function updateCenter(){const c=map.getCenter();document.getElementById('coordinates').textContent=`${Math.abs(c.lat).toFixed(4)}° ${c.lat>=0?'N':'S'} · ${Math.abs(c.lng).toFixed(4)}° ${c.lng>=0?'E':'W'} · ${Math.round(map.getZoom()*10)/10}×`;
+ document.getElementById('heading-label').textContent=Math.abs(map.getBearing())<1?'NORTH UP':`${Math.round((360-map.getBearing())%360)}° BEARING`;}
+map.on('moveend',updateCenter);window.map=map;
 </script>
 </body>
 </html>

@@ -353,8 +353,7 @@ private final class WeakMessageHandler: NSObject, WKScriptMessageHandler {
   }
 }
 
-/// Serves sherpa-map://app/map3d/<file> from the Flutter assets and
-/// sherpa-map://app/tiles/<name>/<z>/<x>/<y>.<ext> from the MBTiles.
+/// Serves the MapLibre page, its bundled survival GeoData, and tiles from the offline MBTiles.
 private final class SchemeHandler: NSObject, WKURLSchemeHandler {
   private let assetPath: (String) -> String?
   private let tiles: TileStore?
@@ -373,6 +372,11 @@ private final class SchemeHandler: NSObject, WKURLSchemeHandler {
       body = try? Data(contentsOf: URL(fileURLWithPath: path))
       mime = parts[1].hasSuffix(".html") ? "text/html" : parts[1].hasSuffix(".css") ? "text/css"
         : parts[1].hasSuffix(".js") ? "text/javascript" : mime
+    } else if parts.count == 3, parts[0] == "assets", parts[1] == "geo",
+              ["trails.json", "pois.json"].contains(parts[2]),
+              let path = assetPath("assets/geo/\(parts[2])") {
+      body = try? Data(contentsOf: URL(fileURLWithPath: path))
+      mime = "application/json"
     } else if parts.first == "tiles", parts.count == 5, let z = Int(parts[2]), let x = Int(parts[3]),
               let dot = parts[4].firstIndex(of: "."), let y = Int(parts[4][..<dot]) {
       body = tiles?.tile(parts[1], z: z, x: x, y: y)

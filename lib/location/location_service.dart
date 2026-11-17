@@ -144,11 +144,21 @@ class LocationService extends ChangeNotifier {
     _sub?.cancel();
     _sub = null;
     if (permissionDenied || tier == PowerTier.critical) return;
-    final settings = AndroidSettings(
-      accuracy: LocationAccuracy.high, // offline wilderness: only GNSS works, "balanced" may never fix
-      distanceFilter: 25,
-      intervalDuration: tier == PowerTier.normal ? const Duration(seconds: 60) : const Duration(minutes: 5),
-    );
+    final LocationSettings settings;
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      settings = AndroidSettings(
+        accuracy: LocationAccuracy.high, // offline wilderness: only GNSS works, "balanced" may never fix
+        distanceFilter: 25,
+        intervalDuration: tier == PowerTier.normal ? const Duration(seconds: 60) : const Duration(minutes: 5),
+      );
+    } else {
+      settings = AppleSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 25,
+        activityType: ActivityType.fitness,
+        pauseLocationUpdatesAutomatically: false,
+      );
+    }
     _sub = Geolocator.getPositionStream(locationSettings: settings).listen(_onPosition, onError: (_) {});
   }
 

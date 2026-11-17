@@ -4,9 +4,9 @@ import 'package:flutter/services.dart';
 import '../location/location_service.dart';
 import '../ui/theme.dart';
 
-/// The offline 3D map: aerial imagery (or the printed NPS park map) draped over real Yosemite
-/// terrain. It is a native Android screen (android/.../map3d/Map3dActivity.kt) that serves its
-/// page and tiles from the app, so it needs no network.
+/// Offline 3D map: the installed region's park map or aerial imagery draped over its terrain,
+/// with the same bundled trail graph and survival POIs used by the guidance engine. Android and
+/// iOS serve the page and data locally, so the map does not need a network connection.
 class Map3d {
   static const _channel = MethodChannel('survival/map3d');
 
@@ -15,15 +15,20 @@ class Map3d {
   static Future<bool> available() async {
     try {
       return await _channel.invokeMethod<bool>('available') ?? false;
-    } on MissingPluginException {
-      return false; // not on Android
+    } catch (_) {
+      return false;
     }
   }
 
   /// Opens the 3D map, showing [lat]/[lon] (the current fix) when given. Completes when it
   /// closes: true if the user tapped "Home" (go to the home dashboard), false for Back.
-  static Future<bool> open({double? lat, double? lon}) async =>
-      await _channel.invokeMethod<bool>('open', {'lat': lat, 'lon': lon}) ?? false;
+  static Future<bool> open({double? lat, double? lon}) async {
+    try {
+      return await _channel.invokeMethod<bool>('open', {'lat': lat, 'lon': lon}) ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
 }
 
 /// "3D MAP" button for the top of the home screen: opens the 3D map at the latest fix.

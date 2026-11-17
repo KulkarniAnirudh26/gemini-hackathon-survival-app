@@ -497,7 +497,14 @@ class _VoiceBar extends StatelessWidget {
             onTap: () => onPickImage(ImageSource.camera),
           ),
           const Spacer(),
-          GestureDetector(
+          Semantics(
+            button: true,
+            label: listening
+                ? 'Recording. Release to send.'
+                : stopMode
+                    ? 'Stop'
+                    : 'Hold to talk, release to send',
+            child: GestureDetector(
             onTapDown: stopMode || loading
                 ? null
                 : (_) {
@@ -513,6 +520,7 @@ class _VoiceBar extends StatelessWidget {
             onTapCancel: stopMode || loading ? null : () => a.releaseTalk(),
             onTap: stopMode ? a.stop : null,
             child: _MicButton(listening: listening, enabled: !loading, stop: stopMode),
+          ),
           ),
           const Spacer(),
           _RoundIcon(

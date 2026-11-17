@@ -337,10 +337,13 @@ class QuestionRouter {
         ? Route.emergency
         : lookups.contains(intent)
             ? Route.template
-            : Route.llm;
+            : topics.length == 1
+                ? Route.guide
+                : Route.llm;
+    final effectiveIntent = (intent == Intent.other && topics.length == 1) ? Intent.survivalHowto : intent;
     return RouteDecision(
-      intent: intent,
-      intentConfidence: intent == Intent.other ? 0 : 0.7,
+      intent: effectiveIntent,
+      intentConfidence: effectiveIntent == Intent.other ? 0 : 0.7,
       topic: topics.isEmpty ? null : topics.first,
       topicConfidence: topics.isEmpty ? 0 : 0.6,
       onTopic: intent == Intent.other ? 0 : 1,
