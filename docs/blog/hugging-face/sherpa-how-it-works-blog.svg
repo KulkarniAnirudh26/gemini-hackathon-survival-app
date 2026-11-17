@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1720" height="960" viewBox="0 0 1720 960" font-family="Helvetica Neue, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#5B6670"/>
+    </marker>
+    <marker id="arrowBlue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1A73E8"/>
+    </marker>
+  </defs>
+
+  <rect width="1720" height="960" fill="#FFFFFF"/>
+
+  <!-- Title -->
+  <text x="60" y="62" font-size="34" font-weight="700" fill="#1F2A30">How Sherpa works</text>
+  <text x="60" y="98" font-size="20" fill="#5B6670">The router sends each question down the cheapest path that can answer it. The route is computed before Gemma explains it.</text>
+
+  <!-- On-device boundary -->
+  <rect x="40" y="135" width="1640" height="770" rx="24" fill="#F4F8F5" stroke="#9DB8A6" stroke-width="2" stroke-dasharray="10 8"/>
+  <text x="70" y="173" font-size="16" font-weight="700" letter-spacing="2" fill="#4E7A5E">ON THE PHONE · FULLY OFFLINE</text>
+
+  <!-- Voice or text -->
+  <rect x="80" y="270" width="250" height="130" rx="16" fill="#FFFFFF" stroke="#C9D3D9" stroke-width="2"/>
+  <text x="205" y="315" font-size="22" font-weight="700" fill="#1F2A30" text-anchor="middle">Voice or text</text>
+  <text x="205" y="343" font-size="16" fill="#3D4850" text-anchor="middle">Zipformer transcribes</text>
+  <text x="205" y="377" font-size="14" fill="#7A858D" text-anchor="middle">LiteRT · GPU</text>
+
+  <!-- Router -->
+  <rect x="390" y="255" width="260" height="160" rx="16" fill="#E6F2EA" stroke="#4E7A5E" stroke-width="2.5"/>
+  <text x="520" y="302" font-size="22" font-weight="700" fill="#1F2A30" text-anchor="middle">Dart router + Laya</text>
+  <text x="520" y="332" font-size="16" fill="#3D4850" text-anchor="middle">picks lookup or Gemma;</text>
+  <text x="520" y="355" font-size="16" fill="#3D4850" text-anchor="middle">Laya's reasoning score can veto</text>
+  <text x="520" y="391" font-size="14" fill="#7A858D" text-anchor="middle">Laya · LiteRT · GPU</text>
+
+  <!-- Local lookup -->
+  <rect x="740" y="190" width="400" height="120" rx="16" fill="#FFFFFF" stroke="#C9D3D9" stroke-width="2"/>
+  <text x="765" y="230" font-size="21" font-weight="700" fill="#1F2A30">Local lookup or field guide</text>
+  <text x="765" y="257" font-size="16" fill="#3D4850">BM25 ranks passages from the bundled guide</text>
+  <text x="765" y="285" font-size="14" fill="#7A858D">no LLM · instant</text>
+
+  <!-- Gemma -->
+  <rect x="740" y="400" width="400" height="140" rx="16" fill="#E8F0FE" stroke="#1A73E8" stroke-width="2.5"/>
+  <text x="765" y="442" font-size="21" font-weight="700" fill="#1F2A30">Gemma 4 E2B</text>
+  <text x="765" y="469" font-size="16" fill="#3D4850">reasons over route facts, guide</text>
+  <text x="765" y="491" font-size="16" fill="#3D4850">excerpts and photos</text>
+  <text x="765" y="522" font-size="14" fill="#5B6670">LiteRT-LM · loads on demand</text>
+
+  <!-- Answer -->
+  <rect x="1240" y="285" width="200" height="150" rx="30" fill="#1F2A30"/>
+  <text x="1340" y="335" font-size="22" font-weight="700" fill="#FFFFFF" text-anchor="middle">Answer</text>
+  <text x="1340" y="365" font-size="15" fill="#C9D3D9" text-anchor="middle">on screen, and</text>
+  <text x="1340" y="387" font-size="15" fill="#C9D3D9" text-anchor="middle">spoken by KittenTTS</text>
+  <text x="1340" y="415" font-size="13" fill="#9AA6AE" text-anchor="middle">LiteRT · CPU</text>
+
+  <!-- Photo -->
+  <rect x="390" y="580" width="260" height="100" rx="16" fill="#FFFFFF" stroke="#C9D3D9" stroke-width="2"/>
+  <text x="520" y="622" font-size="21" font-weight="700" fill="#1F2A30" text-anchor="middle">Photo + question</text>
+  <text x="520" y="652" font-size="14" fill="#7A858D" text-anchor="middle">resized to 640 px · JPEG</text>
+
+  <!-- GPS -->
+  <rect x="80" y="745" width="250" height="120" rx="16" fill="#FFFFFF" stroke="#C9D3D9" stroke-width="2"/>
+  <text x="205" y="788" font-size="21" font-weight="700" fill="#1F2A30" text-anchor="middle">GPS + trail graph</text>
+  <text x="205" y="815" font-size="15" fill="#3D4850" text-anchor="middle">breadcrumb every</text>
+  <text x="205" y="837" font-size="15" fill="#3D4850" text-anchor="middle">25 m or 2 min</text>
+
+  <!-- Route planner -->
+  <rect x="390" y="735" width="350" height="140" rx="16" fill="#FFFFFF" stroke="#4E7A5E" stroke-width="2.5"/>
+  <text x="415" y="777" font-size="21" font-weight="700" fill="#1F2A30">Route planner</text>
+  <text x="415" y="804" font-size="16" fill="#3D4850">Dijkstra on distance + uphill climb</text>
+  <text x="415" y="828" font-size="16" fill="#3D4850">Naismith's rule for walking time</text>
+  <text x="415" y="856" font-size="14" fill="#7A858D">Dart · no LLM</text>
+
+  <!-- MapLibre -->
+  <rect x="1240" y="755" width="400" height="100" rx="16" fill="#FFFFFF" stroke="#C9D3D9" stroke-width="2"/>
+  <text x="1265" y="797" font-size="21" font-weight="700" fill="#1F2A30">MapLibre</text>
+  <text x="1265" y="826" font-size="16" fill="#3D4850">offline map with the route drawn on it</text>
+
+  <!-- Arrows -->
+  <g stroke="#5B6670" stroke-width="2.5" fill="none" marker-end="url(#arrow)">
+    <line x1="330" y1="335" x2="386" y2="335"/>
+    <path d="M650,315 C695,315 695,250 736,250"/>
+    <path d="M650,355 C695,355 695,470 736,470"/>
+    <path d="M1140,250 C1190,250 1190,335 1236,335"/>
+    <path d="M1140,470 C1190,470 1190,385 1236,385"/>
+    <line x1="330" y1="805" x2="386" y2="805"/>
+    <line x1="740" y1="805" x2="1236" y2="805"/>
+  </g>
+  <g stroke="#1A73E8" stroke-width="2" fill="none" marker-end="url(#arrowBlue)">
+    <path d="M650,630 L820,630 L820,544"/>
+    <path d="M690,735 L690,700 L960,700 L960,544"/>
+  </g>
+
+  <!-- Flow labels -->
+  <rect x="980" y="590" width="120" height="34" rx="17" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.5" stroke-dasharray="5 5"/>
+  <text x="1040" y="612" font-size="15" fill="#1A73E8" text-anchor="middle">route facts</text>
+  <rect x="930" y="770" width="150" height="34" rx="17" fill="#FFFFFF" stroke="#C9D3D9" stroke-width="1.5"/>
+  <text x="1005" y="792" font-size="15" fill="#5B6670" text-anchor="middle">route geometry</text>
+
+  <!-- Footer -->
+  <text x="60" y="940" font-size="14" fill="#7A858D">Flutter app on Android and iOS · models from litert-community on Hugging Face</text>
+</svg>
